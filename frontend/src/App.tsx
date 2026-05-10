@@ -176,24 +176,33 @@ const App: React.FC = () => {
 
             <div className="space-y-3">
               <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 ml-1">Select Game Mode</label>
-            <div className="glass p-4 rounded-2xl flex items-center justify-between shadow-inner w-full border border-white/5">
-              <div className="flex flex-col gap-1">
-                <span className="text-white font-semibold">Multiplayer Mode</span>
-                <span className="text-[11px] text-slate-500 uppercase tracking-wider font-bold">
-                  {gameMode === 'MULTIPLE' ? 'Online PvP Enabled' : 'Local Training Only'}
-                </span>
-              </div>
               <div 
-                onClick={() => setGameMode(gameMode === 'MULTIPLE' ? 'SINGLE' : 'MULTIPLE')}
-                className={`w-[51px] h-[31px] rounded-full p-[2px] cursor-pointer transition-colors duration-300 relative ${gameMode === 'MULTIPLE' ? 'bg-[#007AFF]' : 'bg-[#39393d]'}`}
+                onClick={() => setGameMode(prev => prev === 'MULTIPLE' ? 'SINGLE' : 'MULTIPLE')}
+                className="glass p-4 rounded-2xl flex items-center justify-between shadow-inner w-full border border-white/5 cursor-pointer hover:bg-white/10 active:scale-[0.98] transition-all duration-300 group"
               >
-                <motion.div 
-                  className="w-[27px] h-[27px] bg-white rounded-full shadow-[0_3px_8px_rgba(0,0,0,0.15)]"
-                  animate={{ x: gameMode === 'MULTIPLE' ? 20 : 0 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                />
+                <div className="flex flex-col gap-1">
+                  <span className="text-white font-semibold group-hover:text-blue-400 transition-colors">Multiplayer Mode</span>
+                  <span className="text-[11px] text-slate-500 uppercase tracking-wider font-bold">
+                    {gameMode === 'MULTIPLE' ? 'Online PvP Enabled' : 'Local Training Only'}
+                  </span>
+                </div>
+                <div 
+                  className={`w-[51px] h-[31px] rounded-full p-[2px] transition-colors duration-300 relative flex items-center ${gameMode === 'MULTIPLE' ? 'bg-[#34C759]' : 'bg-[#39393d]'}`}
+                >
+                  <motion.div 
+                    className="w-[27px] h-[27px] bg-white rounded-full shadow-[0_3px_8px_rgba(0,0,0,0.15)] z-10"
+                    animate={{ 
+                      x: gameMode === 'MULTIPLE' ? 20 : 0 
+                    }}
+                    transition={{ 
+                      type: "spring", 
+                      stiffness: 500, 
+                      damping: 30,
+                      mass: 0.8
+                    }}
+                  />
+                </div>
               </div>
-            </div>
             </div>
           </div>
 
