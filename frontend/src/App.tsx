@@ -34,7 +34,7 @@ const App: React.FC = () => {
     Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null))
   );
   const [gameId, setGameId] = useState<string>('');
-  const [gameMode, setGameMode] = useState<'SINGLE' | 'MULTIPLE'>('MULTIPLE');
+  const [gameMode, setGameMode] = useState<'SINGLE' | 'MULTIPLE'>('SINGLE');
   const [history, setHistory] = useState<Move[]>([]);
   const [winner, setWinner] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState<boolean>(false);
@@ -55,7 +55,7 @@ const App: React.FC = () => {
 
     const socket = new SockJS(`http://${window.location.hostname}:8888/ws-gomoku`);
     stompClient.current = Stomp.over(socket);
-    stompClient.current.debug = () => {}; // Disable debug logs
+    stompClient.current.debug = () => { }; // Disable debug logs
 
     stompClient.current.connect({}, () => {
       stompClient.current?.subscribe(`/topic/game/${gameId}`, (payload) => {
@@ -78,7 +78,7 @@ const App: React.FC = () => {
     if (message.type === 'MOVE') {
       if (message.row !== undefined && message.col !== undefined && message.content) {
         const { row, col, content, sender } = message;
-        
+
         setBoard(prevBoard => {
           const newBoard = prevBoard.map(r => [...r]);
           newBoard[row][col] = content!;
@@ -150,18 +150,18 @@ const App: React.FC = () => {
   if (!isJoined) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass glow-border p-8 max-w-md w-full flex flex-col gap-6 items-center"
+          className="glass glow-border px-10 py-14 max-w-md w-full flex flex-col gap-12 items-center"
         >
           <div className="w-20 h-20 rounded-full bg-blue-500/20 flex items-center justify-center mb-2">
             <User size={40} className="text-blue-400" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2 text-center tracking-tight">Gomoku Arena</h1>
           <p className="text-slate-400 text-center text-sm mb-4">Strategic 30x30 real-time battle</p>
-          
-          <div className="w-full space-y-6">
+
+          <div className="w-full space-y-8">
             <div className="space-y-3">
               <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 ml-1">Your Name</label>
               <input
@@ -175,40 +175,46 @@ const App: React.FC = () => {
             </div>
 
             <div className="space-y-3">
-              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 ml-1">Select Game Mode</label>
-              <div 
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 ml-1">Network Mode</label>
+              <div className="flex gap-2">
+                <button disabled className="flex-1 py-4 px-4 rounded-xl bg-white/5 text-slate-500 text-sm font-medium border border-white/5 cursor-not-allowed text-left flex justify-between items-center opacity-70">
+                  <span>Online</span>
+                  <span className="text-[10px] uppercase tracking-wider bg-white/10 px-2 py-0.5 rounded text-slate-400">Disabled</span>
+                </button>
+                <button className="flex-1 py-4 px-4 rounded-xl bg-blue-500/20 text-blue-400 text-sm font-bold border border-blue-500/30 text-left flex justify-between items-center ring-1 ring-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.15)]">
+                  <span>Offline</span>
+                  <span className="text-[10px] uppercase tracking-wider bg-blue-500/30 px-2 py-0.5 rounded text-blue-200">Default</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-3 mt-4">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 ml-1">Offline Game Type</label>
+              <div
                 onClick={() => setGameMode(prev => prev === 'MULTIPLE' ? 'SINGLE' : 'MULTIPLE')}
-                className="glass p-4 rounded-2xl flex items-center justify-between shadow-inner w-full border border-white/5 cursor-pointer hover:bg-white/10 active:scale-[0.98] transition-all duration-300 group"
+                className="bg-[#1e293b]/50 p-4 rounded-2xl flex items-center justify-between w-full border border-white/5 cursor-pointer hover:bg-[#1e293b]/80 transition-all duration-300"
               >
                 <div className="flex flex-col gap-1">
-                  <span className="text-white font-semibold group-hover:text-blue-400 transition-colors">Multiplayer Mode</span>
+                  <span className="text-white font-medium">
+                    {gameMode === 'SINGLE' ? 'Single Player (Hotseat)' : 'Multiplayer (LAN)'}
+                  </span>
                   <span className="text-[11px] text-slate-500 uppercase tracking-wider font-bold">
-                    {gameMode === 'MULTIPLE' ? 'Online PvP Enabled' : 'Local Training Only'}
+                    {gameMode === 'SINGLE' ? '2 players on same machine' : 'Other sockets at same URL'}
                   </span>
                 </div>
-                <div 
-                  className={`w-[51px] h-[31px] rounded-full p-[2px] transition-colors duration-300 relative flex items-center ${gameMode === 'MULTIPLE' ? 'bg-[#34C759]' : 'bg-[#39393d]'}`}
-                >
-                  <motion.div 
-                    className="w-[27px] h-[27px] bg-white rounded-full shadow-[0_3px_8px_rgba(0,0,0,0.15)] z-10"
-                    animate={{ 
-                      x: gameMode === 'MULTIPLE' ? 20 : 0 
-                    }}
-                    transition={{ 
-                      type: "spring", 
-                      stiffness: 500, 
-                      damping: 30,
-                      mass: 0.8
-                    }}
-                  />
-                </div>
+                <label className="game-mode-switch">
+                  <input type="checkbox" readOnly checked={gameMode === 'MULTIPLE'} />
+                  <span className="game-mode-slider"></span>
+                </label>
               </div>
             </div>
           </div>
 
-          <button onClick={connect} className="w-full text-lg mt-8 h-14 shadow-lg shadow-blue-500/20">
-            Join Room: {gameId}
-          </button>
+          <div className="w-full mt-4">
+            <button onClick={connect} className="w-full text-lg h-14 shadow-lg shadow-blue-500/20">
+              Join Room: {gameId}
+            </button>
+          </div>
         </motion.div>
       </div>
     );
@@ -219,18 +225,18 @@ const App: React.FC = () => {
       {/* Sidebar - History */}
       <AnimatePresence>
         {showHistory && (
-          <motion.div 
+          <motion.div
             initial={{ width: 0, opacity: 0, x: -50 }}
             animate={{ width: 320, opacity: 1, x: 0 }}
             exit={{ width: 0, opacity: 0, x: -50 }}
-            className="w-80 glass m-4 flex flex-col overflow-hidden relative"
+            className="w-80 history-sidebar glass m-4 flex flex-col overflow-hidden relative"
           >
             <div className="p-4 border-b border-white/10 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <HistoryIcon size={20} className="text-blue-400" />
                 <h2 className="font-bold text-lg">History</h2>
               </div>
-              <button 
+              <button
                 onClick={() => setShowHistory(false)}
                 className="p-1 hover:bg-white/10 rounded-full bg-transparent"
               >
@@ -239,10 +245,10 @@ const App: React.FC = () => {
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
               {history.map((move, i) => (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  key={i} 
+                  key={i}
                   className="flex items-center justify-between p-2 rounded bg-white/5 border border-white/5"
                 >
                   <div className="flex items-center gap-2">
@@ -265,10 +271,10 @@ const App: React.FC = () => {
       </AnimatePresence>
 
       {/* Main Game Area */}
-      <div className="flex-1 flex flex-col items-center justify-center p-4 relative">
-        <div className="mb-6 flex items-center justify-between w-full max-w-[780px]">
+      <div className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-auto">
+        <div className="mb-6 flex flex-wrap items-center justify-between w-full max-w-[1050px] gap-4">
           <div className="flex items-center gap-6">
-            <button 
+            <button
               onClick={() => setShowHistory(!showHistory)}
               className="glass p-2 px-4 flex items-center gap-2 hover:bg-white/10 transition-colors"
             >
@@ -305,15 +311,15 @@ const App: React.FC = () => {
 
         <div className="board-wrapper glass rounded-xl border border-white/10 shadow-2xl custom-scrollbar">
           <div className="game-board">
-            {board.map((row, r) => 
+            {board.map((row, r) =>
               row.map((cell, c) => {
-                const isLastMove = history.length > 0 && 
-                                 history[history.length - 1].row === r && 
-                                 history[history.length - 1].col === c;
-                
+                const isLastMove = history.length > 0 &&
+                  history[history.length - 1].row === r &&
+                  history[history.length - 1].col === c;
+
                 return (
-                  <div 
-                    key={`${r}-${c}`} 
+                  <div
+                    key={`${r}-${c}`}
                     className={`cell ${isLastMove ? 'last-move' : ''}`}
                     onClick={() => makeMove(r, c)}
                   >
@@ -333,7 +339,7 @@ const App: React.FC = () => {
         {/* Winner Overlay */}
         <AnimatePresence>
           {winner && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}

@@ -95,7 +95,7 @@ public class GameController {
         private final java.util.Set<String> players = new java.util.HashSet<>();
         private final java.util.Map<String, Integer> scores = new java.util.HashMap<>();
         private String lastPlayer = null;
-        private GameMessage.GameMode mode = GameMessage.GameMode.MULTIPLE; // Default
+        private GameMessage.GameMode mode = GameMessage.GameMode.SINGLE; // Default
 
         public GameRoom(String id) {
             this.id = id;

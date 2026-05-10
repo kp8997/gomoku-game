@@ -1,3 +1,7 @@
+* {
+  box-sizing: border-box;
+}
+
 :root {
   font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -166,7 +170,7 @@ button:active {
 input {
   background: rgba(15, 23, 42, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 14px;
+  padding: 16px;
   border-radius: 12px;
   color: white;
   outline: none;
@@ -193,17 +197,34 @@ input:focus {
 .w-80 { width: 20rem; }
 .p-2 { padding: 0.5rem; }
 .p-4 { padding: 1rem; }
+.p-6 { padding: 1.5rem; }
 .p-8 { padding: 2rem; }
+.p-10 { padding: 2.5rem; }
 .p-12 { padding: 3rem; }
+.px-4 { padding-left: 1rem; padding-right: 1rem; }
+.px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+.px-10 { padding-left: 2.5rem; padding-right: 2.5rem; }
+.py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+.py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+.py-5 { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+.py-6 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+.py-12 { padding-top: 3rem; padding-bottom: 3rem; }
+.py-14 { padding-top: 3.5rem; padding-bottom: 3.5rem; }
 .m-4 { margin: 1rem; }
 .mb-2 { margin-bottom: 0.5rem; }
+.mb-4 { margin-bottom: 1rem; }
 .mb-6 { margin-bottom: 1.5rem; }
 .mt-4 { margin-top: 1rem; }
+.mt-8 { margin-top: 2rem; }
 .mt-10 { margin-top: 2.5rem; }
 .gap-1 { gap: 0.25rem; }
 .gap-2 { gap: 0.5rem; }
+.gap-3 { gap: 0.75rem; }
 .gap-4 { gap: 1rem; }
 .gap-6 { gap: 1.5rem; }
+.gap-8 { gap: 2rem; }
+.gap-10 { gap: 2.5rem; }
+.gap-12 { gap: 3rem; }
 .max-w-md { max-width: 28rem; }
 .max-w-full { max-width: 100%; }
 .rounded { border-radius: 0.25rem; }
@@ -252,19 +273,28 @@ input:focus {
 @media (max-width: 1024px) {
   .app-container {
     flex-direction: column;
-    height: auto;
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
   }
   
-  .w-80 {
-    width: auto;
-    margin: 1rem;
-    height: 300px; /* Fixed height for history on mobile */
-    order: 2; /* Move history below board */
+  /* History as overlay on mobile */
+  .history-sidebar {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 100;
+    margin: 0 !important;
+    border-radius: 0 16px 16px 0 !important;
+    height: 100% !important;
+    width: 280px !important;
   }
 
   .flex-1 {
-    order: 1;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
   }
 }
 
@@ -289,4 +319,61 @@ input:focus {
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
+}
+
+/* Toggle Switch Button from Vetrivel-VP */
+.game-mode-switch {
+  --width-of-switch: 3.5em;
+  --height-of-switch: 2em;
+  /* size of the icon : sun & moon */
+  --size-of-icon: 1.4em;
+  /* inline padding for the switch */
+  --slider-offset: 0.3em;
+  display: block;
+  position: relative;
+  width: var(--width-of-switch);
+  height: var(--height-of-switch);
+  pointer-events: none; /* Let parent handle clicks */
+}
+
+.game-mode-switch input {
+  /* hide the input */
+  width: 0;
+  height: 0;
+  opacity: 0;
+  position: absolute;
+}
+
+.game-mode-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  transition: 0.4s;
+  border-radius: 30px;
+}
+
+.game-mode-slider::before {
+  position: absolute;
+  content: "";
+  height: var(--size-of-icon, 1.4em);
+  width: var(--size-of-icon, 1.4em);
+  border-radius: 20px;
+  left: var(--slider-offset, 0.3em);
+  top: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(40deg, #3b82f6, #06b6d4 70%);
+  transition: 0.4s;
+}
+
+.game-mode-switch input:checked + .game-mode-slider {
+  background: #1e293b;
+}
+
+.game-mode-switch input:checked + .game-mode-slider::before {
+  left: calc(100% - (var(--size-of-icon, 1.4em) + var(--slider-offset, 0.3em)));
+  background: #1e293b;
+  box-shadow: inset -3px -2px 5px -2px #60a5fa, inset -10px -4px 0 0 #3b82f6;
 }
