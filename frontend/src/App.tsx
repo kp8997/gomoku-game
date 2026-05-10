@@ -306,20 +306,26 @@ const App: React.FC = () => {
         <div className="board-wrapper glass rounded-xl border border-white/10 shadow-2xl custom-scrollbar">
           <div className="game-board">
             {board.map((row, r) => 
-              row.map((cell, c) => (
-                <div 
-                  key={`${r}-${c}`} 
-                  className="cell"
-                  onClick={() => makeMove(r, c)}
-                >
-                  {cell === 'X' && (
-                    <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="stone-x">X</motion.span>
-                  )}
-                  {cell === 'O' && (
-                    <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="stone-o">O</motion.span>
-                  )}
-                </div>
-              ))
+              row.map((cell, c) => {
+                const isLastMove = history.length > 0 && 
+                                 history[history.length - 1].row === r && 
+                                 history[history.length - 1].col === c;
+                
+                return (
+                  <div 
+                    key={`${r}-${c}`} 
+                    className={`cell ${isLastMove ? 'last-move' : ''}`}
+                    onClick={() => makeMove(r, c)}
+                  >
+                    {cell === 'X' && (
+                      <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="stone-x">X</motion.span>
+                    )}
+                    {cell === 'O' && (
+                      <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="stone-o">O</motion.span>
+                    )}
+                  </div>
+                );
+              })
             )}
           </div>
         </div>

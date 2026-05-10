@@ -63,8 +63,8 @@ body {
 
 .game-board {
   display: grid;
-  grid-template-columns: repeat(30, 25px);
-  grid-template-rows: repeat(30, 25px);
+  grid-template-columns: repeat(30, 35px);
+  grid-template-rows: repeat(30, 35px);
   gap: 1px;
   background-color: rgba(255, 255, 255, 0.1);
   border: 2px solid rgba(255, 255, 255, 0.2);
@@ -73,8 +73,8 @@ body {
 }
 
 .cell {
-  width: 25px;
-  height: 25px;
+  width: 35px;
+  height: 35px;
   background-color: #1e293b;
   display: flex;
   align-items: center;
@@ -97,8 +97,33 @@ body {
 .stone-o {
   color: #ec4899;
   font-weight: bold;
-  font-size: 18px;
+  font-size: 24px;
   text-shadow: 0 0 8px rgba(236, 72, 153, 0.5);
+}
+
+.cell.last-move {
+  background-color: rgba(59, 130, 246, 0.15);
+  box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.3);
+  position: relative;
+}
+
+.cell.last-move::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background-color: #facc15;
+  border-radius: 50%;
+  top: 4px;
+  right: 4px;
+  box-shadow: 0 0 8px #facc15;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.6; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 button {
