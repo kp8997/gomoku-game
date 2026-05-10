@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gomoku-backend
+    ports:
+      - "8888:8888"
+    restart: unless-stopped
+    networks:
+      - gomoku-network
+
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: gomoku-frontend
+    ports:
+      - "9999:9999"
+    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - gomoku-network
+
+networks:
+  gomoku-network:
+    name: gomoku-network
+    driver: bridge
