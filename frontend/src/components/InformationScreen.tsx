@@ -72,13 +72,13 @@ const InformationScreen: React.FC<InformationScreenProps> = ({
               <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 ml-1">Offline Game Type</label>
               <div
                 onClick={() => setGameMode(prev => prev === 'MULTIPLE' ? 'SINGLE' : 'MULTIPLE')}
-                className="bg-[#1e293b]/50 p-4 rounded-2xl flex items-center justify-between w-full border border-white/5 cursor-pointer hover:bg-[#1e293b]/80 transition-all duration-300"
+                className="bg-[var(--item-bg)] p-4 rounded-2xl flex items-center justify-between w-full border border-[var(--item-border)] cursor-pointer hover:bg-white/5 transition-all duration-300"
               >
                 <div className="flex flex-col gap-1">
-                  <span className="text-white font-medium">
+                  <span className="text-[var(--text-color)] font-medium">
                     {gameMode === 'SINGLE' ? 'Single Player (Hotseat)' : 'Multiplayer (LAN)'}
                   </span>
-                  <span className="text-[11px] text-slate-500 uppercase tracking-wider font-bold">
+                  <span className="text-slate-500 text-[11px] uppercase tracking-wider font-bold opacity-70">
                     {gameMode === 'SINGLE' ? '2 players on same machine' : 'Other sockets at same URL'}
                   </span>
                 </div>

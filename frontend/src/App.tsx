@@ -114,7 +114,8 @@ const App: React.FC = () => {
 
   const connect = () => {
     if (!username) return;
-    const socket = new SockJS(`http://${window.location.hostname}:8888/ws-gomoku`);
+    const backendUrl = import.meta.env.VITE_WS_URL || `http://${window.location.hostname}:8888/ws-gomoku`;
+    const socket = new SockJS(backendUrl);
     stompClient.current = Stomp.over(socket);
     stompClient.current.debug = () => { };
     stompClient.current.connect({}, () => {
@@ -139,11 +140,15 @@ const App: React.FC = () => {
       {/* Settings Bar */}
       <div className="fixed top-6 right-6 flex gap-3 z-50">
         <button
-          className="!bg-none !border-none !shadow-none !backdrop-blur-none p-2 flex items-center justify-center hover:bg-white/5 transition-all duration-200 rounded-full !transform-none !brightness-100"
+          className="!bg-none !border-none !shadow-none !backdrop-blur-none p-2.5 flex items-center justify-center hover:bg-white/10 transition-all duration-300 rounded-full group"
           onClick={() => setIsLightMode(!isLightMode)}
           title={isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
         >
-          {isLightMode ? <Moon size={20} className="text-slate-400 hover:text-blue-400" /> : <Sun size={20} className="text-yellow-400 hover:text-yellow-300" />}
+          {isLightMode ? (
+            <Moon size={24} className="text-slate-400 group-hover:text-blue-400 drop-shadow-[0_0_8px_rgba(148,163,184,0.3)] group-hover:drop-shadow-[0_0_12px_rgba(59,130,246,0.6)] transition-all" />
+          ) : (
+            <Sun size={24} className="text-yellow-400 group-hover:text-yellow-300 drop-shadow-[0_0_8px_rgba(250,204,21,0.4)] group-hover:drop-shadow-[0_0_15px_rgba(250,204,21,0.8)] transition-all" />
+          )}
         </button>
       </div>
 
