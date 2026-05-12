@@ -37,17 +37,17 @@ const App: React.FC = () => {
   const [winner, setWinner] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState<boolean>(false);
   const [scores, setScores] = useState<Record<string, number>>({});
-  const [isLightMode, setIsLightMode] = useState<boolean>(false);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
   const [copied, setCopied] = useState<boolean>(false);
   const stompClient = useRef<Stomp.Client | null>(null);
 
   useEffect(() => {
-    if (isLightMode) {
-      document.body.classList.add('light');
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
     } else {
-      document.body.classList.remove('light');
+      document.documentElement.classList.remove('dark');
     }
-  }, [isLightMode]);
+  }, [isDarkMode]);
 
   const generateRandomName = () => {
     const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
@@ -135,14 +135,14 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen w-full bg-[var(--bg-color)] text-[var(--text-color)] overflow-hidden">
+    <div className="flex flex-col min-h-screen w-full bg-surface text-content overflow-x-hidden overflow-y-auto transition-colors duration-300">
       <Header
         isJoined={isJoined}
         scores={scores}
         showHistory={showHistory}
         setShowHistory={setShowHistory}
-        isLightMode={isLightMode}
-        setIsLightMode={setIsLightMode}
+        isLightMode={!isDarkMode}
+        setIsLightMode={() => setIsDarkMode(!isDarkMode)}
       />
 
       <div className="flex-1 flex flex-col relative overflow-hidden">

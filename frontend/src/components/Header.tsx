@@ -20,13 +20,13 @@ const Header: React.FC<HeaderProps> = ({
           <>
             <button
               onClick={() => setShowHistory(!showHistory)}
-              className="bg-[var(--glass-bg)] backdrop-blur-md border border-[var(--glass-border)] rounded-xl p-2 px-4 flex items-center gap-2 hover:bg-white/10 transition-colors border-none shadow-none"
+              className="bg-[var(--glass-bg)] backdrop-blur-md border border-[var(--glass-border)] rounded-xl p-2 px-4 flex items-center gap-2 hover:bg-[var(--hover-bg)] transition-colors border-none shadow-none text-[var(--text-color)]"
             >
-              <HistoryIcon size={18} />
-              <span className="text-sm font-medium hidden sm:inline">{showHistory ? 'Hide' : 'Show'} History</span>
+              <HistoryIcon size={18} className="text-blue-500" />
+              <span className="text-sm font-bold hidden sm:inline">{showHistory ? 'Hide' : 'Show'} History</span>
             </button>
 
-            <div className="h-6 w-px bg-white/10 mx-2 hidden sm:block"></div>
+            <div className="h-6 w-px bg-[var(--glass-border)] mx-2 hidden sm:block"></div>
 
             <div className="flex items-center gap-6">
               {Object.entries(scores).length > 0 ? (
@@ -34,7 +34,7 @@ const Header: React.FC<HeaderProps> = ({
                   <div key={player} className="flex items-center gap-3">
                     <div className={`w-3 h-3 rounded-full ${idx % 2 === 0 ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'bg-pink-500 shadow-[0_0_8px_rgba(236,72,153,0.5)]'}`}></div>
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-slate-500 uppercase font-bold leading-none mb-1">{player}</span>
+                      <span className="text-[10px] text-[var(--text-muted)] uppercase font-bold leading-none mb-1">{player}</span>
                       <span className="text-xl font-black leading-none">{score}</span>
                     </div>
                   </div>
@@ -43,11 +43,11 @@ const Header: React.FC<HeaderProps> = ({
                 <>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div>
-                    <span className="text-sm font-medium hidden md:inline">Player X</span>
+                    <span className="text-sm font-bold hidden md:inline">Player X</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-pink-500 shadow-[0_0_8px_rgba(236,72,153,0.5)]"></div>
-                    <span className="text-sm font-medium hidden md:inline">Player O</span>
+                    <span className="text-sm font-bold hidden md:inline">Player O</span>
                   </div>
                 </>
               )}
@@ -61,14 +61,14 @@ const Header: React.FC<HeaderProps> = ({
           20x20 Arena
         </div>
         <button
-          className="!bg-none !border-none !shadow-none !backdrop-blur-none p-2 flex items-center justify-center hover:bg-white/10 transition-all duration-300 rounded-full group"
+          className="!bg-none !border-none !shadow-none !backdrop-blur-none p-2 flex items-center justify-center hover:bg-[var(--hover-bg)] transition-all duration-300 rounded-full group"
           onClick={() => setIsLightMode(!isLightMode)}
           title={isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
         >
           {isLightMode ? (
-            <Moon size={22} className="text-slate-400 group-hover:text-blue-400 drop-shadow-[0_0_8px_rgba(148,163,184,0.3)] group-hover:drop-shadow-[0_0_12px_rgba(59,130,246,0.6)] transition-all" />
+            <Moon size={22} className="text-[var(--text-color)] group-hover:text-blue-600 transition-all" />
           ) : (
-            <Sun size={22} className="text-yellow-400 group-hover:text-yellow-300 drop-shadow-[0_0_8px_rgba(250,204,21,0.4)] group-hover:drop-shadow-[0_0_15px_rgba(250,204,21,0.8)] transition-all" />
+            <Sun size={22} className="text-yellow-400 group-hover:text-yellow-300 drop-shadow-[0_0_8px_rgba(250,204,21,0.4)] transition-all" />
           )}
         </button>
       </div>

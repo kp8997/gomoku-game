@@ -1,187 +1,68 @@
 @import "tailwindcss";
 
-:root {
-  --bg-color: #131c2e;
-  --text-color: rgba(255, 255, 255, 0.92);
-  --glass-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 100%);
-  --glass-border: rgba(255, 255, 255, 0.15);
-  --cell-bg: #1e2d45;
-  --cell-hover: #2a3f5e;
-  --board-bg: rgba(255, 255, 255, 0.1);
-  --board-border: rgba(255, 255, 255, 0.2);
-  --text-muted: #94a3b8;
-  --input-bg: rgba(15, 23, 42, 0.6);
-  --item-bg: rgba(255, 255, 255, 0.05);
-  --item-border: rgba(255, 255, 255, 0.1);
-  color-scheme: dark;
-}
-
-body.light {
-  --bg-color: #cbd5e1;
-  --text-color: #0f172a;
-  --glass-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.8) 100%);
-  --glass-border: rgba(255, 255, 255, 0.6);
-  --cell-bg: #f8fafc;
-  --cell-hover: #f1f5f9;
-  --board-bg: rgba(0, 0, 0, 0.1);
-  --board-border: rgba(0, 0, 0, 0.2);
-  --text-muted: #475569;
-  --input-bg: #ffffff;
-  --item-bg: rgba(255, 255, 255, 0.5);
-  --item-border: rgba(0, 0, 0, 0.05);
-  color-scheme: light;
-}
-
 @theme {
-  --color-bg: var(--bg-color);
-  --color-text: var(--text-color);
-  --color-text-muted: var(--text-muted);
+  /* Design Tokens */
+  --color-brand: #3b82f6;
+  --color-brand-dark: #1d4ed8;
+  --color-accent: #ec4899;
+  
+  /* Backgrounds */
+  --color-surface: #f1f5f9;
+  --color-surface-dark: #0f172a;
+  
+  /* Glassmorphism Defaults (Light Mode) */
+  --color-glass-bg: rgba(255, 255, 255, 0.85);
+  --color-glass-border: rgba(15, 23, 42, 0.15);
+  
+  /* Text Defaults (Light Mode) */
+  --color-content: #0f172a;
+  --color-content-muted: #334155;
 }
 
-body {
-  margin: 0;
-  @apply flex justify-center min-h-screen overflow-hidden;
-  background-color: var(--bg-color);
-  color: var(--text-color);
-}
-
-@media (max-width: 768px) {
+/* Custom Utilities and Base Styles */
+@layer base {
   body {
-    overflow: auto;
+    @apply transition-colors duration-300;
   }
+  
+  /* Dark Mode Overrides via CSS variables (Modern Approach) */
+  .dark {
+    --color-surface: #131c2e;
+    --color-content: rgba(255, 255, 255, 0.92);
+    --color-content-muted: #94a3b8;
+    --color-glass-bg: rgba(255, 255, 255, 0.05);
+    --color-glass-border: rgba(255, 255, 255, 0.15);
+  }
+}
+
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 dark:bg-slate-700 rounded-full hover:bg-slate-400 dark:hover:bg-slate-600;
+  }
+}
+
+/* Global resets and structure */
+body {
+  @apply m-0 min-h-screen bg-surface text-content flex justify-center;
 }
 
 #root {
   @apply w-full h-screen flex flex-col;
 }
 
-.glass {
-  background: var(--glass-bg);
-  @apply backdrop-blur-xl border rounded-2xl;
-  border-color: var(--glass-border);
+/* Reusable Components via Tailwind Classes */
+.glass-card {
+  @apply backdrop-blur-2xl border border-glass-border bg-glass-bg shadow-2xl;
 }
 
-.game-board {
-  @apply grid gap-px m-auto;
-  grid-template-columns: repeat(20, 35px);
-  grid-template-rows: repeat(20, 35px);
-  background-color: var(--board-bg);
-  border: 2px solid var(--board-border);
-  padding: 1px;
-}
-
-.cell {
-  width: 35px;
-  height: 35px;
-  background-color: var(--cell-bg);
-  @apply flex items-center justify-center cursor-pointer transition-all duration-200;
-}
-
-.cell:hover {
-  background-color: var(--cell-hover);
-}
-
-.stone-x {
-  @apply font-bold text-blue-500;
-  font-size: 18px;
-  text-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
-}
-
-.stone-o {
-  @apply font-bold text-pink-500;
-  font-size: 24px;
-  text-shadow: 0 0 8px rgba(236, 72, 153, 0.5);
-}
-
-@media (max-width: 768px) {
-  .game-board {
-    grid-template-columns: repeat(20, 22px);
-    grid-template-rows: repeat(20, 22px);
-  }
-  .cell {
-    width: 22px;
-    height: 22px;
-  }
-  .stone-x { font-size: 14px; }
-  .stone-o { font-size: 18px; }
-}
-
-.cell.last-move {
-  background-color: rgba(59, 130, 246, 0.15);
-  box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.3);
-  @apply relative;
-}
-
-.cell.last-move::after {
-  content: '';
-  @apply absolute rounded-full bg-yellow-400;
-  width: 8px;
-  height: 8px;
-  top: 4px;
-  right: 4px;
-  box-shadow: 0 0 8px #facc15;
-  animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.5); opacity: 0.6; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-button {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  @apply text-white font-semibold rounded-xl transition-all duration-200 shadow-md cursor-pointer border border-white/10;
-  padding: 12px 24px;
-}
-
-button:hover {
-  @apply brightness-110 -translate-y-px shadow-lg;
-}
-
-button:active {
-  @apply translate-y-0 scale-95;
-}
-
-.btn-secondary {
-  @apply bg-white/5 border border-white/10;
-}
-
-.btn-secondary:hover {
-  @apply bg-white/10;
-}
-
-.btn-active {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  @apply border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.4)];
-}
-
-input {
-  background: var(--input-bg);
-  @apply border rounded-xl p-4 text-base outline-none transition-all duration-200;
-  border-color: var(--glass-border);
-  color: var(--text-color);
-}
-
-input:focus {
-  @apply border-blue-500 bg-slate-900/80 shadow-[0_0_0_4px_rgba(59,130,246,0.1)];
-}
-
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
+/* Game Board Specifics */
 .game-mode-switch {
   --width-of-switch: 3.5em;
   --height-of-switch: 2em;
@@ -190,7 +71,6 @@ input:focus {
   position: relative;
   width: var(--width-of-switch);
   height: var(--height-of-switch);
-  pointer-events: none;
 }
 
 .game-mode-switch input {
@@ -200,37 +80,18 @@ input:focus {
 }
 
 .game-mode-slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--item-border);
-  transition: .4s;
-  border-radius: 30px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  @apply absolute cursor-pointer inset-0 bg-slate-200 dark:bg-slate-800 transition-all duration-300 rounded-full border border-glass-border;
 }
 
 .game-mode-slider:before {
-  position: absolute;
   content: "";
-  height: var(--size-of-icon);
-  width: var(--size-of-icon);
-  border-radius: 20px;
-  left: var(--slider-offset);
-  top: 50%;
-  transform: translateY(-50%);
-  background: white;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  transition: .4s;
+  @apply absolute h-[var(--size-of-icon)] w-[var(--size-of-icon)] rounded-full left-[var(--slider-offset)] top-1/2 -translate-y-1/2 bg-white shadow-md transition-all duration-300;
 }
 
-.game-mode-switch input:checked+.game-mode-slider {
-  @apply bg-blue-500;
+.game-mode-switch input:checked + .game-mode-slider {
+  @apply bg-blue-600;
 }
 
-.game-mode-switch input:checked+.game-mode-slider::before {
-  left: calc(100% - (var(--size-of-icon, 1.4em) + var(--slider-offset, 0.3em)));
-  background: white;
+.game-mode-switch input:checked + .game-mode-slider:before {
+  left: calc(100% - (var(--size-of-icon) + var(--slider-offset)));
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { History as HistoryIcon, Trophy, Hash } from 'lucide-react';
+import { History as HistoryIcon, Trophy, Hash, X } from 'lucide-react';
 import { type Move } from '../types';
 
 interface MainGameProps {
@@ -18,78 +18,102 @@ const MainGame: React.FC<MainGameProps> = ({
   board, history, winner, gameId, showHistory, setShowHistory, makeMove, resetGame
 }) => {
   return (
-    <div className="game-content flex flex-1 overflow-hidden relative">
+    <div className="flex-1 flex flex-col lg:flex-row min-h-0 relative overflow-hidden">
       {/* Sidebar - History */}
       <AnimatePresence>
         {showHistory && (
           <motion.div
-            initial={{ width: 0, opacity: 0, x: -50 }}
-            animate={{ width: window.innerWidth <= 768 ? '85vw' : 320, opacity: 1, x: 0 }}
-            exit={{ width: 0, opacity: 0, x: -50 }}
-            className="bg-[var(--glass-bg)] backdrop-blur-xl border border-[var(--glass-border)] rounded-2xl w-full lg:w-80 flex flex-col h-full max-h-[85vh] lg:max-h-[600px] m-0 md:m-4 overflow-hidden relative shadow-2xl z-20"
+            initial={{ x: -320, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -320, opacity: 0 }}
+            className="fixed inset-y-0 left-0 w-[85vw] sm:w-80 bg-[var(--glass-bg)] backdrop-blur-2xl border-r border-[var(--glass-border)] flex flex-col z-[60] shadow-2xl lg:relative lg:inset-auto lg:h-full lg:max-h-none"
           >
-            <div className="p-4 border-b border-[var(--item-border)] flex items-center justify-between">
-              <div className="flex items-center gap-2">
+            <div className="p-6 border-b border-[var(--item-border)] flex items-center justify-between">
+              <div className="flex items-center gap-3">
                 <HistoryIcon size={20} className="text-blue-500" />
-                <h2 className="font-bold text-lg text-[var(--text-color)]">History</h2>
+                <h2 className="font-bold text-lg text-[var(--text-color)]">Move History</h2>
               </div>
               <button
                 onClick={() => setShowHistory(false)}
-                className="p-1 hover:bg-white/10 rounded-full bg-transparent border-none shadow-none text-[var(--text-muted)]"
+                className="p-2 hover:bg-white/10 rounded-full transition-colors text-[var(--text-muted)] border-none bg-transparent shadow-none"
               >
-                ✕
+                <X size={20} />
               </button>
             </div>
+            
             <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
-              {history.map((move, i) => (
+              {history.length > 0 ? (
+                history.map((move, i) => (
                   <div
                     key={i}
-                    className="flex items-center justify-between p-2 rounded bg-[var(--item-bg)] border border-[var(--item-border)]"
+                    className="flex items-center justify-between p-3 rounded-xl bg-[var(--item-bg)] border border-[var(--item-border)] shadow-sm"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className={`font-bold ${move.symbol === 'X' ? 'text-blue-500' : 'text-pink-500'}`}>
+                    <div className="flex items-center gap-3">
+                      <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-black ${move.symbol === 'X' ? 'bg-blue-500/10 text-blue-500' : 'bg-pink-500/10 text-pink-500'}`}>
                         {move.symbol}
                       </span>
-                      <span className="text-[var(--text-color)] text-sm font-medium">{move.player}</span>
+                      <span className="text-[var(--text-color)] text-sm font-semibold truncate max-w-[120px]">{move.player}</span>
                     </div>
-                    <span className="text-[var(--text-muted)] text-xs font-bold opacity-80">[{move.row}, {move.col}]</span>
+                    <span className="text-[var(--text-muted)] text-xs font-mono bg-white/5 px-2 py-1 rounded">[{move.row}, {move.col}]</span>
                   </div>
-              ))}
-              {history.length === 0 && <p className="text-[var(--text-muted)] text-center mt-10">No moves yet</p>}
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full opacity-30 text-[var(--text-muted)]">
+                  <HistoryIcon size={48} className="mb-4" />
+                  <p>No moves yet</p>
+                </div>
+              )}
             </div>
-            <div className="p-4 border-t border-[var(--item-border)] text-xs text-[var(--text-muted)] flex items-center gap-1">
-              <Hash size={12} />
-              <span className="font-bold opacity-80">Room: {gameId}</span>
+
+            <div className="p-6 border-t border-[var(--item-border)] bg-black/5 flex items-center gap-2">
+              <Hash size={14} className="text-blue-500" />
+              <span className="text-xs font-bold tracking-wider text-[var(--text-muted)] uppercase">Room: {gameId}</span>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Main Game Area */}
-      <main className="flex-1 flex flex-col items-center justify-center p-6 overflow-auto">
-        <div className="bg-[var(--glass-bg)] backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl custom-scrollbar overflow-auto max-w-full max-h-[85vh] p-4">
-          <div className="game-board">
+      {/* Main Board Area */}
+      <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 min-h-0 relative overflow-hidden">
+        {/* Board Container with Scroll */}
+        <div className="w-full h-full flex items-center justify-center overflow-auto custom-scrollbar rounded-3xl bg-black/5 border border-white/5 shadow-inner p-4 sm:p-8">
+          <div 
+            className="grid gap-0 bg-slate-800 p-[2px] shadow-2xl border-[6px] border-slate-700 rounded-sm"
+            style={{
+              gridTemplateColumns: `repeat(${board.length}, 1fr)`,
+              width: 'min-content'
+            }}
+          >
             {board.map((row, r) =>
-              row.map((cell, c) => {
-                const isLastMove = history.length > 0 &&
-                  history[history.length - 1].row === r &&
-                  history[history.length - 1].col === c;
-
-                return (
-                  <div
-                    key={`${r}-${c}`}
-                    className={`cell ${isLastMove ? 'last-move' : ''}`}
-                    onClick={() => makeMove(r, c)}
-                  >
-                    {cell === 'X' && (
-                      <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="stone-x">X</motion.span>
-                    )}
-                    {cell === 'O' && (
-                      <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} className="stone-o">O</motion.span>
-                    )}
+              row.map((cell, c) => (
+                <div
+                  key={`${r}-${c}`}
+                  className="w-9 h-9 sm:w-11 sm:h-11 bg-slate-900 border-[0.5px] border-slate-800/50 flex items-center justify-center cursor-pointer hover:bg-slate-800 transition-colors relative group"
+                  onClick={() => makeMove(r, c)}
+                >
+                  {/* Grid intersection helper */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-10 group-hover:opacity-30 pointer-events-none">
+                    <div className="w-full h-[1px] bg-slate-500"></div>
+                    <div className="h-full w-[1px] bg-slate-500 absolute"></div>
                   </div>
-                );
-              })
+
+                  {cell && (
+                    <motion.div 
+                      initial={{ scale: 0, rotate: -45 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      className={`
+                        w-7 h-7 sm:w-9 sm:h-9 rounded-full shadow-xl flex items-center justify-center text-xs sm:text-base font-black z-10
+                        ${cell === 'X'
+                          ? 'bg-blue-600 text-white shadow-blue-900/40 ring-2 ring-blue-400/30'
+                          : 'bg-pink-600 text-white shadow-pink-900/40 ring-2 ring-pink-400/30'
+                        }
+                      `}
+                    >
+                      {cell}
+                    </motion.div>
+                  )}
+                </div>
+              ))
             )}
           </div>
         </div>
@@ -98,25 +122,43 @@ const MainGame: React.FC<MainGameProps> = ({
         <AnimatePresence>
           {winner && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-[100] p-6"
             >
-              <div className="bg-[var(--glass-bg)] backdrop-blur-xl border border-[var(--glass-border)] rounded-[40px] p-12 text-center flex flex-col items-center gap-6 shadow-2xl">
-                <div className="w-24 h-24 rounded-full bg-yellow-500/20 flex items-center justify-center">
-                  <Trophy size={60} className="text-yellow-400" />
+              <motion.div
+                initial={{ scale: 0.8, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                className="bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-[3rem] p-10 md:p-16 text-center flex flex-col items-center gap-8 shadow-2xl max-w-lg w-full"
+              >
+                <div className="relative">
+                  <div className="w-28 h-28 rounded-full bg-yellow-500/20 flex items-center justify-center animate-bounce">
+                    <Trophy size={64} className="text-yellow-400" />
+                  </div>
+                  <motion.div 
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ repeat: Infinity, duration: 2 }}
+                    className="absolute -top-2 -right-2 bg-pink-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg"
+                  >
+                    CHAMPION
+                  </motion.div>
                 </div>
-                <h2 className="text-5xl font-bold text-white tracking-tighter">{winner} WINS!</h2>
-                <p className="text-slate-400 text-lg">The match has been decided.</p>
-                <button onClick={resetGame} className="mt-4 px-12 py-5 text-xl bg-linear-to-br from-blue-500 to-blue-700 hover:from-blue-400 hover:to-blue-600 border-none shadow-none">
-                  Play Again
+                <div>
+                  <h2 className="text-5xl font-black text-white tracking-tighter mb-2">{winner}</h2>
+                  <p className="text-slate-400 text-lg font-medium">Has conquered the arena!</p>
+                </div>
+                <button 
+                  onClick={resetGame} 
+                  className="w-full py-5 text-xl font-black bg-blue-600 hover:bg-blue-500 text-white rounded-2xl transition-all shadow-xl shadow-blue-500/20 active:scale-95 border-none"
+                >
+                  PLAY AGAIN
                 </button>
-              </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
-      </main>
+      </div>
     </div>
   );
 };
