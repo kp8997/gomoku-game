@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import SockJS from 'sockjs-client';
 import Stomp from 'stompjs';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Trophy, History as HistoryIcon, Hash, Sun, Moon } from 'lucide-react';
+import { User, Trophy, History as HistoryIcon, Hash, Sun, Moon, RefreshCw } from 'lucide-react';
 import './index.css';
 
 const BOARD_SIZE = 20;
@@ -13,6 +13,18 @@ interface Move {
   col: number;
   symbol: string;
 }
+
+const ADJECTIVES = [
+  "Sleepy", "Graceful", "Mighty", "Wandering", "Cheerful", "Swift", 
+  "Noble", "Gentle", "Clever", "Vibrant", "Cunning", "Peaceful", 
+  "Dashing", "Sturdy", "Loyal", "Wise", "Brave", "Playful"
+];
+
+const ANIMALS = [
+  "Panda", "Fox", "Crane", "Tiger", "Koi", "Dragon", 
+  "Badger", "Owl", "Sparrow", "Wolf", "Rabbit", "Deer", 
+  "Turtle", "Otter", "Falcon", "Lynx", "Phoenix", "Leopard"
+];
 
 interface GameMessage {
   type: 'CHAT' | 'JOIN' | 'MOVE' | 'LEAVE' | 'START' | 'WIN';
@@ -50,7 +62,14 @@ const App: React.FC = () => {
     }
   }, [isLightMode]);
 
+  const generateRandomName = () => {
+    const adj = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)];
+    const animal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
+    setUsername(`${adj} ${animal}`);
+  };
+
   useEffect(() => {
+    generateRandomName();
     const urlParams = new URLSearchParams(window.location.search);
     const room = urlParams.get('room') || Math.random().toString(36).substring(7);
     setGameId(room);
@@ -182,17 +201,26 @@ const App: React.FC = () => {
             <p className="text-slate-400 text-center text-sm mb-4">Strategic 20x20 real-time battle</p>
 
             <div className="w-full flex flex-col gap-10">
-              <div className="flex flex-col gap-3">
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 ml-1">Your Name</label>
+            <div className="flex flex-col gap-3">
+              <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 ml-1">Your Name</label>
+              <div className="relative group">
                 <input
                   type="text"
                   placeholder="Enter your name..."
-                  className="w-full text-center"
+                  className="w-full text-center pr-12"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && connect()}
                 />
+                <button
+                  onClick={generateRandomName}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-slate-500 hover:text-blue-400 transition-colors bg-transparent border-none shadow-none"
+                  title="Generate random name"
+                >
+                  <RefreshCw size={18} />
+                </button>
               </div>
+            </div>
 
               <div className="flex flex-col gap-3">
                 <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 ml-1">Network Mode</label>
