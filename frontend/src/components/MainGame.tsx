@@ -114,19 +114,27 @@ const MainGame: React.FC<MainGameProps> = ({
                     {isLastMove && (
                       <motion.div
                         layoutId="lastMoveIndicator"
-                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-yellow-400/30 blur-sm rounded-full z-0 pointer-events-none"
+                        className="absolute top-1 right-1 w-2.5 h-2.5 bg-yellow-400 rounded-full shadow-[0_0_10px_#facc15] blur-[1px] z-30 pointer-events-none"
                         initial={{ scale: 0 }}
                         animate={{ 
-                          scale: [1, 1.8, 1],
-                          opacity: [0.5, 0.8, 0.5] 
+                          scale: [1, 1.4, 1],
+                          opacity: [0.8, 1, 0.8] 
                         }}
                         transition={{ 
-                          repeat: Infinity,
-                          duration: 2,
+                          scale: { repeat: Infinity, duration: 1.5 },
+                          opacity: { repeat: Infinity, duration: 1.5 },
                           type: "spring", 
                           stiffness: 500, 
                           damping: 30 
                         }}
+                      />
+                    )}
+
+                    {isLastMove && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="absolute inset-0 bg-blue-500/30 dark:bg-blue-500/40 z-0 pointer-events-none"
                       />
                     )}
 
