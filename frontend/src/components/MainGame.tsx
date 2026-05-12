@@ -18,14 +18,19 @@ const MainGame: React.FC<MainGameProps> = ({
   board, history, winner, gameId, showHistory, setShowHistory, makeMove, resetGame
 }) => {
   return (
-    <div className="flex-1 flex flex-col lg:flex-row min-h-0 relative overflow-hidden">
+    <motion.div
+      layout
+      className="flex-1 flex flex-col lg:flex-row min-h-0 relative overflow-hidden"
+    >
       {/* Sidebar - History */}
       <AnimatePresence>
         {showHistory && (
           <motion.div
-            initial={{ x: -320, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -320, opacity: 0 }}
+            layout
+            initial={{ x: -320, opacity: 0, width: 0 }}
+            animate={{ x: 0, opacity: 1, width: 'auto' }}
+            exit={{ x: -320, opacity: 0, width: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="fixed inset-y-0 left-0 w-[85vw] sm:w-80 bg-glass-bg backdrop-blur-3xl border-r border-slate-200/50 dark:border-white/5 rounded-br-3xl flex flex-col z-[60] shadow-xl lg:relative lg:inset-auto lg:h-full lg:max-h-none lg:mb-4 lg:rounded-br-3xl"
           >
             <div className="p-6 border-b border-glass-border flex items-center justify-between">
@@ -65,7 +70,7 @@ const MainGame: React.FC<MainGameProps> = ({
               )}
             </div>
 
-            <div className="p-6 border-t flex align-center justify-center border-glass-border bg-black/5 dark:bg-white/5 flex items-center gap-2">
+            <div className="p-6 border-t border-glass-border bg-black/5 dark:bg-white/5 flex items-center gap-2">
               <Hash size={14} className="text-blue-500" />
               <span className="text-xs font-bold tracking-wider text-content-muted uppercase">Room: {gameId}</span>
             </div>
@@ -74,17 +79,17 @@ const MainGame: React.FC<MainGameProps> = ({
       </AnimatePresence>
 
       {/* Main Board Area */}
-      <motion.div 
+      <motion.div
         layout
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 min-h-0 relative overflow-hidden"
       >
         {/* Board Container with Scroll */}
-        <motion.div 
+        <motion.div
           layout
           className="w-full h-full flex items-center justify-center overflow-auto custom-scrollbar rounded-3xl bg-black/5 dark:bg-white/5 border border-glass-border shadow-inner p-4 sm:p-8"
         >
-          <motion.div 
+          <motion.div
             layout
             className="grid gap-0 bg-board-grid p-[1px] shadow-xl border-4 border-board-grid rounded-sm"
             style={{
@@ -93,32 +98,53 @@ const MainGame: React.FC<MainGameProps> = ({
             }}
           >
             {board.map((row, r) =>
-              row.map((cell, c) => (
-                <div
-                  key={`${r}-${c}`}
-                  className="w-8 h-8 sm:w-10 sm:h-10 bg-board-cell border-[0.5px] border-board-grid/30 flex items-center justify-center cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors relative group"
-                  onClick={() => makeMove(r, c)}
-                >
-                  {/* Grid intersection helper */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-10 group-hover:opacity-20 pointer-events-none">
-                    <div className="w-full h-[1px] bg-board-grid"></div>
-                    <div className="h-full w-[1px] bg-board-grid absolute"></div>
-                  </div>
+              row.map((cell, c) => {
+                const lastMove = history.length > 0 ? history[history.length - 1] : null;
+                const isLastMove = lastMove && lastMove.row === r && lastMove.col === c;
 
-                  {cell && (
-                    <motion.div
-                      initial={{ scale: 0, rotate: -45 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      className={`
-                        flex items-center justify-center text-lg sm:text-2xl font-black z-10 select-none
-                        ${cell === 'X' ? 'text-blue-600 drop-shadow-[0_0_8px_rgba(37,99,235,0.4)]' : 'text-pink-600 drop-shadow-[0_0_8px_rgba(219,39,119,0.4)]'}
-                      `}
-                    >
-                      {cell}
-                    </motion.div>
-                  )}
-                </div>
-              ))
+                return (
+                  <div
+                    key={`${r}-${c}`}
+                    className="w-8 h-8 sm:w-10 sm:h-10 bg-board-cell border-[1px] border-board-grid flex items-center justify-center cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors relative group"
+                    onClick={() => makeMove(r, c)}
+                  >
+                    {/* Minimal Cell Background */}
+                    <div className="absolute inset-0 bg-black/5 dark:bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
+                    {isLastMove && (
+                      <motion.div
+                        layoutId="lastMoveIndicator"
+                        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-yellow-400/30 blur-sm rounded-full z-0 pointer-events-none"
+                        initial={{ scale: 0 }}
+                        animate={{ 
+                          scale: [1, 1.8, 1],
+                          opacity: [0.5, 0.8, 0.5] 
+                        }}
+                        transition={{ 
+                          repeat: Infinity,
+                          duration: 2,
+                          type: "spring", 
+                          stiffness: 500, 
+                          damping: 30 
+                        }}
+                      />
+                    )}
+
+                    {cell && (
+                      <motion.div 
+                        initial={{ scale: 0, rotate: -45 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        className={`
+                          flex items-center justify-center text-xl sm:text-2xl font-black z-10 select-none
+                          ${cell === 'X' ? 'text-blue-600 drop-shadow-[0_0_10px_rgba(37,99,235,0.5)]' : 'text-pink-600 drop-shadow-[0_0_10px_rgba(219,39,119,0.5)]'}
+                        `}
+                      >
+                        {cell}
+                      </motion.div>
+                    )}
+                  </div>
+                );
+              })
             )}
           </motion.div>
         </motion.div>
@@ -157,7 +183,7 @@ const MainGame: React.FC<MainGameProps> = ({
           )}
         </AnimatePresence>
       </motion.div>
-    </div>
+    </motion.div>
   );
 };
 
