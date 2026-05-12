@@ -86,11 +86,13 @@ const App: React.FC = () => {
         setIsJoined(true);
         break;
       case 'MOVE':
-        if (message.row !== undefined && message.col !== undefined && message.sender) {
-          const symbol = history.length % 2 === 0 ? 'X' : 'O';
-          const newBoard = [...board];
-          newBoard[message.row][message.col] = symbol;
-          setBoard(newBoard);
+        if (message.row !== undefined && message.col !== undefined) {
+          const symbol = message.content || (history.length % 2 === 0 ? 'X' : 'O');
+          setBoard(prev => {
+            const next = prev.map(row => [...row]);
+            next[message.row!][message.col!] = symbol;
+            return next;
+          });
           setHistory(prev => [...prev, {
             player: message.sender || 'Unknown',
             row: message.row!,
