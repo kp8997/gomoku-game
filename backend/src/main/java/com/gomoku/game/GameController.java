@@ -90,7 +90,7 @@ public class GameController {
 
     private static class GameRoom {
         private final String id;
-        private final String[][] board = new String[30][30];
+        private final String[][] board = new String[20][20];
         private final java.util.List<GameMessage.Move> history = new ArrayList<>();
         private final java.util.Set<String> players = new java.util.HashSet<>();
         private final java.util.Map<String, Integer> scores = new java.util.HashMap<>();
@@ -106,7 +106,7 @@ public class GameController {
         }
 
         public boolean isValidMove(int r, int c) {
-            return r >= 0 && r < 30 && c >= 0 && c < 30 && board[r][c] == null;
+            return r >= 0 && r < 20 && c >= 0 && c < 20 && board[r][c] == null;
         }
 
         public String getNextSymbol() {
@@ -155,7 +155,7 @@ public class GameController {
             int count = 0;
             int nr = r + dr;
             int nc = c + dc;
-            while (nr >= 0 && nr < 30 && nc >= 0 && nc < 30 && s.equals(board[nr][nc])) {
+            while (nr >= 0 && nr < 20 && nc >= 0 && nc < 20 && s.equals(board[nr][nc])) {
                 count++;
                 nr += dr;
                 nc += dc;
@@ -164,8 +164,8 @@ public class GameController {
         }
 
         public void reset() {
-            for (int i = 0; i < 30; i++) {
-                for (int j = 0; j < 30; j++) {
+            for (int i = 0; i < 20; i++) {
+                for (int j = 0; j < 20; j++) {
                     board[i][j] = null;
                 }
             }
