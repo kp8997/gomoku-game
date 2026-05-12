@@ -172,7 +172,7 @@ const App: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glow-border max-w-md w-full relative"
+          className="max-w-md w-full relative"
         >
           <div className="glass px-10 py-14 w-full flex flex-col gap-12 items-center relative z-10">
             <div className="w-20 h-20 rounded-full bg-blue-500/20 flex items-center justify-center mb-2">
