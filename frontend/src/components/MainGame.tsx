@@ -86,7 +86,7 @@ const MainGame: React.FC<MainGameProps> = ({
         >
           <motion.div 
             layout
-            className="grid gap-0 bg-slate-200 dark:bg-slate-800 p-[1px] shadow-xl border-4 border-slate-300 dark:border-slate-800 rounded-sm"
+            className="grid gap-0 bg-board-grid p-[1px] shadow-xl border-4 border-board-grid rounded-sm"
             style={{
               gridTemplateColumns: `repeat(${board.length}, 1fr)`,
               width: 'min-content'
@@ -96,13 +96,13 @@ const MainGame: React.FC<MainGameProps> = ({
               row.map((cell, c) => (
                 <div
                   key={`${r}-${c}`}
-                  className="w-8 h-8 sm:w-10 sm:h-10 bg-white dark:bg-slate-900 border-[0.5px] border-slate-100 dark:border-slate-800/50 flex items-center justify-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors relative group"
+                  className="w-8 h-8 sm:w-10 sm:h-10 bg-board-cell border-[0.5px] border-board-grid/30 flex items-center justify-center cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors relative group"
                   onClick={() => makeMove(r, c)}
                 >
                   {/* Grid intersection helper */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-5 group-hover:opacity-10 pointer-events-none">
-                    <div className="w-full h-[1px] bg-slate-400 dark:bg-slate-500"></div>
-                    <div className="h-full w-[1px] bg-slate-400 dark:bg-slate-500 absolute"></div>
+                  <div className="absolute inset-0 flex items-center justify-center opacity-10 group-hover:opacity-20 pointer-events-none">
+                    <div className="w-full h-[1px] bg-board-grid"></div>
+                    <div className="h-full w-[1px] bg-board-grid absolute"></div>
                   </div>
 
                   {cell && (
