@@ -28,40 +28,38 @@ const MainGame: React.FC<MainGameProps> = ({
             exit={{ width: 0, opacity: 0, x: -50 }}
             className="bg-[var(--glass-bg)] backdrop-blur-xl border border-[var(--glass-border)] rounded-2xl w-full lg:w-80 flex flex-col h-full max-h-[85vh] lg:max-h-[600px] m-0 md:m-4 overflow-hidden relative shadow-2xl z-20"
           >
-            <div className="p-4 border-b border-white/10 flex items-center justify-between">
+            <div className="p-4 border-b border-[var(--item-border)] flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <HistoryIcon size={20} className="text-blue-400" />
-                <h2 className="font-bold text-lg">History</h2>
+                <HistoryIcon size={20} className="text-blue-500" />
+                <h2 className="font-bold text-lg text-[var(--text-color)]">History</h2>
               </div>
               <button
                 onClick={() => setShowHistory(false)}
-                className="p-1 hover:bg-white/10 rounded-full bg-transparent border-none shadow-none"
+                className="p-1 hover:bg-white/10 rounded-full bg-transparent border-none shadow-none text-[var(--text-muted)]"
               >
                 ✕
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
               {history.map((move, i) => (
-                <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  key={i}
-                  className="flex items-center justify-between p-2 rounded bg-white/5 border border-white/5"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className={`font-bold ${move.symbol === 'X' ? 'text-blue-400' : 'text-pink-400'}`}>
-                      {move.symbol}
-                    </span>
-                    <span className="text-slate-300 text-sm">{move.player}</span>
+                  <div
+                    key={i}
+                    className="flex items-center justify-between p-2 rounded bg-[var(--item-bg)] border border-[var(--item-border)]"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className={`font-bold ${move.symbol === 'X' ? 'text-blue-500' : 'text-pink-500'}`}>
+                        {move.symbol}
+                      </span>
+                      <span className="text-[var(--text-color)] text-sm font-medium">{move.player}</span>
+                    </div>
+                    <span className="text-[var(--text-muted)] text-xs font-bold opacity-80">[{move.row}, {move.col}]</span>
                   </div>
-                  <span className="text-slate-500 text-xs">[{move.row}, {move.col}]</span>
-                </motion.div>
               ))}
-              {history.length === 0 && <p className="text-slate-500 text-center mt-10">No moves yet</p>}
+              {history.length === 0 && <p className="text-[var(--text-muted)] text-center mt-10">No moves yet</p>}
             </div>
-            <div className="p-4 border-t border-white/10 text-xs text-slate-500 flex items-center gap-1">
+            <div className="p-4 border-t border-[var(--item-border)] text-xs text-[var(--text-muted)] flex items-center gap-1">
               <Hash size={12} />
-              <span>Room: {gameId}</span>
+              <span className="font-bold opacity-80">Room: {gameId}</span>
             </div>
           </motion.div>
         )}

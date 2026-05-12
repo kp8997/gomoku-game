@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import SockJS from 'sockjs-client';
 import Stomp from 'stompjs';
-import { Sun, Moon } from 'lucide-react';
 import './index.css';
 
 // Components
+import Header from './components/Header';
 import InformationScreen from './components/InformationScreen';
 import MainGame from './components/MainGame';
-import GameHeader from './components/GameHeader';
 
 // Types
 import { type Move, type GameMessage } from './types';
@@ -122,55 +121,44 @@ const App: React.FC = () => {
       stompClient.current?.subscribe(`/topic/game/${gameId}`, (payload) => {
         handleMessage(JSON.parse(payload.body));
       });
-      stompClient.current?.send(`/app/game/${gameId}/join`, {}, JSON.stringify({ sender: username, type: 'JOIN', mode: gameMode }));
+      stompClient.current?.send("/app/game.join", {}, JSON.stringify({ sender: username, type: 'JOIN', mode: gameMode, gameId }));
     });
   };
 
   const makeMove = (row: number, col: number) => {
     if (board[row][col] || winner || !isJoined) return;
-    stompClient.current?.send(`/app/game/${gameId}/move`, {}, JSON.stringify({ sender: username, type: 'MOVE', row, col }));
+    stompClient.current?.send("/app/game.move", {}, JSON.stringify({ sender: username, type: 'MOVE', row, col, gameId }));
   };
 
   const resetGame = () => {
-    stompClient.current?.send(`/app/game/${gameId}/start`, {}, JSON.stringify({ sender: username, type: 'START' }));
+    stompClient.current?.send("/app/game.start", {}, JSON.stringify({ sender: username, type: 'START', gameId }));
   };
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-[var(--bg-color)] text-[var(--text-color)] overflow-hidden">
-      {/* Settings Bar */}
-      <div className="fixed top-6 right-6 flex gap-3 z-50">
-        <button
-          className="!bg-none !border-none !shadow-none !backdrop-blur-none p-2.5 flex items-center justify-center hover:bg-white/10 transition-all duration-300 rounded-full group"
-          onClick={() => setIsLightMode(!isLightMode)}
-          title={isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-        >
-          {isLightMode ? (
-            <Moon size={24} className="text-slate-400 group-hover:text-blue-400 drop-shadow-[0_0_8px_rgba(148,163,184,0.3)] group-hover:drop-shadow-[0_0_12px_rgba(59,130,246,0.6)] transition-all" />
-          ) : (
-            <Sun size={24} className="text-yellow-400 group-hover:text-yellow-300 drop-shadow-[0_0_8px_rgba(250,204,21,0.4)] group-hover:drop-shadow-[0_0_15px_rgba(250,204,21,0.8)] transition-all" />
-          )}
-        </button>
-      </div>
+      <Header
+        isJoined={isJoined}
+        scores={scores}
+        showHistory={showHistory}
+        setShowHistory={setShowHistory}
+        isLightMode={isLightMode}
+        setIsLightMode={setIsLightMode}
+      />
 
-      {!isJoined ? (
-        <InformationScreen
-          username={username}
-          setUsername={setUsername}
-          generateRandomName={generateRandomName}
-          gameId={gameId}
-          gameMode={gameMode}
-          setGameMode={setGameMode}
-          copied={copied}
-          copyToClipboard={copyToClipboard}
-          connect={connect}
-        />
-      ) : (
-        <>
-          <GameHeader
-            scores={scores}
-            showHistory={showHistory}
-            setShowHistory={setShowHistory}
+      <div className="flex-1 flex flex-col relative overflow-hidden">
+        {!isJoined ? (
+          <InformationScreen
+            username={username}
+            setUsername={setUsername}
+            generateRandomName={generateRandomName}
+            gameId={gameId}
+            gameMode={gameMode}
+            setGameMode={setGameMode}
+            copied={copied}
+            copyToClipboard={copyToClipboard}
+            connect={connect}
           />
+        ) : (
           <MainGame
             board={board}
             history={history}
@@ -181,8 +169,8 @@ const App: React.FC = () => {
             makeMove={makeMove}
             resetGame={resetGame}
           />
-        </>
-      )}
+        )}
+      </div>
     </div>
   );
 };
