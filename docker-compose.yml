@@ -16,6 +16,8 @@ services:
     build: 
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - VITE_WS_URL=${VITE_WS_URL:-http://localhost:8888/ws-gomoku}
     container_name: gomoku-frontend
     ports:
       - "9999:9999"
