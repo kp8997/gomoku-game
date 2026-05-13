@@ -170,6 +170,11 @@ const App: React.FC = () => {
     }
   };
 
+  const createNewRoom = () => {
+    const newRoom = Math.random().toString(36).substring(7);
+    window.location.href = `?room=${newRoom}`; // Hard refresh to reset everything properly
+  };
+
   const connect = () => {
     if (!username || isRoomFull) return;
     stompClient.current?.send("/app/game.join", {}, JSON.stringify({ sender: username, type: 'JOIN', mode: gameMode, gameId }));
@@ -219,6 +224,7 @@ const App: React.FC = () => {
             isRoomFull={isRoomFull}
             roomFullReason={roomFullReason}
             serverGameMode={serverGameMode}
+            createNewRoom={createNewRoom}
           />
         ) : (
           <MainGame

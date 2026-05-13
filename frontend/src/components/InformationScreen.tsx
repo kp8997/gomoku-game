@@ -15,11 +15,13 @@ interface InformationScreenProps {
   isRoomFull: boolean;
   roomFullReason: string | null;
   serverGameMode: 'SINGLE' | 'MULTIPLE' | null;
+  createNewRoom: () => void;
 }
 
 const InformationScreen: React.FC<InformationScreenProps> = ({
   username, setUsername, generateRandomName, gameId, gameMode, setGameMode,
-  copied, copyToClipboard, connect, isRoomFull, roomFullReason, serverGameMode
+  copied, copyToClipboard, connect, isRoomFull, roomFullReason, serverGameMode,
+  createNewRoom
 }) => {
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-4 min-h-0 overflow-y-auto">
@@ -117,13 +119,24 @@ const InformationScreen: React.FC<InformationScreenProps> = ({
                   {isRoomFull && <div className="w-2 h-2 rounded-full bg-slate-400 animate-pulse"></div>}
                   {isRoomFull ? 'Arena Full' : `Join Arena: ${gameId}`}
                 </button>
-                <button
-                  onClick={copyToClipboard}
-                  className="flex-1 h-16 !p-0 flex items-center justify-center !bg-none border border-glass-border rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 transition-all shadow-lg text-content"
-                  title="Copy Invite Link"
-                >
-                  {copied ? <Check size={28} className="text-green-600 dark:text-green-500" /> : <Copy size={28} className="text-content opacity-80" />}
-                </button>
+                {isRoomFull ? (
+                  <button
+                    onClick={createNewRoom}
+                    className="flex-1 h-16 !p-0 flex flex-col items-center justify-center bg-blue-500/10 border-2 border-blue-500/30 rounded-2xl hover:bg-blue-500/20 transition-all shadow-lg text-blue-600 dark:text-blue-400 group"
+                    title="Create New Room"
+                  >
+                    <RefreshCw size={24} className="group-hover:rotate-180 transition-transform duration-500" />
+                    <span className="text-[8px] font-black uppercase mt-1">New Arena</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={copyToClipboard}
+                    className="flex-1 h-16 !p-0 flex items-center justify-center !bg-none border border-glass-border rounded-2xl hover:bg-black/5 dark:hover:bg-white/10 transition-all shadow-lg text-content"
+                    title="Copy Invite Link"
+                  >
+                    {copied ? <Check size={28} className="text-green-600 dark:text-green-500" /> : <Copy size={28} className="text-content opacity-80" />}
+                  </button>
+                )}
               </div>
               
               {isRoomFull && (
