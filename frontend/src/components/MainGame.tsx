@@ -18,12 +18,11 @@ interface MainGameProps {
   onSendMessage: (content: string) => void;
   username: string;
   winningLine: Move[];
-  leaveGame: () => void;
 }
 
 const MainGame: React.FC<MainGameProps> = ({
   board, history, winner, gameId, showDrawer, setShowDrawer, isMyTurn, makeMove, resetGame,
-  chatMessages, onSendMessage, username, winningLine, leaveGame
+  chatMessages, onSendMessage, username, winningLine
 }) => {
   const [showWinnerPopup, setShowWinnerPopup] = React.useState(false);
 

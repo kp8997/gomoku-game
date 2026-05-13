@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Moon, Sun, Layout, LogOut } from 'lucide-react';
+import TurnTimer from './TurnTimer';
 
 interface HeaderProps {
   isJoined: boolean;
@@ -12,10 +13,17 @@ interface HeaderProps {
   isMyTurn: boolean;
   leaveGame: () => void;
   username: string;
+  turnStartTime: number;
+  turnDuration: number;
+  isGameOver: boolean;
+  gameMode: 'SINGLE' | 'MULTIPLE';
+  currentTurnSymbol: 'X' | 'O';
+  playerCount: number;
 }
 
 const Header: React.FC<HeaderProps> = ({
-  isJoined, scores, showDrawer, setShowDrawer, isLightMode, setIsLightMode, isMyTurn, leaveGame, username
+  isJoined, scores, showDrawer, setShowDrawer, isLightMode, setIsLightMode, isMyTurn, leaveGame, username,
+  turnStartTime, turnDuration, isGameOver, gameMode, currentTurnSymbol, playerCount
 }) => {
 
   return (
@@ -65,42 +73,15 @@ const Header: React.FC<HeaderProps> = ({
 
             {isJoined && (
               <div className="ml-8 hidden lg:flex items-center">
-                {isMyTurn ? (
-                  <motion.span
-                    animate={{
-                      backgroundColor: ['rgba(59, 130, 246, 0.4)', 'rgba(59, 130, 246, 0.8)', 'rgba(59, 130, 246, 0.4)'],
-                      boxShadow: [
-                        '0 0 15px rgba(59,130,246,0.5), 0 0 30px rgba(59,130,246,0.3)',
-                        '0 0 30px rgba(59,130,246,0.8), 0 0 60px rgba(59,130,246,0.5)',
-                        '0 0 15px rgba(59,130,246,0.5), 0 0 30px rgba(59,130,246,0.3)'
-                      ]
-                    }}
-                    transition={{ repeat: Infinity, duration: 1.2 }}
-                    className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.15em] border-2 border-blue-200 text-blue-200 bg-blue-600 shadow-2xl transition-all cursor-default filter drop-shadow-[0_0_12px_rgba(59,130,246,1)]"
-                  >
-                    ● Your Turn
-                  </motion.span>
-                ) : (
-                  <motion.span
-                    animate={{
-                      opacity: [0.8, 1, 0.8],
-                      scale: [0.98, 1.05, 0.98],
-                      boxShadow: [
-                        '0 0 10px rgba(245,158,11,0.3), 0 0 20px rgba(245,158,11,0.2)',
-                        '0 0 25px rgba(245,158,11,0.7), 0 0 50px rgba(245,158,11,0.4)',
-                        '0 0 10px rgba(245,158,11,0.3), 0 0 20px rgba(245,158,11,0.2)'
-                      ]
-                    }}
-                    transition={{
-                      repeat: Infinity,
-                      duration: 1.5,
-                      ease: "easeInOut"
-                    }}
-                    className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.15em] border-2 border-amber-300 bg-amber-500/30 text-amber-300 shadow-xl transition-all cursor-default filter drop-shadow-[0_0_10px_rgba(245,158,11,1)]"
-                  >
-                    ○ Waiting for Opponent
-                  </motion.span>
-                )}
+                <TurnTimer 
+                  startTime={turnStartTime} 
+                  duration={turnDuration} 
+                  isMyTurn={isMyTurn}
+                  isPaused={isGameOver}
+                  gameMode={gameMode}
+                  currentTurnSymbol={currentTurnSymbol}
+                  playerCount={playerCount}
+                />
               </div>
             )}
           </>

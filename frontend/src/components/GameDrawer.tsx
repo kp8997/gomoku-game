@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { History as HistoryIcon, MessageSquare, X as CloseIcon, Hash, LogOut } from 'lucide-react';
+import { History as HistoryIcon, MessageSquare, X as CloseIcon, Hash } from 'lucide-react';
 import ChatPanel from './ChatPanel';
 import HistorySection from './HistorySection';
 import { type Move, type ChatMessage } from '../types';

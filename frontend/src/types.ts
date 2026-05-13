@@ -26,4 +26,7 @@ export interface GameMessage {
   playerCount?: number;
   timestamp?: number;
   winningLine?: Move[];
+  turnStartTime?: number;
+  turnDuration?: number;
+  playerSymbol?: string;
 }

@@ -41,7 +41,11 @@ const App: React.FC = () => {
   const [copied, setCopied] = useState<boolean>(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [winningLine, setWinningLine] = useState<Move[]>([]);
-  const [stats, setStats] = useState<{ wins: number, losses: number }>({ wins: 0, losses: 0 });
+  const [_stats, setStats] = useState<{ wins: number, losses: number }>({ wins: 0, losses: 0 });
+  const [turnStartTime, setTurnStartTime] = useState<number>(0);
+  const [turnDuration, setTurnDuration] = useState<number>(5);
+  const [mySymbol, setMySymbol] = useState<string | null>(null);
+  const [playerCount, setPlayerCount] = useState<number>(0);
   
   // Occupancy States
   const [serverGameMode, setServerGameMode] = useState<'SINGLE' | 'MULTIPLE' | null>(null);
@@ -119,8 +123,8 @@ const App: React.FC = () => {
       case 'ROOM_STATUS':
         console.log("Received ROOM_STATUS:", message);
         setServerGameMode(message.mode || null);
-        // Calculate fullness
         const currentCount = message.playerCount || 0;
+        setPlayerCount(currentCount);
         // Default to 2 for Private rooms unless the server explicitly confirmed SINGLE and there's 1 person
         const max = (message.mode === 'SINGLE' && currentCount <= 1) ? 1 : 2;
         
@@ -156,22 +160,34 @@ const App: React.FC = () => {
             timestamp: msg.timestamp || Date.now()
           })));
         }
+        if (message.turnStartTime !== undefined) setTurnStartTime(message.turnStartTime);
+        if (message.turnDuration !== undefined) setTurnDuration(message.turnDuration);
+        if (message.sender === username && message.playerSymbol) setMySymbol(message.playerSymbol);
+        if (message.playerCount !== undefined) setPlayerCount(message.playerCount);
         setIsJoined(true);
         break;
       case 'MOVE':
         if (message.row !== undefined && message.col !== undefined) {
-          const symbol = message.content || (history.length % 2 === 0 ? 'X' : 'O');
-          setBoard(prev => {
-            const next = prev.map(row => [...row]);
-            next[message.row!][message.col!] = symbol;
-            return next;
+          setHistory(prevHistory => {
+            const symbol = message.content || (prevHistory.length % 2 === 0 ? 'X' : 'O');
+            
+            // Update board using the same symbol
+            setBoard(prevBoard => {
+              const next = prevBoard.map(row => [...row]);
+              next[message.row!][message.col!] = symbol;
+              return next;
+            });
+
+            return [...prevHistory, {
+              player: message.sender || 'Unknown',
+              row: message.row!,
+              col: message.col!,
+              symbol
+            }];
           });
-          setHistory(prev => [...prev, {
-            player: message.sender || 'Unknown',
-            row: message.row!,
-            col: message.col!,
-            symbol
-          }]);
+          
+          if (message.turnStartTime !== undefined) setTurnStartTime(message.turnStartTime);
+          if (message.turnDuration !== undefined) setTurnDuration(message.turnDuration);
         }
         break;
       case 'WIN':
@@ -193,6 +209,8 @@ const App: React.FC = () => {
         setWinningLine([]);
         setHistory([]);
         setBoard(Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null)));
+        if (message.turnStartTime !== undefined) setTurnStartTime(message.turnStartTime);
+        if (message.turnDuration !== undefined) setTurnDuration(message.turnDuration);
         break;
     }
   };
@@ -237,7 +255,9 @@ const App: React.FC = () => {
     // We stay connected but logically "leave" the match screen
   };
 
-  const isMyTurn = gameMode === 'SINGLE' || history.length === 0 || history[history.length - 1].player !== username;
+  const isMyTurn = (gameMode === 'SINGLE' || (
+    mySymbol ? (history.length % 2 === 0 ? 'X' : 'O') === mySymbol : history.length === 0 || history[history.length - 1].player !== username
+  )) && (gameMode === 'SINGLE' || playerCount >= 2);
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-surface text-content overflow-x-hidden overflow-y-auto transition-colors duration-300">
@@ -251,6 +271,12 @@ const App: React.FC = () => {
         isMyTurn={isMyTurn}
         leaveGame={leaveGame}
         username={username}
+        turnStartTime={turnStartTime}
+        turnDuration={turnDuration}
+        isGameOver={!!winner}
+        gameMode={gameMode}
+        currentTurnSymbol={history.length % 2 === 0 ? 'X' : 'O'}
+        playerCount={playerCount}
       />
 
       <div className="flex-1 flex flex-col relative overflow-hidden">
@@ -285,7 +311,6 @@ const App: React.FC = () => {
             onSendMessage={sendChatMessage}
             username={username}
             winningLine={winningLine}
-            leaveGame={leaveGame}
           />
         )}
       </div>

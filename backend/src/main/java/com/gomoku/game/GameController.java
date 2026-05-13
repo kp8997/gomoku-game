@@ -14,12 +14,19 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 @Controller
 public class GameController {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final Map<String, GameRoom> games = new ConcurrentHashMap<>();
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
+    private final Map<String, ScheduledFuture<?>> gameTimers = new ConcurrentHashMap<>();
+    private static final int TURN_DURATION_SECONDS = 5; // As requested for testing
 
     public GameController(SimpMessagingTemplate messagingTemplate) {
         this.messagingTemplate = messagingTemplate;
@@ -41,17 +48,14 @@ public class GameController {
         if (room.getActiveSessionCount() >= maxPlayers) {
             message.setType(GameMessage.MessageType.ERROR);
             message.setContent("Room is full. " + (room.getMode() == GameMessage.GameMode.SINGLE ? "Single player" : "Multiplayer (max 2)") + " limit reached.");
-            messagingTemplate.convertAndSendToUser(sessionId, "/topic/errors", message); // Use a private topic or just /topic/game/gameId with a flag
-            // Actually, send it back to the specific topic but maybe just to the sender.
-            // For simplicity, we'll send it to the room topic but the client will handle it.
+            messagingTemplate.convertAndSendToUser(sessionId, "/topic/errors", message);
             messagingTemplate.convertAndSend("/topic/game/" + gameId, message);
             return;
         }
 
-        // If room was empty, reset it for a new match
         if (room.getActiveSessionCount() == 0) {
             room.reset();
-            room.getScores().clear(); // Also clear scores for a fresh start
+            room.getScores().clear();
         }
         
         room.addSession(sessionId, message.getSender());
@@ -65,9 +69,11 @@ public class GameController {
         message.setMode(room.getMode());
         message.setScores(room.getScores());
         message.setPlayerCount(room.getActiveSessionCount());
+        message.setTurnStartTime(room.getTurnStartTime());
+        message.setTurnDuration(TURN_DURATION_SECONDS);
+        message.setPlayerSymbol(room.getPlayerSymbol(message.getSender()));
         messagingTemplate.convertAndSend("/topic/game/" + gameId, message);
         
-        // Also broadcast a status update
         broadcastStatus(gameId);
     }
 
@@ -100,6 +106,7 @@ public class GameController {
             GameRoom room = games.get(gameId);
             if (room != null) {
                 room.removeSession(sessionId);
+                stopTurnTimer(gameId);
                 broadcastStatus(gameId);
             }
         }
@@ -111,7 +118,6 @@ public class GameController {
         GameRoom room = games.get(gameId);
         
         if (room != null && room.isValidMove(message.getRow(), message.getCol())) {
-            // Check turn if in MULTIPLE mode
             if (room.getMode() == GameMessage.GameMode.MULTIPLE) {
                 if (message.getSender().equals(room.getLastPlayer())) {
                     return;
@@ -123,10 +129,13 @@ public class GameController {
             
             message.setType(GameMessage.MessageType.MOVE);
             message.setContent(symbol);
+            message.setTurnStartTime(System.currentTimeMillis());
+            message.setTurnDuration(TURN_DURATION_SECONDS);
             messagingTemplate.convertAndSend("/topic/game/" + gameId, message);
 
             List<GameMessage.Move> winningLine = room.getWinningLine(message.getRow(), message.getCol());
             if (winningLine != null) {
+                stopTurnTimer(gameId);
                 room.incrementScore(message.getSender());
                 GameMessage winMessage = new GameMessage();
                 winMessage.setType(GameMessage.MessageType.WIN);
@@ -137,6 +146,8 @@ public class GameController {
                 winMessage.setWinningLine(winningLine);
                 messagingTemplate.convertAndSend("/topic/game/" + gameId, winMessage);
                 room.reset();
+            } else {
+                startTurnTimer(gameId);
             }
         }
     }
@@ -147,11 +158,69 @@ public class GameController {
         GameRoom room = games.get(gameId);
         if (room != null) {
             room.reset();
+            stopTurnTimer(gameId);
             GameMessage startMessage = new GameMessage();
             startMessage.setType(GameMessage.MessageType.START);
             startMessage.setSender("SYSTEM");
+            startMessage.setTurnStartTime(0); // Explicitly 0 at start
+            startMessage.setTurnDuration(TURN_DURATION_SECONDS);
             messagingTemplate.convertAndSend("/topic/game/" + gameId, startMessage);
         }
+    }
+
+    private void startTurnTimer(String gameId) {
+        stopTurnTimer(gameId);
+        GameRoom room = games.get(gameId);
+        if (room == null) return;
+
+        ScheduledFuture<?> future = scheduler.schedule(() -> {
+            handleTimeout(gameId);
+        }, TURN_DURATION_SECONDS, TimeUnit.SECONDS);
+        
+        gameTimers.put(gameId, future);
+        room.setTurnStartTime(System.currentTimeMillis());
+    }
+
+    private void stopTurnTimer(String gameId) {
+        ScheduledFuture<?> future = gameTimers.remove(gameId);
+        if (future != null) {
+            future.cancel(false);
+        }
+    }
+
+    private void handleTimeout(String gameId) {
+        GameRoom room = games.get(gameId);
+        if (room == null) return;
+
+        String lastPlayer = room.getLastPlayer();
+        String winner;
+        String currentPlayer;
+
+        List<String> playerList = new ArrayList<>(room.getPlayers());
+        if (playerList.isEmpty()) return;
+
+        if (room.getMode() == GameMessage.GameMode.SINGLE) {
+            currentPlayer = (room.getHistory().size() % 2 == 0) ? "Player X" : "Player O";
+            winner = (room.getHistory().size() % 2 == 0) ? "Player O" : "Player X";
+        } else {
+            if (playerList.size() < 2) return;
+            if (lastPlayer == null) {
+                currentPlayer = playerList.get(0); 
+            } else {
+                currentPlayer = playerList.get(0).equals(lastPlayer) ? playerList.get(1) : playerList.get(0);
+            }
+            winner = playerList.get(0).equals(currentPlayer) ? playerList.get(1) : playerList.get(0);
+        }
+        
+        room.incrementScore(winner);
+        GameMessage timeoutMessage = new GameMessage();
+        timeoutMessage.setType(GameMessage.MessageType.WIN);
+        timeoutMessage.setSender("SYSTEM");
+        timeoutMessage.setWinner(winner);
+        timeoutMessage.setContent(currentPlayer + " timed out! " + winner + " wins!");
+        timeoutMessage.setScores(room.getScores());
+        messagingTemplate.convertAndSend("/topic/game/" + gameId, timeoutMessage);
+        room.reset();
     }
 
     @MessageMapping("/game.chat")
@@ -169,13 +238,14 @@ public class GameController {
     private static class GameRoom {
         private final String id;
         private final String[][] board = new String[20][20];
-        private final java.util.List<GameMessage.Move> history = new ArrayList<>();
-        private final java.util.List<GameMessage.ChatMessage> chatHistory = new ArrayList<>();
-        private final java.util.Set<String> players = new java.util.HashSet<>();
+        private final List<GameMessage.Move> history = new ArrayList<>();
+        private final List<GameMessage.ChatMessage> chatHistory = new ArrayList<>();
+        private final java.util.Set<String> players = new java.util.LinkedHashSet<>();
         private final java.util.Set<String> activeSessions = new java.util.HashSet<>();
-        private final java.util.Map<String, Integer> scores = new java.util.HashMap<>();
+        private final Map<String, Integer> scores = new HashMap<>();
         private String lastPlayer = null;
-        private GameMessage.GameMode mode = GameMessage.GameMode.SINGLE; // Default
+        private GameMessage.GameMode mode = GameMessage.GameMode.SINGLE;
+        private long turnStartTime = 0;
 
         public GameRoom(String id) {
             this.id = id;
@@ -208,7 +278,7 @@ public class GameController {
             lastPlayer = player;
         }
 
-        public java.util.List<GameMessage.Move> getHistory() {
+        public List<GameMessage.Move> getHistory() {
             return history;
         }
 
@@ -228,8 +298,28 @@ public class GameController {
             scores.put(player, scores.getOrDefault(player, 0) + 1);
         }
 
-        public java.util.Map<String, Integer> getScores() {
+        public Map<String, Integer> getScores() {
             return scores;
+        }
+
+        public java.util.Set<String> getPlayers() {
+            return players;
+        }
+
+        public void setTurnStartTime(long time) {
+            this.turnStartTime = time;
+        }
+
+        public long getTurnStartTime() {
+            return turnStartTime;
+        }
+
+        public String getPlayerSymbol(String username) {
+            List<String> playerList = new ArrayList<>(players);
+            int index = playerList.indexOf(username);
+            if (index == 0) return "X";
+            if (index == 1) return "O";
+            return null;
         }
 
         public List<GameMessage.Move> getWinningLine(int r, int c) {
@@ -238,14 +328,9 @@ public class GameController {
             for (int[] dir : dirs) {
                 List<GameMessage.Move> line = new ArrayList<>();
                 line.add(new GameMessage.Move(lastPlayer, r, c, s));
-                
-                // Check both directions
                 collectInDir(r, c, dir[0], dir[1], s, line);
                 collectInDir(r, c, -dir[0], -dir[1], s, line);
-                
-                if (line.size() >= 5) {
-                    return line;
-                }
+                if (line.size() >= 5) return line;
             }
             return null;
         }
@@ -254,14 +339,10 @@ public class GameController {
             int nr = r + dr;
             int nc = c + dc;
             while (nr >= 0 && nr < 20 && nc >= 0 && nc < 20 && s.equals(board[nr][nc])) {
-                line.add(new GameMessage.Move(null, nr, nc, s)); // Player name not needed for line effect
+                line.add(new GameMessage.Move(null, nr, nc, s));
                 nr += dr;
                 nc += dc;
             }
-        }
-
-        public boolean checkWin(int r, int c) {
-            return getWinningLine(r, c) != null;
         }
 
         public void reset() {
@@ -273,13 +354,14 @@ public class GameController {
             history.clear();
             chatHistory.clear();
             lastPlayer = null;
+            turnStartTime = 0;
         }
 
         public void addChatMessage(String sender, String content) {
             chatHistory.add(new GameMessage.ChatMessage(sender, content, System.currentTimeMillis()));
         }
 
-        public java.util.List<GameMessage.ChatMessage> getChatHistory() {
+        public List<GameMessage.ChatMessage> getChatHistory() {
             return chatHistory;
         }
     }
