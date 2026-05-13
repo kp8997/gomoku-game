@@ -32,7 +32,7 @@ const App: React.FC = () => {
     Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null))
   );
   const [gameId, setGameId] = useState<string>('');
-  const [gameMode, setGameMode] = useState<'SINGLE' | 'MULTIPLE'>('SINGLE');
+  const [gameMode, setGameMode] = useState<'SINGLE' | 'MULTIPLE'>('MULTIPLE');
   const [history, setHistory] = useState<Move[]>([]);
   const [winner, setWinner] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState<boolean>(false);
@@ -117,7 +117,9 @@ const App: React.FC = () => {
         setServerGameMode(message.mode || null);
         // Calculate fullness
         const currentCount = message.playerCount || 0;
-        const max = (message.mode === 'SINGLE') ? 1 : 2;
+        // Default to 2 for Private rooms unless the server explicitly confirmed SINGLE and there's 1 person
+        const max = (message.mode === 'SINGLE' && currentCount <= 1) ? 1 : 2;
+        
         if (currentCount >= max) {
           setIsRoomFull(true);
           setRoomFullReason(`Arena is currently full (${currentCount}/${max}). Please try a different room or wait for a slot.`);
