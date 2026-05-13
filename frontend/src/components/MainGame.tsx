@@ -10,12 +10,13 @@ interface MainGameProps {
   gameId: string;
   showHistory: boolean;
   setShowHistory: (val: boolean) => void;
+  isMyTurn: boolean;
   makeMove: (r: number, c: number) => void;
   resetGame: () => void;
 }
 
 const MainGame: React.FC<MainGameProps> = ({
-  board, history, winner, gameId, showHistory, setShowHistory, makeMove, resetGame
+  board, history, winner, gameId, showHistory, setShowHistory, isMyTurn, makeMove, resetGame
 }) => {
   return (
     <motion.div
@@ -105,8 +106,11 @@ const MainGame: React.FC<MainGameProps> = ({
                 return (
                   <div
                     key={`${r}-${c}`}
-                    className="w-8 h-8 sm:w-10 sm:h-10 bg-board-cell border-[1px] border-board-grid flex items-center justify-center cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors relative group"
-                    onClick={() => makeMove(r, c)}
+                    className={`
+                      w-8 h-8 sm:w-10 sm:h-10 bg-board-cell border-[1px] border-board-grid flex items-center justify-center transition-colors relative group
+                      ${isMyTurn ? 'cursor-pointer hover:bg-black/5 dark:hover:bg-white/5' : 'cursor-not-allowed opacity-90'}
+                    `}
+                    onClick={() => isMyTurn && makeMove(r, c)}
                   >
                     {/* Minimal Cell Background */}
                     <div className="absolute inset-0 bg-black/5 dark:bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />

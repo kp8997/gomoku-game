@@ -5,6 +5,8 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.context.event.EventListener;
+import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import org.springframework.stereotype.Controller;
 
 import java.util.ArrayList;
@@ -25,11 +27,21 @@ public class GameController {
     @MessageMapping("/game.join")
     public void joinGame(@Payload GameMessage message, SimpMessageHeaderAccessor headerAccessor) {
         String gameId = message.getGameId();
+        String sessionId = headerAccessor.getSessionId();
+        
         headerAccessor.getSessionAttributes().put("username", message.getSender());
         headerAccessor.getSessionAttributes().put("gameId", gameId);
+        headerAccessor.getSessionAttributes().put("sessionId", sessionId);
 
         GameRoom room = games.computeIfAbsent(gameId, id -> new GameRoom(id));
-        room.addPlayer(message.getSender());
+        
+        // If room was empty, reset it for a new match
+        if (room.getActiveSessionCount() == 0) {
+            room.reset();
+            room.getScores().clear(); // Also clear scores for a fresh start
+        }
+        
+        room.addSession(sessionId, message.getSender());
         if (message.getMode() != null) {
             room.setMode(message.getMode());
         }
@@ -39,6 +51,23 @@ public class GameController {
         message.setMode(room.getMode());
         message.setScores(room.getScores());
         messagingTemplate.convertAndSend("/topic/game/" + gameId, message);
+    }
+
+    @EventListener
+    public void handleSessionDisconnect(SessionDisconnectEvent event) {
+        SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor.wrap(event.getMessage());
+        String gameId = (String) headerAccessor.getSessionAttributes().get("gameId");
+        String sessionId = event.getSessionId();
+
+        if (gameId != null) {
+            GameRoom room = games.get(gameId);
+            if (room != null) {
+                room.removeSession(sessionId);
+                // We keep the room in the 'games' map so its history/scores are available 
+                // if a player joins back quickly, but the 'joinGame' logic will handle 
+                // resetting it if it eventually becomes empty and then someone joins.
+            }
+        }
     }
 
     @MessageMapping("/game.move")
@@ -93,6 +122,7 @@ public class GameController {
         private final String[][] board = new String[20][20];
         private final java.util.List<GameMessage.Move> history = new ArrayList<>();
         private final java.util.Set<String> players = new java.util.HashSet<>();
+        private final java.util.Set<String> activeSessions = new java.util.HashSet<>();
         private final java.util.Map<String, Integer> scores = new java.util.HashMap<>();
         private String lastPlayer = null;
         private GameMessage.GameMode mode = GameMessage.GameMode.SINGLE; // Default
@@ -101,8 +131,17 @@ public class GameController {
             this.id = id;
         }
 
-        public void addPlayer(String player) {
-            players.add(player);
+        public void addSession(String sessionId, String username) {
+            activeSessions.add(sessionId);
+            players.add(username);
+        }
+
+        public void removeSession(String sessionId) {
+            activeSessions.remove(sessionId);
+        }
+
+        public int getActiveSessionCount() {
+            return activeSessions.size();
         }
 
         public boolean isValidMove(int r, int c) {

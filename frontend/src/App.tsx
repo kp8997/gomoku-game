@@ -129,12 +129,20 @@ const App: React.FC = () => {
 
   const makeMove = (row: number, col: number) => {
     if (board[row][col] || winner || !isJoined) return;
+    
+    // Prevent consecutive moves in MULTIPLE mode
+    if (gameMode === 'MULTIPLE' && history.length > 0 && history[history.length - 1].player === username) {
+      return;
+    }
+
     stompClient.current?.send("/app/game.move", {}, JSON.stringify({ sender: username, type: 'MOVE', row, col, gameId }));
   };
 
   const resetGame = () => {
     stompClient.current?.send("/app/game.start", {}, JSON.stringify({ sender: username, type: 'START', gameId }));
   };
+
+  const isMyTurn = gameMode === 'SINGLE' || history.length === 0 || history[history.length - 1].player !== username;
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-surface text-content overflow-x-hidden overflow-y-auto transition-colors duration-300">
@@ -145,6 +153,7 @@ const App: React.FC = () => {
         setShowHistory={setShowHistory}
         isLightMode={!isDarkMode}
         setIsLightMode={() => setIsDarkMode(!isDarkMode)}
+        isMyTurn={isMyTurn}
       />
 
       <div className="flex-1 flex flex-col relative overflow-hidden">
@@ -168,6 +177,7 @@ const App: React.FC = () => {
             gameId={gameId}
             showHistory={showHistory}
             setShowHistory={setShowHistory}
+            isMyTurn={isMyTurn}
             makeMove={makeMove}
             resetGame={resetGame}
           />

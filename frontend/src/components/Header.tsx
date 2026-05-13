@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { History as HistoryIcon, Moon, Sun } from 'lucide-react';
 
 interface HeaderProps {
@@ -8,10 +9,11 @@ interface HeaderProps {
   setShowHistory: (val: boolean) => void;
   isLightMode: boolean;
   setIsLightMode: (val: boolean) => void;
+  isMyTurn: boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({
-  isJoined, scores, showHistory, setShowHistory, isLightMode, setIsLightMode
+  isJoined, scores, showHistory, setShowHistory, isLightMode, setIsLightMode, isMyTurn
 }) => {
   return (
     <header className="h-16 w-full flex items-center justify-between px-6 bg-[var(--glass-bg)] backdrop-blur-xl border-b border-[var(--glass-border)] z-50">
@@ -52,6 +54,31 @@ const Header: React.FC<HeaderProps> = ({
                 </>
               )}
             </div>
+
+            {isJoined && (
+              <div className="ml-8 hidden lg:flex items-center">
+                {isMyTurn ? (
+                  <span className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-500/30 bg-blue-500/20 text-blue-500 shadow-lg animate-pulse ring-4 ring-blue-500/10 transition-all">
+                    ● Your Turn
+                  </span>
+                ) : (
+                  <motion.span 
+                    animate={{ 
+                      opacity: [0.4, 1, 0.4],
+                      scale: [0.98, 1, 0.98]
+                    }}
+                    transition={{ 
+                      repeat: Infinity, 
+                      duration: 2,
+                      ease: "easeInOut"
+                    }}
+                    className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-amber-500/30 bg-amber-500/10 text-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.2)] transition-all"
+                  >
+                    ○ Waiting for Opponent
+                  </motion.span>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
