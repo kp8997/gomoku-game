@@ -159,6 +159,7 @@ public class GameController {
             room.addChatMessage(message.getSender(), message.getContent());
         }
         message.setType(GameMessage.MessageType.CHAT);
+        message.setTimestamp(System.currentTimeMillis());
         messagingTemplate.convertAndSend("/topic/game/" + gameId, message);
     }
 

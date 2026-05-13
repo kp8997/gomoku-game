@@ -1,7 +1,0 @@
-com/gomoku/game/GameMessage$Move.class
-com/gomoku/game/GameController$GameRoom.class
-com/gomoku/game/GameController.class
-com/gomoku/game/WebSocketConfig.class
-com/gomoku/game/GameMessage.class
-com/gomoku/game/GomokuApplication.class
-com/gomoku/game/GameMessage$MessageType.class

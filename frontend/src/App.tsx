@@ -9,7 +9,7 @@ import InformationScreen from './components/InformationScreen';
 import MainGame from './components/MainGame';
 
 // Types
-import { type Move, type GameMessage } from './types';
+import { type Move, type GameMessage, type ChatMessage } from './types';
 
 const BOARD_SIZE = 20;
 
@@ -39,7 +39,7 @@ const App: React.FC = () => {
   const [scores, setScores] = useState<Record<string, number>>({});
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
   const [copied, setCopied] = useState<boolean>(false);
-  const [chatMessages, setChatMessages] = useState<{sender: string, content: string, timestamp: number}[]>([]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   
   // Occupancy States
   const [serverGameMode, setServerGameMode] = useState<'SINGLE' | 'MULTIPLE' | null>(null);
@@ -133,7 +133,7 @@ const App: React.FC = () => {
         setChatMessages(prev => [...prev, {
           sender: message.sender || 'Anonymous',
           content: message.content || '',
-          timestamp: Date.now()
+          timestamp: message.timestamp || Date.now()
         }]);
         break;
       case 'JOIN':

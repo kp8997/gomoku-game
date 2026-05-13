@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { History as HistoryIcon, Moon, Sun, MessageSquare, Layout } from 'lucide-react';
+import { Moon, Sun, Layout } from 'lucide-react';
 
 interface HeaderProps {
   isJoined: boolean;

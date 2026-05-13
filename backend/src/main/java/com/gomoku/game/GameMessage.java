@@ -15,6 +15,7 @@ public class GameMessage {
     private String winner;
     private java.util.Map<String, Integer> scores;
     private int playerCount;
+    private long timestamp;
 
     public static class ChatMessage {
         private String sender;
@@ -92,4 +93,6 @@ public class GameMessage {
     public void setScores(java.util.Map<String, Integer> scores) { this.scores = scores; }
     public int getPlayerCount() { return playerCount; }
     public void setPlayerCount(int playerCount) { this.playerCount = playerCount; }
+    public long getTimestamp() { return timestamp; }
+    public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
 }

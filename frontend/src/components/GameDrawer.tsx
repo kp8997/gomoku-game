@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { History as HistoryIcon, MessageSquare, X as CloseIcon, Hash } from 'lucide-react';
 import ChatPanel from './ChatPanel';
 import HistorySection from './HistorySection';

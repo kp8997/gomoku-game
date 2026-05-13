@@ -24,4 +24,5 @@ export interface GameMessage {
   winner?: string;
   scores?: Record<string, number>;
   playerCount?: number;
+  timestamp?: number;
 }
