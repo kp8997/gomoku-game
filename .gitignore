@@ -6,14 +6,10 @@ backend/*.ear
 backend/out/
 
 # Node / Frontend
-frontend/node_modules/
-frontend/dist/
-frontend/dist-ssr/
-frontend/*.local
+# Managed by frontend/.gitignore
 
 # Environment variables
 .env
-frontend/.env
 
 # IDE / OS
 .vscode/
