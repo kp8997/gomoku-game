@@ -6,7 +6,7 @@ export interface Move {
 }
 
 export interface GameMessage {
-  type: 'CHAT' | 'JOIN' | 'MOVE' | 'LEAVE' | 'START' | 'WIN';
+  type: 'CHAT' | 'JOIN' | 'MOVE' | 'LEAVE' | 'START' | 'WIN' | 'ROOM_STATUS' | 'ERROR';
   content?: string;
   sender?: string;
   row?: number;
@@ -16,4 +16,5 @@ export interface GameMessage {
   history?: Move[];
   winner?: string;
   scores?: Record<string, number>;
+  playerCount?: number;
 }

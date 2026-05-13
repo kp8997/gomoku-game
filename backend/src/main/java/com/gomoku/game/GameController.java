@@ -35,6 +35,18 @@ public class GameController {
 
         GameRoom room = games.computeIfAbsent(gameId, id -> new GameRoom(id));
         
+        // Check constraints
+        int maxPlayers = (room.getMode() == GameMessage.GameMode.SINGLE) ? 1 : 2;
+        if (room.getActiveSessionCount() >= maxPlayers) {
+            message.setType(GameMessage.MessageType.ERROR);
+            message.setContent("Room is full. " + (room.getMode() == GameMessage.GameMode.SINGLE ? "Single player" : "Multiplayer (max 2)") + " limit reached.");
+            messagingTemplate.convertAndSendToUser(sessionId, "/topic/errors", message); // Use a private topic or just /topic/game/gameId with a flag
+            // Actually, send it back to the specific topic but maybe just to the sender.
+            // For simplicity, we'll send it to the room topic but the client will handle it.
+            messagingTemplate.convertAndSend("/topic/game/" + gameId, message);
+            return;
+        }
+
         // If room was empty, reset it for a new match
         if (room.getActiveSessionCount() == 0) {
             room.reset();
@@ -50,7 +62,30 @@ public class GameController {
         message.setHistory(room.getHistory());
         message.setMode(room.getMode());
         message.setScores(room.getScores());
+        message.setPlayerCount(room.getActiveSessionCount());
         messagingTemplate.convertAndSend("/topic/game/" + gameId, message);
+        
+        // Also broadcast a status update
+        broadcastStatus(gameId);
+    }
+
+    @MessageMapping("/game.status")
+    public void getRoomStatus(@Payload GameMessage message) {
+        broadcastStatus(message.getGameId());
+    }
+
+    private void broadcastStatus(String gameId) {
+        GameRoom room = games.get(gameId);
+        GameMessage status = new GameMessage();
+        status.setType(GameMessage.MessageType.ROOM_STATUS);
+        status.setGameId(gameId);
+        if (room != null) {
+            status.setPlayerCount(room.getActiveSessionCount());
+            status.setMode(room.getMode());
+        } else {
+            status.setPlayerCount(0);
+        }
+        messagingTemplate.convertAndSend("/topic/game/" + gameId, status);
     }
 
     @EventListener
@@ -63,9 +98,7 @@ public class GameController {
             GameRoom room = games.get(gameId);
             if (room != null) {
                 room.removeSession(sessionId);
-                // We keep the room in the 'games' map so its history/scores are available 
-                // if a player joins back quickly, but the 'joinGame' logic will handle 
-                // resetting it if it eventually becomes empty and then someone joins.
+                broadcastStatus(gameId);
             }
         }
     }

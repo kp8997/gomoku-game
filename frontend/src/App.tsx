@@ -39,6 +39,12 @@ const App: React.FC = () => {
   const [scores, setScores] = useState<Record<string, number>>({});
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
   const [copied, setCopied] = useState<boolean>(false);
+  
+  // Occupancy States
+  const [serverGameMode, setServerGameMode] = useState<'SINGLE' | 'MULTIPLE' | null>(null);
+  const [isRoomFull, setIsRoomFull] = useState<boolean>(false);
+  const [roomFullReason, setRoomFullReason] = useState<string | null>(null);
+
   const stompClient = useRef<Stomp.Client | null>(null);
 
   useEffect(() => {
@@ -69,10 +75,61 @@ const App: React.FC = () => {
     if (!urlParams.get('room')) {
       window.history.replaceState({}, '', `?room=${room}`);
     }
+    
+    // Connect early to check room status (but don't block render)
+    const backendUrl = import.meta.env.VITE_WS_URL || `http://${window.location.hostname}:8888/ws-gomoku`;
+    const socket = new SockJS(backendUrl);
+    const client = Stomp.over(socket);
+    client.debug = () => { };
+    
+    const connectToBackend = () => {
+      client.connect({}, 
+        () => {
+          stompClient.current = client;
+          client.subscribe(`/topic/game/${room}`, (payload) => {
+            handleMessage(JSON.parse(payload.body));
+          });
+          // Query room status immediately
+          client.send("/app/game.status", {}, JSON.stringify({ gameId: room }));
+        },
+        (error) => {
+          console.warn("Backend unavailable or connection failed:", error);
+          // We don't block the UI, user can still see the screen
+          // We might want to retry later or just let them try to 'Join' manually
+          setTimeout(connectToBackend, 5000); // Simple retry
+        }
+      );
+    };
+
+    connectToBackend();
+
+    return () => {
+      if (client.connected) {
+        client.disconnect(() => {});
+      }
+    };
   }, []);
 
   const handleMessage = (message: GameMessage) => {
     switch (message.type) {
+      case 'ROOM_STATUS':
+        console.log("Received ROOM_STATUS:", message);
+        setServerGameMode(message.mode || null);
+        // Calculate fullness
+        const currentCount = message.playerCount || 0;
+        const max = (message.mode === 'SINGLE') ? 1 : 2;
+        if (currentCount >= max) {
+          setIsRoomFull(true);
+          setRoomFullReason(`Arena is currently full (${currentCount}/${max}). Please try a different room or wait for a slot.`);
+        } else {
+          setIsRoomFull(false);
+          setRoomFullReason(null);
+        }
+        break;
+      case 'ERROR':
+        setIsRoomFull(true);
+        setRoomFullReason(message.content || "Connection error.");
+        break;
       case 'JOIN':
         if (message.scores) setScores(message.scores);
         if (message.history) {
@@ -114,17 +171,8 @@ const App: React.FC = () => {
   };
 
   const connect = () => {
-    if (!username) return;
-    const backendUrl = import.meta.env.VITE_WS_URL || `http://${window.location.hostname}:8888/ws-gomoku`;
-    const socket = new SockJS(backendUrl);
-    stompClient.current = Stomp.over(socket);
-    stompClient.current.debug = () => { };
-    stompClient.current.connect({}, () => {
-      stompClient.current?.subscribe(`/topic/game/${gameId}`, (payload) => {
-        handleMessage(JSON.parse(payload.body));
-      });
-      stompClient.current?.send("/app/game.join", {}, JSON.stringify({ sender: username, type: 'JOIN', mode: gameMode, gameId }));
-    });
+    if (!username || isRoomFull) return;
+    stompClient.current?.send("/app/game.join", {}, JSON.stringify({ sender: username, type: 'JOIN', mode: gameMode, gameId }));
   };
 
   const makeMove = (row: number, col: number) => {
@@ -168,6 +216,9 @@ const App: React.FC = () => {
             copied={copied}
             copyToClipboard={copyToClipboard}
             connect={connect}
+            isRoomFull={isRoomFull}
+            roomFullReason={roomFullReason}
+            serverGameMode={serverGameMode}
           />
         ) : (
           <MainGame

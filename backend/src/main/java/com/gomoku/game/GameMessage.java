@@ -13,9 +13,10 @@ public class GameMessage {
     private List<Move> history;
     private String winner;
     private java.util.Map<String, Integer> scores;
+    private int playerCount;
 
     public enum MessageType {
-        CHAT, JOIN, MOVE, LEAVE, START, WIN
+        CHAT, JOIN, MOVE, LEAVE, START, WIN, ROOM_STATUS, ERROR
     }
 
     public enum GameMode {
@@ -66,4 +67,6 @@ public class GameMessage {
     public void setWinner(String winner) { this.winner = winner; }
     public java.util.Map<String, Integer> getScores() { return scores; }
     public void setScores(java.util.Map<String, Integer> scores) { this.scores = scores; }
+    public int getPlayerCount() { return playerCount; }
+    public void setPlayerCount(int playerCount) { this.playerCount = playerCount; }
 }
