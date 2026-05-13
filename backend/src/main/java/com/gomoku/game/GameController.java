@@ -60,6 +60,7 @@ public class GameController {
 
         message.setType(GameMessage.MessageType.JOIN);
         message.setHistory(room.getHistory());
+        message.setChatHistory(room.getChatHistory());
         message.setMode(room.getMode());
         message.setScores(room.getScores());
         message.setPlayerCount(room.getActiveSessionCount());
@@ -150,10 +151,22 @@ public class GameController {
         }
     }
 
+    @MessageMapping("/game.chat")
+    public void handleChat(@Payload GameMessage message) {
+        String gameId = message.getGameId();
+        GameRoom room = games.get(gameId);
+        if (room != null) {
+            room.addChatMessage(message.getSender(), message.getContent());
+        }
+        message.setType(GameMessage.MessageType.CHAT);
+        messagingTemplate.convertAndSend("/topic/game/" + gameId, message);
+    }
+
     private static class GameRoom {
         private final String id;
         private final String[][] board = new String[20][20];
         private final java.util.List<GameMessage.Move> history = new ArrayList<>();
+        private final java.util.List<GameMessage.ChatMessage> chatHistory = new ArrayList<>();
         private final java.util.Set<String> players = new java.util.HashSet<>();
         private final java.util.Set<String> activeSessions = new java.util.HashSet<>();
         private final java.util.Map<String, Integer> scores = new java.util.HashMap<>();
@@ -242,7 +255,16 @@ public class GameController {
                 }
             }
             history.clear();
+            chatHistory.clear();
             lastPlayer = null;
+        }
+
+        public void addChatMessage(String sender, String content) {
+            chatHistory.add(new GameMessage.ChatMessage(sender, content, System.currentTimeMillis()));
+        }
+
+        public java.util.List<GameMessage.ChatMessage> getChatHistory() {
+            return chatHistory;
         }
     }
 }

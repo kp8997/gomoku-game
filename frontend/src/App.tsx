@@ -35,10 +35,11 @@ const App: React.FC = () => {
   const [gameMode, setGameMode] = useState<'SINGLE' | 'MULTIPLE'>('MULTIPLE');
   const [history, setHistory] = useState<Move[]>([]);
   const [winner, setWinner] = useState<string | null>(null);
-  const [showHistory, setShowHistory] = useState<boolean>(false);
+  const [showDrawer, setShowDrawer] = useState<boolean>(false);
   const [scores, setScores] = useState<Record<string, number>>({});
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
   const [copied, setCopied] = useState<boolean>(false);
+  const [chatMessages, setChatMessages] = useState<{sender: string, content: string, timestamp: number}[]>([]);
   
   // Occupancy States
   const [serverGameMode, setServerGameMode] = useState<'SINGLE' | 'MULTIPLE' | null>(null);
@@ -128,9 +129,12 @@ const App: React.FC = () => {
           setRoomFullReason(null);
         }
         break;
-      case 'ERROR':
-        setIsRoomFull(true);
-        setRoomFullReason(message.content || "Connection error.");
+      case 'CHAT':
+        setChatMessages(prev => [...prev, {
+          sender: message.sender || 'Anonymous',
+          content: message.content || '',
+          timestamp: Date.now()
+        }]);
         break;
       case 'JOIN':
         if (message.scores) setScores(message.scores);
@@ -141,6 +145,13 @@ const App: React.FC = () => {
             newBoard[move.row][move.col] = move.symbol;
           });
           setBoard(newBoard);
+        }
+        if (message.chatHistory) {
+          setChatMessages(message.chatHistory.map(msg => ({
+            sender: msg.sender || 'Anonymous',
+            content: msg.content || '',
+            timestamp: msg.timestamp || Date.now()
+          })));
         }
         setIsJoined(true);
         break;
@@ -193,6 +204,12 @@ const App: React.FC = () => {
     stompClient.current?.send("/app/game.move", {}, JSON.stringify({ sender: username, type: 'MOVE', row, col, gameId }));
   };
 
+  const sendChatMessage = (content: string) => {
+    if (stompClient.current && stompClient.current.connected && content.trim()) {
+      stompClient.current.send("/app/game.chat", {}, JSON.stringify({ type: 'CHAT', content, gameId, sender: username }));
+    }
+  };
+
   const resetGame = () => {
     stompClient.current?.send("/app/game.start", {}, JSON.stringify({ sender: username, type: 'START', gameId }));
   };
@@ -204,8 +221,8 @@ const App: React.FC = () => {
       <Header
         isJoined={isJoined}
         scores={scores}
-        showHistory={showHistory}
-        setShowHistory={setShowHistory}
+        showDrawer={showDrawer}
+        setShowDrawer={setShowDrawer}
         isLightMode={!isDarkMode}
         setIsLightMode={() => setIsDarkMode(!isDarkMode)}
         isMyTurn={isMyTurn}
@@ -234,11 +251,14 @@ const App: React.FC = () => {
             history={history}
             winner={winner}
             gameId={gameId}
-            showHistory={showHistory}
-            setShowHistory={setShowHistory}
+            showDrawer={showDrawer}
+            setShowDrawer={setShowDrawer}
             isMyTurn={isMyTurn}
             makeMove={makeMove}
             resetGame={resetGame}
+            chatMessages={chatMessages}
+            onSendMessage={sendChatMessage}
+            username={username}
           />
         )}
       </div>

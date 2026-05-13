@@ -11,9 +11,30 @@ public class GameMessage {
     private String gameId;
     private GameMode mode;
     private List<Move> history;
+    private List<ChatMessage> chatHistory;
     private String winner;
     private java.util.Map<String, Integer> scores;
     private int playerCount;
+
+    public static class ChatMessage {
+        private String sender;
+        private String content;
+        private long timestamp;
+
+        public ChatMessage() {}
+        public ChatMessage(String sender, String content, long timestamp) {
+            this.sender = sender;
+            this.content = content;
+            this.timestamp = timestamp;
+        }
+
+        public String getSender() { return sender; }
+        public void setSender(String sender) { this.sender = sender; }
+        public String getContent() { return content; }
+        public void setContent(String content) { this.content = content; }
+        public long getTimestamp() { return timestamp; }
+        public void setTimestamp(long timestamp) { this.timestamp = timestamp; }
+    }
 
     public enum MessageType {
         CHAT, JOIN, MOVE, LEAVE, START, WIN, ROOM_STATUS, ERROR
@@ -63,6 +84,8 @@ public class GameMessage {
     public void setMode(GameMode mode) { this.mode = mode; }
     public List<Move> getHistory() { return history; }
     public void setHistory(List<Move> history) { this.history = history; }
+    public List<ChatMessage> getChatHistory() { return chatHistory; }
+    public void setChatHistory(List<ChatMessage> chatHistory) { this.chatHistory = chatHistory; }
     public String getWinner() { return winner; }
     public void setWinner(String winner) { this.winner = winner; }
     public java.util.Map<String, Integer> getScores() { return scores; }

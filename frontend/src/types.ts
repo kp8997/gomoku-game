@@ -5,6 +5,12 @@ export interface Move {
   symbol: string;
 }
 
+export interface ChatMessage {
+  sender: string;
+  content: string;
+  timestamp: number;
+}
+
 export interface GameMessage {
   type: 'CHAT' | 'JOIN' | 'MOVE' | 'LEAVE' | 'START' | 'WIN' | 'ROOM_STATUS' | 'ERROR';
   content?: string;
@@ -14,6 +20,7 @@ export interface GameMessage {
   gameId?: string;
   mode?: 'SINGLE' | 'MULTIPLE';
   history?: Move[];
+  chatHistory?: ChatMessage[];
   winner?: string;
   scores?: Record<string, number>;
   playerCount?: number;

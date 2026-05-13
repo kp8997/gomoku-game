@@ -1,19 +1,19 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { History as HistoryIcon, Moon, Sun } from 'lucide-react';
+import { History as HistoryIcon, Moon, Sun, MessageSquare, Layout } from 'lucide-react';
 
 interface HeaderProps {
   isJoined: boolean;
   scores: Record<string, number>;
-  showHistory: boolean;
-  setShowHistory: (val: boolean) => void;
+  showDrawer: boolean;
+  setShowDrawer: (val: boolean) => void;
   isLightMode: boolean;
   setIsLightMode: (val: boolean) => void;
   isMyTurn: boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({
-  isJoined, scores, showHistory, setShowHistory, isLightMode, setIsLightMode, isMyTurn
+  isJoined, scores, showDrawer, setShowDrawer, isLightMode, setIsLightMode, isMyTurn
 }) => {
   return (
     <header className="h-16 w-full flex items-center justify-between px-6 bg-[var(--glass-bg)] backdrop-blur-xl border-b border-[var(--glass-border)] z-50">
@@ -21,13 +21,12 @@ const Header: React.FC<HeaderProps> = ({
         {isJoined && (
           <>
             <button
-              onClick={() => setShowHistory(!showHistory)}
-              className="group relative bg-glass-bg backdrop-blur-md border border-glass-border rounded-xl p-2 px-4 flex items-center gap-2 hover:bg-black/5 dark:hover:bg-white/5 transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:shadow-inner"
+              onClick={() => setShowDrawer(!showDrawer)}
+              className={`group relative backdrop-blur-md border border-glass-border rounded-xl p-3 flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:shadow-inner ${showDrawer ? 'bg-blue-500/20 border-blue-500/50' : 'bg-glass-bg hover:bg-black/5 dark:hover:bg-white/5'}`}
+              title="Toggle Game Panel"
             >
-              <HistoryIcon size={18} className="text-blue-500 group-hover:rotate-12 transition-transform" />
-              <span className="text-sm font-bold hidden sm:inline text-content">{showHistory ? 'Hide' : 'Show'} History</span>
-              {/* Subtle hover glow underline */}
-              <div className="absolute bottom-1 left-4 right-4 h-0.5 bg-blue-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-full" />
+              <Layout size={22} className={`${showDrawer ? 'text-blue-500' : 'text-content-muted'} group-hover:scale-110 transition-transform`} />
+              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full scale-0 group-hover:scale-100 transition-transform" />
             </button>
 
             <div className="h-6 w-px bg-glass-border mx-2 hidden sm:block"></div>
