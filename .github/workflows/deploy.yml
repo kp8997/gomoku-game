@@ -15,8 +15,8 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Define project directory
-            PROJECT_DIR="~/spring-boot-react-gomoku-game"
+            # Define project directory using $HOME for absolute path safety
+            PROJECT_DIR="$HOME/spring-boot-react-gomoku-game"
             
             # Check if directory exists
             if [ ! -d "$PROJECT_DIR" ]; then
