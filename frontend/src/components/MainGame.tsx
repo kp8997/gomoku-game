@@ -17,12 +17,27 @@ interface MainGameProps {
   chatMessages: ChatMessage[];
   onSendMessage: (content: string) => void;
   username: string;
+  winningLine: Move[];
+  leaveGame: () => void;
 }
 
 const MainGame: React.FC<MainGameProps> = ({
   board, history, winner, gameId, showDrawer, setShowDrawer, isMyTurn, makeMove, resetGame,
-  chatMessages, onSendMessage, username
+  chatMessages, onSendMessage, username, winningLine, leaveGame
 }) => {
+  const [showWinnerPopup, setShowWinnerPopup] = React.useState(false);
+
+  React.useEffect(() => {
+    if (winner) {
+      const timer = setTimeout(() => {
+        setShowWinnerPopup(true);
+      }, 2000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowWinnerPopup(false);
+    }
+  }, [winner]);
+
   return (
     <LayoutGroup>
       <motion.div
@@ -48,6 +63,7 @@ const MainGame: React.FC<MainGameProps> = ({
                 onSendMessage={onSendMessage}
                 username={username}
                 gameId={gameId}
+                leaveGame={leaveGame}
               />
             </motion.div>
           )}
@@ -76,15 +92,17 @@ const MainGame: React.FC<MainGameProps> = ({
               row.map((cell, c) => {
                 const lastMove = history.length > 0 ? history[history.length - 1] : null;
                 const isLastMove = lastMove && lastMove.row === r && lastMove.col === c;
+                const isWinningCell = winningLine.some(m => m.row === r && m.col === c);
 
                 return (
                   <div
                     key={`${r}-${c}`}
                     className={`
                       w-8 h-8 sm:w-10 sm:h-10 bg-board-cell border-[1px] border-board-grid flex items-center justify-center transition-colors relative group
-                      ${isMyTurn ? 'cursor-pointer hover:bg-black/5 dark:hover:bg-white/5' : 'cursor-not-allowed opacity-90'}
+                      ${isWinningCell ? 'z-40' : ''}
+                      ${isMyTurn && !winner ? 'cursor-pointer hover:bg-black/5 dark:hover:bg-white/5' : 'cursor-not-allowed opacity-90'}
                     `}
-                    onClick={() => isMyTurn && makeMove(r, c)}
+                    onClick={() => isMyTurn && !winner && makeMove(r, c)}
                   >
                     {/* Minimal Cell Background */}
                     <div className="absolute inset-0 bg-black/5 dark:bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
@@ -116,6 +134,18 @@ const MainGame: React.FC<MainGameProps> = ({
                       />
                     )}
 
+                    {isWinningCell && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ 
+                          opacity: 1, 
+                          scale: 1.1,
+                          boxShadow: "0 0 20px rgba(255,255,255,0.8), inset 0 0 10px rgba(255,255,255,0.5)"
+                        }}
+                        className="absolute inset-0 border-2 border-white rounded-md z-40 backdrop-blur-[2px] pointer-events-none shadow-[0_0_15px_white]"
+                      />
+                    )}
+
                     {cell && (
                       <motion.div
                         initial={{ scale: 0, rotate: -45 }}
@@ -137,7 +167,7 @@ const MainGame: React.FC<MainGameProps> = ({
 
         {/* Winner Overlay */}
         <AnimatePresence>
-          {winner && (
+          {winner && showWinnerPopup && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

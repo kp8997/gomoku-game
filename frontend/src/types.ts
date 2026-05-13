@@ -25,4 +25,5 @@ export interface GameMessage {
   scores?: Record<string, number>;
   playerCount?: number;
   timestamp?: number;
+  winningLine?: Move[];
 }

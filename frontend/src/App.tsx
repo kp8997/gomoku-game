@@ -40,6 +40,7 @@ const App: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
   const [copied, setCopied] = useState<boolean>(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [winningLine, setWinningLine] = useState<Move[]>([]);
   
   // Occupancy States
   const [serverGameMode, setServerGameMode] = useState<'SINGLE' | 'MULTIPLE' | null>(null);
@@ -174,9 +175,11 @@ const App: React.FC = () => {
       case 'WIN':
         setWinner(message.winner || 'Someone');
         if (message.scores) setScores(message.scores);
+        if (message.winningLine) setWinningLine(message.winningLine);
         break;
       case 'START':
         setWinner(null);
+        setWinningLine([]);
         setHistory([]);
         setBoard(Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null)));
         break;
@@ -212,6 +215,15 @@ const App: React.FC = () => {
 
   const resetGame = () => {
     stompClient.current?.send("/app/game.start", {}, JSON.stringify({ sender: username, type: 'START', gameId }));
+  };
+
+  const leaveGame = () => {
+    setIsJoined(false);
+    setWinner(null);
+    setWinningLine([]);
+    setHistory([]);
+    setBoard(Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null)));
+    // We stay connected but logically "leave" the match screen
   };
 
   const isMyTurn = gameMode === 'SINGLE' || history.length === 0 || history[history.length - 1].player !== username;
@@ -259,6 +271,8 @@ const App: React.FC = () => {
             chatMessages={chatMessages}
             onSendMessage={sendChatMessage}
             username={username}
+            winningLine={winningLine}
+            leaveGame={leaveGame}
           />
         )}
       </div>

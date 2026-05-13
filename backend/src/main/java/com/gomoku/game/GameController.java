@@ -10,6 +10,7 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import org.springframework.stereotype.Controller;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -124,7 +125,8 @@ public class GameController {
             message.setContent(symbol);
             messagingTemplate.convertAndSend("/topic/game/" + gameId, message);
 
-            if (room.checkWin(message.getRow(), message.getCol())) {
+            List<GameMessage.Move> winningLine = room.getWinningLine(message.getRow(), message.getCol());
+            if (winningLine != null) {
                 room.incrementScore(message.getSender());
                 GameMessage winMessage = new GameMessage();
                 winMessage.setType(GameMessage.MessageType.WIN);
@@ -132,6 +134,7 @@ public class GameController {
                 winMessage.setWinner(message.getSender());
                 winMessage.setContent(message.getSender() + " wins!");
                 winMessage.setScores(room.getScores());
+                winMessage.setWinningLine(winningLine);
                 messagingTemplate.convertAndSend("/topic/game/" + gameId, winMessage);
                 room.reset();
             }
@@ -229,24 +232,36 @@ public class GameController {
             return scores;
         }
 
-        public boolean checkWin(int r, int c) {
+        public List<GameMessage.Move> getWinningLine(int r, int c) {
             String s = board[r][c];
-            return checkDir(r, c, 1, 0, s) + checkDir(r, c, -1, 0, s) >= 4 || // Horizontal
-                   checkDir(r, c, 0, 1, s) + checkDir(r, c, 0, -1, s) >= 4 || // Vertical
-                   checkDir(r, c, 1, 1, s) + checkDir(r, c, -1, -1, s) >= 4 || // Diagonal 1
-                   checkDir(r, c, 1, -1, s) + checkDir(r, c, -1, 1, s) >= 4;   // Diagonal 2
+            int[][] dirs = {{1, 0}, {0, 1}, {1, 1}, {1, -1}};
+            for (int[] dir : dirs) {
+                List<GameMessage.Move> line = new ArrayList<>();
+                line.add(new GameMessage.Move(lastPlayer, r, c, s));
+                
+                // Check both directions
+                collectInDir(r, c, dir[0], dir[1], s, line);
+                collectInDir(r, c, -dir[0], -dir[1], s, line);
+                
+                if (line.size() >= 5) {
+                    return line;
+                }
+            }
+            return null;
         }
 
-        private int checkDir(int r, int c, int dr, int dc, String s) {
-            int count = 0;
+        private void collectInDir(int r, int c, int dr, int dc, String s, List<GameMessage.Move> line) {
             int nr = r + dr;
             int nc = c + dc;
             while (nr >= 0 && nr < 20 && nc >= 0 && nc < 20 && s.equals(board[nr][nc])) {
-                count++;
+                line.add(new GameMessage.Move(null, nr, nc, s)); // Player name not needed for line effect
                 nr += dr;
                 nc += dc;
             }
-            return count;
+        }
+
+        public boolean checkWin(int r, int c) {
+            return getWinningLine(r, c) != null;
         }
 
         public void reset() {
