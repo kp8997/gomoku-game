@@ -41,6 +41,7 @@ const App: React.FC = () => {
   const [copied, setCopied] = useState<boolean>(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [winningLine, setWinningLine] = useState<Move[]>([]);
+  const [stats, setStats] = useState<{ wins: number, losses: number }>({ wins: 0, losses: 0 });
   
   // Occupancy States
   const [serverGameMode, setServerGameMode] = useState<'SINGLE' | 'MULTIPLE' | null>(null);
@@ -71,6 +72,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     generateRandomName();
+
     const urlParams = new URLSearchParams(window.location.search);
     const room = urlParams.get('room') || Math.random().toString(36).substring(7);
     setGameId(room);
@@ -176,6 +178,15 @@ const App: React.FC = () => {
         setWinner(message.winner || 'Someone');
         if (message.scores) setScores(message.scores);
         if (message.winningLine) setWinningLine(message.winningLine);
+        
+        // Update local stats
+        if (message.winner) {
+          const isWinner = message.winner === username;
+          setStats(prev => ({
+            wins: prev.wins + (isWinner ? 1 : 0),
+            losses: prev.losses + (isWinner ? 0 : 1)
+          }));
+        }
         break;
       case 'START':
         setWinner(null);
@@ -238,6 +249,9 @@ const App: React.FC = () => {
         isLightMode={!isDarkMode}
         setIsLightMode={() => setIsDarkMode(!isDarkMode)}
         isMyTurn={isMyTurn}
+        leaveGame={leaveGame}
+        stats={stats}
+        username={username}
       />
 
       <div className="flex-1 flex flex-col relative overflow-hidden">

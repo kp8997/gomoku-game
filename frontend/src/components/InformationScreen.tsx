@@ -53,7 +53,7 @@ const InformationScreen: React.FC<InformationScreenProps> = ({
                   <input
                     type="text"
                     placeholder="Enter your name..."
-                    className="w-full bg-slate-900/1 border border-glass-border rounded-2xl p-4 text-base outline-none transition-all duration-300 text-left pl-5 pr-12 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-1 focus:ring-blue-500 focus:bg-white"
+                    className="w-full bg-black/5 dark:bg-white/5 border border-glass-border rounded-2xl p-4 text-base outline-none transition-all duration-300 text-left pl-5 pr-12 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 focus:bg-white dark:focus:bg-slate-800 text-content"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && connect()}

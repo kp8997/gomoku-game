@@ -11,7 +11,6 @@ interface GameDrawerProps {
   onSendMessage: (content: string) => void;
   username: string;
   gameId: string;
-  leaveGame: () => void;
 }
 
 const GameDrawer: React.FC<GameDrawerProps> = ({
@@ -20,8 +19,7 @@ const GameDrawer: React.FC<GameDrawerProps> = ({
   chatMessages,
   onSendMessage,
   username,
-  gameId,
-  leaveGame
+  gameId
 }) => {
   const [activeTab, setActiveTab] = useState<'history' | 'chat'>('history');
 
@@ -101,14 +99,6 @@ const GameDrawer: React.FC<GameDrawerProps> = ({
                 Room: {gameId}
               </span>
             </div>
-            <button
-              onClick={leaveGame}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-all border-none shadow-none group"
-              title="Exit to Main Screen"
-            >
-              <LogOut size={14} className="group-hover:-translate-x-1 transition-transform" />
-              <span className="text-[10px] font-black uppercase">Exit</span>
-            </button>
           </div>
     </div>
   );

@@ -63,7 +63,6 @@ const MainGame: React.FC<MainGameProps> = ({
                 onSendMessage={onSendMessage}
                 username={username}
                 gameId={gameId}
-                leaveGame={leaveGame}
               />
             </motion.div>
           )}

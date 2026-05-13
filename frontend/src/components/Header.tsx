@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Moon, Sun, Layout } from 'lucide-react';
+import { Moon, Sun, Layout, LogOut, TrendingUp } from 'lucide-react';
 
 interface HeaderProps {
   isJoined: boolean;
@@ -10,11 +10,18 @@ interface HeaderProps {
   isLightMode: boolean;
   setIsLightMode: (val: boolean) => void;
   isMyTurn: boolean;
+  leaveGame: () => void;
+  stats: { wins: number; losses: number };
+  username: string;
 }
 
 const Header: React.FC<HeaderProps> = ({
-  isJoined, scores, showDrawer, setShowDrawer, isLightMode, setIsLightMode, isMyTurn
+  isJoined, scores, showDrawer, setShowDrawer, isLightMode, setIsLightMode, isMyTurn, leaveGame, stats, username
 }) => {
+  const winRate = stats.wins + stats.losses > 0 
+    ? Math.round((stats.wins / (stats.wins + stats.losses)) * 100) 
+    : 0;
+
   return (
     <header className="h-16 w-full flex items-center justify-between px-6 bg-[var(--glass-bg)] backdrop-blur-xl border-b border-[var(--glass-border)] z-50">
       <div className="flex items-center gap-4 flex-1">
@@ -22,7 +29,7 @@ const Header: React.FC<HeaderProps> = ({
           <>
             <button
               onClick={() => setShowDrawer(!showDrawer)}
-              className={`group relative backdrop-blur-md border border-glass-border rounded-xl p-3 flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:shadow-inner ${showDrawer ? 'bg-blue-500/20 border-blue-500/50' : 'bg-glass-bg hover:bg-black/5 dark:hover:bg-white/5'}`}
+              className={`group relative backdrop-blur-md border border-glass-border rounded-xl p-3 flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:shadow-inner cursor-pointer ${showDrawer ? 'bg-blue-500/20 border-blue-500/50' : 'bg-glass-bg hover:bg-black/5 dark:hover:bg-white/5'}`}
               title="Toggle Game Panel"
             >
               <Layout size={22} className={`${showDrawer ? 'text-blue-500' : 'text-content-muted'} group-hover:scale-110 transition-transform`} />
@@ -105,11 +112,36 @@ const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="text-[var(--text-muted)] text-[10px] sm:text-xs uppercase tracking-widest font-bold">
-          20x20 Arena
+        {!isJoined && (stats.wins > 0 || stats.losses > 0) && (
+          <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 px-3 py-1.5 rounded-xl border border-glass-border">
+            <TrendingUp size={14} className="text-green-500" />
+            <span className="text-[10px] font-black uppercase tracking-tighter">
+              {stats.wins}W - {stats.losses}L ({winRate}%)
+            </span>
+          </div>
+        )}
+        <div className="flex items-center gap-2">
+          {username && (
+            <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest hidden md:inline">
+              HI {username}
+            </span>
+          )}
+          <div className="text-[var(--text-muted)] text-[10px] sm:text-xs uppercase tracking-widest font-bold">
+            20x20 Arena
+          </div>
         </div>
+        {isJoined && (
+          <button
+            onClick={leaveGame}
+            className="flex items-center gap-2 px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-xl transition-all border border-red-500/20 group cursor-pointer"
+            title="Exit Arena"
+          >
+            <LogOut size={18} className="group-hover:-translate-x-1 transition-transform" />
+            <span className="text-xs font-black uppercase hidden sm:inline">Exit</span>
+          </button>
+        )}
         <button
-          className="!bg-none !border-none !shadow-none !backdrop-blur-none p-2 flex items-center justify-center hover:bg-[var(--hover-bg)] transition-all duration-300 rounded-full group"
+          className="!bg-none !border-none !shadow-none !backdrop-blur-none p-2 flex items-center justify-center hover:bg-[var(--hover-bg)] transition-all duration-300 rounded-full group cursor-pointer"
           onClick={() => setIsLightMode(!isLightMode)}
           title={isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
         >
