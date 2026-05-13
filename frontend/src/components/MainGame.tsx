@@ -1,8 +1,8 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { History as HistoryIcon, Trophy, Hash, X as CloseIcon, MessageSquare } from 'lucide-react';
-import { type Move } from '../types';
-import ChatPanel from './ChatPanel';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
+import { Trophy } from 'lucide-react';
+import { type Move, type ChatMessage } from '../types';
+import GameDrawer from './GameDrawer';
 
 interface MainGameProps {
   board: (string | null)[][];
@@ -14,7 +14,7 @@ interface MainGameProps {
   isMyTurn: boolean;
   makeMove: (r: number, c: number) => void;
   resetGame: () => void;
-  chatMessages: { sender: string, content: string, timestamp: number }[];
+  chatMessages: ChatMessage[];
   onSendMessage: (content: string) => void;
   username: string;
 }
@@ -23,118 +23,42 @@ const MainGame: React.FC<MainGameProps> = ({
   board, history, winner, gameId, showDrawer, setShowDrawer, isMyTurn, makeMove, resetGame,
   chatMessages, onSendMessage, username
 }) => {
-  const [activeTab, setActiveTab] = React.useState<'history' | 'chat'>('history');
-
-  const closeDrawer = () => {
-    setShowDrawer(false);
-  };
-
   return (
-    <motion.div
-      layout
-      className="flex-1 flex flex-col lg:flex-row min-h-0 relative overflow-hidden"
-    >
-      {/* Sidebar Drawer - History & Chat */}
-      <AnimatePresence>
-        {showDrawer && (
-          <motion.div
-            layout
-            initial={{ x: -320, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -320, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed inset-y-0 left-0 w-[85vw] sm:w-80 bg-glass-bg backdrop-blur-3xl border-r border-slate-200/50 dark:border-white/5 rounded-br-3xl flex flex-col z-[60] shadow-xl overflow-hidden lg:relative lg:inset-auto lg:h-full lg:max-h-none lg:rounded-br-3xl"
-          >
-            {/* Drawer Header with Tabs */}
-            <div className="p-4 border-b border-glass-border flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                    {activeTab === 'history' ? <HistoryIcon size={18} className="text-blue-500" /> : <MessageSquare size={18} className="text-green-500" />}
-                  </div>
-                  <h2 className="font-bold text-content">{activeTab === 'history' ? 'Game History' : 'Chat Arena'}</h2>
-                </div>
-                <button
-                  onClick={closeDrawer}
-                  className="p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors text-content-muted border-none bg-transparent shadow-none"
-                >
-                  <CloseIcon size={20} />
-                </button>
-              </div>
-
-              {/* Tab Toggles */}
-              <div className="flex p-1 bg-black/5 dark:bg-white/5 rounded-xl border border-glass-border">
-                <button
-                  onClick={() => setActiveTab('history')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'history' ? 'bg-white dark:bg-white/10 shadow-sm text-blue-500' : 'text-content-muted hover:text-content'}`}
-                >
-                  <HistoryIcon size={14} /> History
-                </button>
-                <button
-                  onClick={() => setActiveTab('chat')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'chat' ? 'bg-white dark:bg-white/10 shadow-sm text-green-500' : 'text-content-muted hover:text-content'}`}
-                >
-                  <MessageSquare size={14} /> Chat
-                </button>
-              </div>
-            </div>
-
-            {/* Drawer Content */}
-            <div className="flex-1 overflow-hidden flex flex-col">
-              {activeTab === 'history' ? (
-                <div className="flex-1 overflow-y-auto min-h-0 px-4 pb-4 space-y-2 custom-scrollbar">
-                  {history.length > 0 ? (
-                    history.map((move, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center justify-between p-3 rounded-2xl bg-slate-900/5 dark:bg-white/5 border border-glass-border shadow-sm"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-black ${move.symbol === 'X' ? 'bg-blue-500/10 text-blue-500' : 'bg-pink-500/10 text-pink-500'}`}>
-                            {move.symbol}
-                          </span>
-                          <span className="text-content text-sm font-semibold truncate max-w-[120px]">{move.player}</span>
-                        </div>
-                        <span className="text-content-muted text-xs font-mono bg-black/5 dark:bg-white/5 px-2 py-1 rounded">[{move.row}, {move.col}]</span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center opacity-30 text-content-muted text-center p-8">
-                      <div className="w-16 h-16 rounded-full border-2 border-dashed border-current flex items-center justify-center mb-4">
-                        <HistoryIcon size={32} />
-                      </div>
-                      <p className="text-sm font-medium">No moves yet</p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <ChatPanel
-                  messages={chatMessages}
-                  onSendMessage={onSendMessage}
-                  isOpen={true} // Always open when tab is active
-                  setIsOpen={() => { }} // No-op, handled by drawer
-                  currentUser={username}
-                  isInline={true} // Add a prop to ChatPanel for inline mode if needed, or I'll just refactor ChatPanel
-                />
-              )}
-            </div>
-
-            <div className="p-4 border-t border-glass-border bg-black/5 dark:bg-white/5 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Hash size={14} className="text-blue-500" />
-                <span className="text-[10px] font-bold tracking-wider text-content-muted uppercase">Room: {gameId}</span>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Main Board Area */}
+    <LayoutGroup>
       <motion.div
         layout
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 min-h-0 relative overflow-hidden"
+        className="flex-1 flex flex-col lg:flex-row min-h-0 relative overflow-hidden"
       >
+        {/* Sidebar Drawer - History & Chat */}
+        <AnimatePresence>
+          {showDrawer && (
+            <motion.div
+              key="game-drawer-wrapper"
+              layout
+              initial={{ x: -360, opacity: 0, width: 0 }}
+              animate={{ x: 0, opacity: 1, width: 360 }}
+              exit={{ x: -360, opacity: 0, width: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="fixed inset-y-0 left-0 w-[85vw] sm:w-[360px] z-[60] lg:relative lg:inset-auto lg:h-full lg:max-h-none overflow-hidden"
+            >
+              <GameDrawer
+                setShowDrawer={setShowDrawer}
+                history={history}
+                chatMessages={chatMessages}
+                onSendMessage={onSendMessage}
+                username={username}
+                gameId={gameId}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Main Board Area */}
+        <motion.div
+          layout
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          className="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 min-h-0 relative overflow-hidden"
+        >
         {/* Board Container with Scroll */}
         <motion.div
           layout
@@ -246,7 +170,8 @@ const MainGame: React.FC<MainGameProps> = ({
         </AnimatePresence>
       </motion.div>
     </motion.div>
-  );
+  </LayoutGroup>
+);
 };
 
 export default MainGame;
