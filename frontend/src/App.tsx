@@ -250,7 +250,6 @@ const App: React.FC = () => {
         setIsLightMode={() => setIsDarkMode(!isDarkMode)}
         isMyTurn={isMyTurn}
         leaveGame={leaveGame}
-        stats={stats}
         username={username}
       />
 

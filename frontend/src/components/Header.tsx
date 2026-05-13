@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Moon, Sun, Layout, LogOut, TrendingUp } from 'lucide-react';
+import { Moon, Sun, Layout, LogOut } from 'lucide-react';
 
 interface HeaderProps {
   isJoined: boolean;
@@ -11,16 +11,12 @@ interface HeaderProps {
   setIsLightMode: (val: boolean) => void;
   isMyTurn: boolean;
   leaveGame: () => void;
-  stats: { wins: number; losses: number };
   username: string;
 }
 
 const Header: React.FC<HeaderProps> = ({
-  isJoined, scores, showDrawer, setShowDrawer, isLightMode, setIsLightMode, isMyTurn, leaveGame, stats, username
+  isJoined, scores, showDrawer, setShowDrawer, isLightMode, setIsLightMode, isMyTurn, leaveGame, username
 }) => {
-  const winRate = stats.wins + stats.losses > 0 
-    ? Math.round((stats.wins / (stats.wins + stats.losses)) * 100) 
-    : 0;
 
   return (
     <header className="h-16 w-full flex items-center justify-between px-6 bg-[var(--glass-bg)] backdrop-blur-xl border-b border-[var(--glass-border)] z-50">
@@ -112,14 +108,6 @@ const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-4">
-        {!isJoined && (stats.wins > 0 || stats.losses > 0) && (
-          <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 px-3 py-1.5 rounded-xl border border-glass-border">
-            <TrendingUp size={14} className="text-green-500" />
-            <span className="text-[10px] font-black uppercase tracking-tighter">
-              {stats.wins}W - {stats.losses}L ({winRate}%)
-            </span>
-          </div>
-        )}
         <div className="flex items-center gap-2">
           {username && (
             <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest hidden md:inline">
