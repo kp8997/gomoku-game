@@ -15,8 +15,16 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Go to project directory
-            cd ~/spring-boot-react-gomoku-game
+            # Define project directory
+            PROJECT_DIR="~/spring-boot-react-gomoku-game"
+            
+            # Check if directory exists
+            if [ ! -d "$PROJECT_DIR" ]; then
+              echo "Project directory not found. Cloning for the first time..."
+              git clone https://github.com/kp8997/gomoku-game.git "$PROJECT_DIR"
+            fi
+            
+            cd "$PROJECT_DIR"
             
             # Pull latest changes
             git pull origin master
