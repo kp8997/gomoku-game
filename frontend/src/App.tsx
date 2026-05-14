@@ -7,6 +7,7 @@ import './index.css';
 import Header from './components/Header';
 import InformationScreen from './components/InformationScreen';
 import MainGame from './components/MainGame';
+import TimeoutWarning from './components/TimeoutWarning';
 
 // Types
 import { type Move, type GameMessage, type ChatMessage } from './types';
@@ -321,6 +322,14 @@ const App: React.FC = () => {
           />
         )}
       </div>
+
+      {/* Global Timeout Warning Overlay */}
+      <TimeoutWarning 
+        startTime={turnStartTime}
+        duration={turnDuration}
+        isMyTurn={isMyTurn}
+        isPaused={!!winner}
+      />
     </div>
   );
 };
