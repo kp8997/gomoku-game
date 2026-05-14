@@ -115,7 +115,7 @@ const Header: React.FC<HeaderProps> = ({
         )}
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-4 md:gap-8">
+      <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
         <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
           {username && (
             <span className="text-[10px] md:text-xs font-black text-blue-500 uppercase tracking-widest hidden md:inline whitespace-nowrap">
