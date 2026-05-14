@@ -37,5 +37,6 @@
 - **Root Cause**: Recurring inconsistency caused by hardcoding `dark:focus` utilities across components, which failed to cleanly override browser/Tailwind states during dynamic theme toggling.
 - **Solution**: Centralized input colors into the design system (`index.css`). Added `--color-input-bg` and `--color-input-focus` tokens that respond directly to the `.dark` class.
 - **Implementation**: Refactored `InformationScreen.tsx` and `ChatPanel.tsx` to use these tokens, ensuring a "single source of truth" for input aesthetics across modes.
+- **Bug Fix (Timeout)**: `TimeoutWarning` was appearing on the `InformationScreen` due to a low default `turnDuration` (5s) and missing `startTime > 0` check. Added strict check to ensure warning only triggers during an active, counting turn.
 - **Next Step**: Audit other interactive elements for similar hardcoded theme dependencies.
 ```

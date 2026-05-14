@@ -33,8 +33,8 @@ const TimeoutWarning: React.FC<TimeoutWarningProps> = ({ startTime, duration, is
   }, [startTime, duration, isMyTurn, isPaused]);
 
   // Thresholds for warning
-  const isWarning = isMyTurn && !isPaused && timeLeft <= 15 && timeLeft > 0;
-  const isUrgent = timeLeft <= 5;
+  const isWarning = isMyTurn && !isPaused && startTime > 0 && timeLeft <= 15 && timeLeft > 0;
+  const isUrgent = isWarning && timeLeft <= 5;
 
   return (
     <AnimatePresence>

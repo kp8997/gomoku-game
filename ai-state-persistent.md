@@ -142,7 +142,7 @@ GameMessage { type, content?, sender?, row?, col?, gameId?, mode?, history?, cha
 | `winningLine` | `Move[]` | `[]` | Winning cell coordinates |
 | `_stats` | `{wins, losses}` | `{0, 0}` | Local session stats |
 | `turnStartTime` | `number` | `0` | Backend turn start (ms) |
-| `turnDuration` | `number` | `5` | Turn duration (seconds), updated by backend |
+| `turnDuration` | `number` | `60` | Turn duration (seconds), updated by backend |
 | `mySymbol` | `string\|null` | `null` | Assigned 'X' or 'O' |
 | `playerCount` | `number` | `0` | Active players in room |
 | `turnSymbol` | `'X'\|'O'` | `'X'` | Current turn symbol |
@@ -365,5 +365,12 @@ network: gomoku-network (bridge)
 - **Root Cause**: Specificity/consistency issues with hardcoded `dark:focus` utilities.
 - **Refactor**: Centralized `--color-input-bg` and `--color-input-focus` in `index.css`.
 - **Outcome**: Inputs now automatically adapt their focus state based on the theme variable, eliminating "back and forth" CSS bugs.
+
+### Session: TimeoutWarning Logic Correction [2026-05-14]
+- **Bug**: Global `TimeoutWarning` overlay appeared on the pre-game information screen.
+- **Root Cause**: The component lacked a `startTime > 0` check, and the initial `turnDuration` of 5s satisfied the `timeLeft <= 15s` condition immediately on mount.
+- **Fix**: Added `startTime > 0` to the visibility condition.
+- **Cleanup**: Updated default `turnDuration` in `App.tsx` to 60s to align with backend constants and manifest.
+
 
 

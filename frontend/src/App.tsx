@@ -44,7 +44,7 @@ const App: React.FC = () => {
   const [winningLine, setWinningLine] = useState<Move[]>([]);
   const [_stats, setStats] = useState<{ wins: number, losses: number }>({ wins: 0, losses: 0 });
   const [turnStartTime, setTurnStartTime] = useState<number>(0);
-  const [turnDuration, setTurnDuration] = useState<number>(5);
+  const [turnDuration, setTurnDuration] = useState<number>(60);
   const [mySymbol, setMySymbol] = useState<string | null>(null);
   const [playerCount, setPlayerCount] = useState<number>(0);
   const [turnSymbol, setTurnSymbol] = useState<'X' | 'O'>('X');
