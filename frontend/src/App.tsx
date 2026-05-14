@@ -46,7 +46,8 @@ const App: React.FC = () => {
   const [turnDuration, setTurnDuration] = useState<number>(5);
   const [mySymbol, setMySymbol] = useState<string | null>(null);
   const [playerCount, setPlayerCount] = useState<number>(0);
-  
+  const [turnSymbol, setTurnSymbol] = useState<'X' | 'O'>('X');
+
   // Occupancy States
   const [serverGameMode, setServerGameMode] = useState<'SINGLE' | 'MULTIPLE' | null>(null);
   const [isRoomFull, setIsRoomFull] = useState<boolean>(false);
@@ -83,15 +84,15 @@ const App: React.FC = () => {
     if (!urlParams.get('room')) {
       window.history.replaceState({}, '', `?room=${room}`);
     }
-    
+
     // Connect early to check room status (but don't block render)
     const backendUrl = import.meta.env.VITE_WS_URL || `http://${window.location.hostname}:8888/ws-gomoku`;
     const socket = new SockJS(backendUrl);
     const client = Stomp.over(socket);
     client.debug = () => { };
-    
+
     const connectToBackend = () => {
-      client.connect({}, 
+      client.connect({},
         () => {
           stompClient.current = client;
           client.subscribe(`/topic/game/${room}`, (payload) => {
@@ -113,7 +114,7 @@ const App: React.FC = () => {
 
     return () => {
       if (client.connected) {
-        client.disconnect(() => {});
+        client.disconnect(() => { });
       }
     };
   }, []);
@@ -122,12 +123,12 @@ const App: React.FC = () => {
     switch (message.type) {
       case 'ROOM_STATUS':
         console.log("Received ROOM_STATUS:", message);
+        if (message.mode) setGameMode(message.mode);
         setServerGameMode(message.mode || null);
         const currentCount = message.playerCount || 0;
         setPlayerCount(currentCount);
-        // Default to 2 for Private rooms unless the server explicitly confirmed SINGLE and there's 1 person
         const max = (message.mode === 'SINGLE' && currentCount <= 1) ? 1 : 2;
-        
+
         if (currentCount >= max) {
           setIsRoomFull(true);
           setRoomFullReason(`Arena is currently full (${currentCount}/${max}). Please try a different room or wait for a slot.`);
@@ -152,7 +153,9 @@ const App: React.FC = () => {
             newBoard[move.row][move.col] = move.symbol;
           });
           setBoard(newBoard);
+          setTurnSymbol(message.history.length % 2 === 0 ? 'X' : 'O');
         }
+        if (message.mode) setGameMode(message.mode);
         if (message.chatHistory) {
           setChatMessages(message.chatHistory.map(msg => ({
             sender: msg.sender || 'Anonymous',
@@ -169,14 +172,20 @@ const App: React.FC = () => {
       case 'MOVE':
         if (message.row !== undefined && message.col !== undefined) {
           setHistory(prevHistory => {
+            const isDuplicate = prevHistory.some(m => m.row === message.row && m.col === message.col);
+            if (isDuplicate) return prevHistory;
+            
             const symbol = message.content || (prevHistory.length % 2 === 0 ? 'X' : 'O');
             
-            // Update board using the same symbol
+            // Schedule updates for other states
             setBoard(prevBoard => {
               const next = prevBoard.map(row => [...row]);
               next[message.row!][message.col!] = symbol;
               return next;
             });
+            setTurnSymbol(symbol === 'X' ? 'O' : 'X');
+            if (message.turnStartTime !== undefined) setTurnStartTime(message.turnStartTime);
+            if (message.turnDuration !== undefined) setTurnDuration(message.turnDuration);
 
             return [...prevHistory, {
               player: message.sender || 'Unknown',
@@ -185,16 +194,13 @@ const App: React.FC = () => {
               symbol
             }];
           });
-          
-          if (message.turnStartTime !== undefined) setTurnStartTime(message.turnStartTime);
-          if (message.turnDuration !== undefined) setTurnDuration(message.turnDuration);
         }
         break;
       case 'WIN':
         setWinner(message.winner || 'Someone');
         if (message.scores) setScores(message.scores);
         if (message.winningLine) setWinningLine(message.winningLine);
-        
+
         // Update local stats
         if (message.winner) {
           const isWinner = message.winner === username;
@@ -208,6 +214,7 @@ const App: React.FC = () => {
         setWinner(null);
         setWinningLine([]);
         setHistory([]);
+        setTurnSymbol('X');
         setBoard(Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null)));
         if (message.turnStartTime !== undefined) setTurnStartTime(message.turnStartTime);
         if (message.turnDuration !== undefined) setTurnDuration(message.turnDuration);
@@ -227,7 +234,7 @@ const App: React.FC = () => {
 
   const makeMove = (row: number, col: number) => {
     if (board[row][col] || winner || !isJoined) return;
-    
+
     // Prevent consecutive moves in MULTIPLE mode
     if (gameMode === 'MULTIPLE' && history.length > 0 && history[history.length - 1].player === username) {
       return;
@@ -256,7 +263,7 @@ const App: React.FC = () => {
   };
 
   const isMyTurn = (gameMode === 'SINGLE' || (
-    mySymbol ? (history.length % 2 === 0 ? 'X' : 'O') === mySymbol : history.length === 0 || history[history.length - 1].player !== username
+    mySymbol ? turnSymbol === mySymbol : history.length === 0 || history[history.length - 1].player !== username
   )) && (gameMode === 'SINGLE' || playerCount >= 2);
 
   return (
@@ -275,7 +282,7 @@ const App: React.FC = () => {
         turnDuration={turnDuration}
         isGameOver={!!winner}
         gameMode={gameMode}
-        currentTurnSymbol={history.length % 2 === 0 ? 'X' : 'O'}
+        currentTurnSymbol={turnSymbol}
         playerCount={playerCount}
       />
 

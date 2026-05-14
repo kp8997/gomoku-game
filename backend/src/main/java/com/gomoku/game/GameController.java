@@ -54,7 +54,6 @@ public class GameController {
         }
 
         if (room.getActiveSessionCount() == 0) {
-            room.reset();
             room.getScores().clear();
         }
         

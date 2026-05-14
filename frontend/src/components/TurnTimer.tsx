@@ -11,8 +11,8 @@ interface TurnTimerProps {
   playerCount: number;
 }
 
-const TurnTimer: React.FC<TurnTimerProps> = ({ 
-  startTime, duration, isMyTurn, isPaused, gameMode, currentTurnSymbol, playerCount 
+const TurnTimer: React.FC<TurnTimerProps> = ({
+  startTime, duration, isMyTurn, isPaused, gameMode, currentTurnSymbol, playerCount
 }) => {
   const [timeLeft, setTimeLeft] = useState(duration);
   const [progress, setProgress] = useState(1);
@@ -56,7 +56,7 @@ const TurnTimer: React.FC<TurnTimerProps> = ({
     color = currentTurnSymbol === 'X' ? '#3b82f6' : '#db2677'; // Blue vs Pink
     label = `Player ${currentTurnSymbol}`;
   } else {
-    color = isMyTurn ? '#3b82f6' : '#f59e0b'; // Blue vs Yellow
+    color = isMyTurn ? '#3b82f6' : '#f59e0b'; // Blue vs Yellow¬
     label = isMyTurn ? 'Your Turn' : 'Opponent';
   }
 
