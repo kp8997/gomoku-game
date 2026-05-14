@@ -43,7 +43,30 @@ const Header: React.FC<HeaderProps> = ({
             <div className="h-6 w-px bg-glass-border mx-2 hidden sm:block"></div>
 
             <div className="flex items-center gap-6">
-              {Object.entries(scores).length > 0 ? (
+              {gameMode === 'SINGLE' ? (
+                <>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    className="flex items-center gap-3 bg-black/5 dark:bg-white/5 p-2 px-3 rounded-2xl border border-glass-border shadow-sm"
+                  >
+                    <div className="w-3 h-3 rounded-full bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.6)] animate-pulse"></div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-content-muted uppercase font-black leading-none mb-1 tracking-tighter">Player X</span>
+                      <span className="text-xl font-black leading-none text-content tabular-nums">{scores['Player X'] || 0}</span>
+                    </div>
+                  </motion.div>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    className="flex items-center gap-3 bg-black/5 dark:bg-white/5 p-2 px-3 rounded-2xl border border-glass-border shadow-sm"
+                  >
+                    <div className="w-3 h-3 rounded-full bg-pink-500 shadow-[0_0_12px_rgba(236,72,153,0.6)] animate-pulse"></div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-content-muted uppercase font-black leading-none mb-1 tracking-tighter">Player O</span>
+                      <span className="text-xl font-black leading-none text-content tabular-nums">{scores['Player O'] || 0}</span>
+                    </div>
+                  </motion.div>
+                </>
+              ) : Object.entries(scores).length > 0 ? (
                 Object.entries(scores).map(([player, score], idx) => (
                   <motion.div
                     key={player}

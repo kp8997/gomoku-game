@@ -135,12 +135,13 @@ public class GameController {
             List<GameMessage.Move> winningLine = room.getWinningLine(message.getRow(), message.getCol());
             if (winningLine != null) {
                 stopTurnTimer(gameId);
-                room.incrementScore(message.getSender());
+                String winnerKey = (room.getMode() == GameMessage.GameMode.SINGLE) ? ("Player " + symbol) : message.getSender();
+                room.incrementScore(winnerKey);
                 GameMessage winMessage = new GameMessage();
                 winMessage.setType(GameMessage.MessageType.WIN);
                 winMessage.setSender("SYSTEM");
-                winMessage.setWinner(message.getSender());
-                winMessage.setContent(message.getSender() + " wins!");
+                winMessage.setWinner(winnerKey);
+                winMessage.setContent(winnerKey + " wins!");
                 winMessage.setScores(room.getScores());
                 winMessage.setWinningLine(winningLine);
                 messagingTemplate.convertAndSend("/topic/game/" + gameId, winMessage);

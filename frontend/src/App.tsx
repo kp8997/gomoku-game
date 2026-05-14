@@ -203,10 +203,10 @@ const App: React.FC = () => {
 
         // Update local stats
         if (message.winner) {
-          const isWinner = message.winner === username;
+          const isWinner = gameMode === 'SINGLE' || message.winner === username;
           setStats(prev => ({
-            wins: prev.wins + (isWinner ? 1 : 0),
-            losses: prev.losses + (isWinner ? 0 : 1)
+            wins: isWinner ? prev.wins + 1 : prev.wins,
+            losses: isWinner ? prev.losses : prev.losses + 1
           }));
         }
         break;
