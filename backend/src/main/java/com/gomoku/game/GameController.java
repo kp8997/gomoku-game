@@ -57,10 +57,10 @@ public class GameController {
             room.getScores().clear();
         }
         
-        room.addSession(sessionId, message.getSender());
         if (message.getMode() != null) {
             room.setMode(message.getMode());
         }
+        room.addSession(sessionId, message.getSender());
 
         message.setType(GameMessage.MessageType.JOIN);
         message.setHistory(room.getHistory());
@@ -254,6 +254,14 @@ public class GameController {
         public void addSession(String sessionId, String username) {
             activeSessions.add(sessionId);
             players.add(username);
+            
+            // Initialize scores so names appear in header immediately
+            if (mode == GameMessage.GameMode.SINGLE) {
+                scores.putIfAbsent("Player X", 0);
+                scores.putIfAbsent("Player O", 0);
+            } else {
+                scores.putIfAbsent(username, 0);
+            }
         }
 
         public void removeSession(String sessionId) {
@@ -292,6 +300,10 @@ public class GameController {
 
         public void setMode(GameMessage.GameMode mode) {
             this.mode = mode;
+            if (mode == GameMessage.GameMode.MULTIPLE) {
+                if (scores.getOrDefault("Player X", 0) == 0) scores.remove("Player X");
+                if (scores.getOrDefault("Player O", 0) == 0) scores.remove("Player O");
+            }
         }
 
         public void incrementScore(String player) {

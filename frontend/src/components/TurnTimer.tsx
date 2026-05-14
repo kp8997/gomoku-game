@@ -48,7 +48,7 @@ const TurnTimer: React.FC<TurnTimerProps> = ({
 
   let color;
   let label;
-  
+
   if (gameMode === 'MULTIPLE' && playerCount < 2) {
     color = '#f59e0b'; // Amber for waiting
     label = 'Waiting for Player';
@@ -61,7 +61,7 @@ const TurnTimer: React.FC<TurnTimerProps> = ({
   }
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3 sm:gap-2">
       <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
         {/* Background Circle */}
         <svg width={size} height={size} className="transform rotate-[-90deg] scale-x-[-1]">
@@ -102,7 +102,7 @@ const TurnTimer: React.FC<TurnTimerProps> = ({
         </div>
       </div>
 
-      <div className="flex flex-col">
+      <div className="hidden sm:flex flex-col">
         <AnimatePresence mode="wait">
           <motion.span
             key={label}
