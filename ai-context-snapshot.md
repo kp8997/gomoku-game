@@ -32,4 +32,10 @@
 - **UI Consistency**: Ensure all modals (Winner, Exit) respect the same responsive abbreviation patterns as the header.
 - **Feature Expansion**: Consider implementing "Draw" requests or "Undo" functionality (Single Mode only).
 - **Performance**: Monitor WebSocket heartbeat overhead on low-bandwidth mobile connections.
+## 6. Session Note: Input Focus Stability [2026-05-14]
+- **Bug**: Name input in light mode displayed dark background on focus.
+- **Root Cause**: Recurring inconsistency caused by hardcoding `dark:focus` utilities across components, which failed to cleanly override browser/Tailwind states during dynamic theme toggling.
+- **Solution**: Centralized input colors into the design system (`index.css`). Added `--color-input-bg` and `--color-input-focus` tokens that respond directly to the `.dark` class.
+- **Implementation**: Refactored `InformationScreen.tsx` and `ChatPanel.tsx` to use these tokens, ensuring a "single source of truth" for input aesthetics across modes.
+- **Next Step**: Audit other interactive elements for similar hardcoded theme dependencies.
 ```

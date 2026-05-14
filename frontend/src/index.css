@@ -20,6 +20,10 @@
   /* Board Specifics (Light Mode) - Clearer Grid */
   --color-board-grid: #64748b;
   --color-board-cell: #ffffff;
+
+  /* Input Specifics */
+  --color-input-bg: rgba(15, 23, 42, 0.05);
+  --color-input-focus: #ffffff;
 }
 
 /* Custom Utilities and Base Styles */
@@ -38,6 +42,10 @@
     /* Bright & Clear Board for Dark Mode */
     --color-board-grid: #475569;
     --color-board-cell: #1e293b;
+
+    /* Input Specifics - Dark Mode */
+    --color-input-bg: rgba(255, 255, 255, 0.05);
+    --color-input-focus: #0f172a;
   }
 }
 

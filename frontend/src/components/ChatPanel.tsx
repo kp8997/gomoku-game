@@ -121,7 +121,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Type a message..."
-            className="w-full bg-slate-900/5 dark:bg-white/5 border border-glass-border rounded-2xl py-3 pl-4 pr-12 text-sm text-content placeholder:text-content-muted focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+            className="w-full bg-input-bg border border-glass-border rounded-2xl py-3 pl-4 pr-12 text-sm text-content placeholder:text-content-muted focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:bg-input-focus transition-all"
           />
           <button
             type="submit"

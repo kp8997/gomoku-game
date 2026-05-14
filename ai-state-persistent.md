@@ -195,6 +195,8 @@ isMyTurn = (gameMode === 'SINGLE' || (
 | `--color-glass-border` | `rgba(15,23,42,0.1)` | `rgba(255,255,255,0.1)` |
 | `--color-board-grid` | `#64748b` | `#475569` |
 | `--color-board-cell` | `#ffffff` | `#1e293b` |
+| `--color-input-bg` | `rgba(15,23,42,0.05)` | `rgba(255,255,255,0.05)` |
+| `--color-input-focus` | `#ffffff` | `#0f172a` |
 | `--color-brand` | `#3b82f6` | — |
 | `--color-accent` | `#ec4899` | — |
 
@@ -357,5 +359,11 @@ network: gomoku-network (bridge)
 - **Blur Values**: Warning=3px (edges), Urgent=5px (edges). Center always 0.
 - **Vignette**: `inset box-shadow` with pulsing opacity for peripheral awareness.
 - **Urgent Edge Flash**: 4px red border flashing at 0.4s interval.
+
+### Session: Input Focus Stability [2026-05-14]
+- **Issue**: Name input showed dark background on focus in light mode.
+- **Root Cause**: Specificity/consistency issues with hardcoded `dark:focus` utilities.
+- **Refactor**: Centralized `--color-input-bg` and `--color-input-focus` in `index.css`.
+- **Outcome**: Inputs now automatically adapt their focus state based on the theme variable, eliminating "back and forth" CSS bugs.
 
 
