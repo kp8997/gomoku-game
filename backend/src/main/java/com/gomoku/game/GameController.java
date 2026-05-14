@@ -26,7 +26,7 @@ public class GameController {
     private final Map<String, GameRoom> games = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
     private final Map<String, ScheduledFuture<?>> gameTimers = new ConcurrentHashMap<>();
-    private static final int TURN_DURATION_SECONDS = 5; // As requested for testing
+    private static final int TURN_DURATION_SECONDS = 60;
 
     public GameController(SimpMessagingTemplate messagingTemplate) {
         this.messagingTemplate = messagingTemplate;

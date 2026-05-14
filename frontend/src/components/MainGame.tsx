@@ -28,14 +28,22 @@ const MainGame: React.FC<MainGameProps> = ({
 
   React.useEffect(() => {
     if (winner) {
-      const timer = setTimeout(() => {
+      // If it's a timeout win (no winning line), show immediately.
+      // Otherwise, wait for the line animation to finish.
+      const delay = winningLine && winningLine.length > 0 ? 2500 : 0;
+
+      if (delay === 0) {
         setShowWinnerPopup(true);
-      }, 3500);
-      return () => clearTimeout(timer);
+      } else {
+        const timer = setTimeout(() => {
+          setShowWinnerPopup(true);
+        }, delay);
+        return () => clearTimeout(timer);
+      }
     } else {
       setShowWinnerPopup(false);
     }
-  }, [winner]);
+  }, [winner, winningLine]);
 
   return (
     <LayoutGroup>
@@ -89,70 +97,70 @@ const MainGame: React.FC<MainGameProps> = ({
                   gridTemplateColumns: `repeat(${board.length}, 1fr)`,
                 }}
               >
-              {board.map((row, r) => {
-                return row.map((cell, c) => {
-                  const lastMove = history.length > 0 ? history[history.length - 1] : null;
-                  const isLastMove = lastMove && lastMove.row === r && lastMove.col === c;
-                  const isWinningCell = winningLine.some(m => m.row === r && m.col === c);
+                {board.map((row, r) => {
+                  return row.map((cell, c) => {
+                    const lastMove = history.length > 0 ? history[history.length - 1] : null;
+                    const isLastMove = lastMove && lastMove.row === r && lastMove.col === c;
+                    const isWinningCell = winningLine.some(m => m.row === r && m.col === c);
 
-                  return (
-                    <div
-                      key={`${r}-${c}`}
-                      className={`
+                    return (
+                      <div
+                        key={`${r}-${c}`}
+                        className={`
                       w-8 h-8 sm:w-10 sm:h-10 bg-board-cell border-[1px] border-board-grid flex items-center justify-center transition-colors relative group
                       ${isWinningCell ? 'z-40' : ''}
                       ${isMyTurn && !winner ? 'cursor-pointer hover:bg-black/5 dark:hover:bg-white/5' : 'cursor-not-allowed opacity-90'}
                     `}
-                      onClick={() => isMyTurn && !winner && makeMove(r, c)}
-                    >
-                      {/* Minimal Cell Background */}
-                      <div className="absolute inset-0 bg-black/5 dark:bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                        onClick={() => isMyTurn && !winner && makeMove(r, c)}
+                      >
+                        {/* Minimal Cell Background */}
+                        <div className="absolute inset-0 bg-black/5 dark:bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
-                      {isLastMove && (
-                        <motion.div
-                          layoutId="lastMoveIndicator"
-                          className="absolute top-1 right-1 w-2.5 h-2.5 bg-yellow-400 rounded-full shadow-[0_0_10px_#facc15] blur-[1px] z-30 pointer-events-none"
-                          initial={{ scale: 0 }}
-                          animate={{
-                            scale: [1, 1.4, 1],
-                            opacity: [0.8, 1, 0.8]
-                          }}
-                          transition={{
-                            scale: { repeat: Infinity, duration: 1.5 },
-                            opacity: { repeat: Infinity, duration: 1.5 },
-                            type: "spring",
-                            stiffness: 500,
-                            damping: 30
-                          }}
-                        />
-                      )}
+                        {isLastMove && (
+                          <motion.div
+                            layoutId="lastMoveIndicator"
+                            className="absolute top-1 right-1 w-2.5 h-2.5 bg-yellow-400 rounded-full shadow-[0_0_10px_#facc15] blur-[1px] z-30 pointer-events-none"
+                            initial={{ scale: 0 }}
+                            animate={{
+                              scale: [1, 1.4, 1],
+                              opacity: [0.8, 1, 0.8]
+                            }}
+                            transition={{
+                              scale: { repeat: Infinity, duration: 1.5 },
+                              opacity: { repeat: Infinity, duration: 1.5 },
+                              type: "spring",
+                              stiffness: 500,
+                              damping: 30
+                            }}
+                          />
+                        )}
 
-                      {isLastMove && (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="absolute inset-0 bg-blue-500/30 dark:bg-blue-500/40 z-0 pointer-events-none"
-                        />
-                      )}
+                        {isLastMove && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="absolute inset-0 bg-blue-500/30 dark:bg-blue-500/40 z-0 pointer-events-none"
+                          />
+                        )}
 
 
-                      {cell && (
-                        <motion.div
-                          initial={{ scale: 0, rotate: -45 }}
-                          animate={{ scale: 1, rotate: 0 }}
-                          className={`
+                        {cell && (
+                          <motion.div
+                            initial={{ scale: 0, rotate: -45 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            className={`
                             flex items-center justify-center text-xl sm:text-2xl font-black z-10 select-none
                             ${cell === 'X' ? 'text-blue-600 drop-shadow-[0_0_10px_rgba(37,99,235,0.5)]' : 'text-pink-600 drop-shadow-[0_0_10px_rgba(219,39,119,0.5)]'}
                           `}
-                        >
-                          {cell}
-                        </motion.div>
-                      )}
-                    </div>
-                  );
-                });
-              })}
-            </div>
+                          >
+                            {cell}
+                          </motion.div>
+                        )}
+                      </div>
+                    );
+                  });
+                })}
+              </div>
 
               {/* SVG Winning Line */}
               {winner && winningLine.length >= 5 && (
