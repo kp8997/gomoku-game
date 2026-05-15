@@ -9,6 +9,8 @@ services:
     ports:
       - "8888:8888"
     restart: unless-stopped
+    volumes:
+      - gomoku-db:/app/data
     networks:
       - gomoku-network
 
@@ -31,3 +33,6 @@ networks:
   gomoku-network:
     name: gomoku-network
     driver: bridge
+
+volumes:
+  gomoku-db:

@@ -8,9 +8,14 @@ import Header from './components/Header';
 import InformationScreen from './components/InformationScreen';
 import MainGame from './components/MainGame';
 import TimeoutWarning from './components/TimeoutWarning';
+import AuthModal from './components/AuthModal';
+import ProfileModal from './components/ProfileModal';
 
 // Types
 import { type Move, type GameMessage, type ChatMessage } from './types';
+
+// Context
+import { useAuth } from './context/AuthContext';
 
 const BOARD_SIZE = 20;
 
@@ -27,6 +32,7 @@ const ANIMALS = [
 ];
 
 const App: React.FC = () => {
+  const { user, isAuthenticated } = useAuth();
   const [username, setUsername] = useState<string>('');
   const [isJoined, setIsJoined] = useState<boolean>(false);
   const [board, setBoard] = useState<(string | null)[][]>(
@@ -54,6 +60,10 @@ const App: React.FC = () => {
   const [isRoomFull, setIsRoomFull] = useState<boolean>(false);
   const [roomFullReason, setRoomFullReason] = useState<string | null>(null);
 
+  // Auth Modals
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
+  const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
+
   const stompClient = useRef<Stomp.Client | null>(null);
 
   useEffect(() => {
@@ -77,8 +87,14 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    generateRandomName();
+    if (isAuthenticated && user) {
+      setUsername(user.username);
+    } else if (!username) {
+      generateRandomName();
+    }
+  }, [isAuthenticated, user]);
 
+  useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const room = urlParams.get('room') || Math.random().toString(36).substring(7);
     setGameId(room);
@@ -285,6 +301,11 @@ const App: React.FC = () => {
         gameMode={gameMode}
         currentTurnSymbol={turnSymbol}
         playerCount={playerCount}
+        onOpenAuth={() => setShowAuthModal(true)}
+        onOpenProfile={() => setShowProfileModal(true)}
+        isAuthenticated={isAuthenticated}
+        userAvatar={user?.avatar || null}
+        userFullName={user?.fullName || null}
       />
 
       <div className="flex-1 flex flex-col relative overflow-hidden">
@@ -303,6 +324,8 @@ const App: React.FC = () => {
             roomFullReason={roomFullReason}
             serverGameMode={serverGameMode}
             createNewRoom={createNewRoom}
+            onOpenAuth={() => setShowAuthModal(true)}
+            isAuthenticated={isAuthenticated}
           />
         ) : (
           <MainGame
@@ -329,6 +352,16 @@ const App: React.FC = () => {
         duration={turnDuration}
         isMyTurn={isMyTurn}
         isPaused={!!winner}
+      />
+
+      {/* Auth Modals */}
+      <AuthModal 
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
+      <ProfileModal 
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
       />
     </div>
   );

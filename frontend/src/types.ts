@@ -30,3 +30,37 @@ export interface GameMessage {
   turnDuration?: number;
   playerSymbol?: string;
 }
+
+// Auth
+export interface SignupRequest {
+  username: string;
+  password: string;
+  fullName: string;
+  avatar?: string; // Base64
+}
+
+export interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  username: string;
+  fullName: string;
+  avatar: string | null;
+}
+
+export interface UserProfile {
+  username: string;
+  fullName: string;
+  avatar: string | null;
+}
+
+export interface ConfrontationRecord {
+  opponentUsername: string;
+  opponentFullName: string;
+  opponentAvatar: string | null;
+  wins: number;
+  losses: number;
+}

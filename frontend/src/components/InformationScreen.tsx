@@ -16,12 +16,14 @@ interface InformationScreenProps {
   roomFullReason: string | null;
   serverGameMode: 'SINGLE' | 'MULTIPLE' | null;
   createNewRoom: () => void;
+  onOpenAuth: () => void;
+  isAuthenticated: boolean;
 }
 
 const InformationScreen: React.FC<InformationScreenProps> = ({
   username, setUsername, generateRandomName, gameId, gameMode, setGameMode,
   copied, copyToClipboard, connect, isRoomFull, roomFullReason, serverGameMode,
-  createNewRoom
+  createNewRoom, onOpenAuth, isAuthenticated
 }) => {
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-4 min-h-0 overflow-y-auto">
@@ -43,6 +45,16 @@ const InformationScreen: React.FC<InformationScreenProps> = ({
                 <h1 className="text-3xl font-black tracking-tight mb-1 text-content">Gomoku Arena</h1>
                 <p className="text-content-muted text-sm font-medium uppercase tracking-widest opacity-70">20x20 Strategic Battle</p>
               </div>
+
+              {!isAuthenticated && (
+                <button 
+                  onClick={onOpenAuth}
+                  className="mt-2 text-[10px] font-black uppercase tracking-widest text-brand hover:text-brand-hover transition-colors flex items-center gap-1 group"
+                >
+                  <span className="opacity-60">Already have an account?</span>
+                  <span className="underline underline-offset-4 group-hover:no-underline">Log In</span>
+                </button>
+              )}
             </div>
 
             {/* Form section */}

@@ -23,13 +23,19 @@ import java.util.concurrent.TimeUnit;
 public class GameController {
 
     private final SimpMessagingTemplate messagingTemplate;
+    private final com.gomoku.game.service.ConfrontationService confrontationService;
+    private final com.gomoku.game.repository.UserRepository userRepository;
     private final Map<String, GameRoom> games = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
     private final Map<String, ScheduledFuture<?>> gameTimers = new ConcurrentHashMap<>();
     private static final int TURN_DURATION_SECONDS = 60;
 
-    public GameController(SimpMessagingTemplate messagingTemplate) {
+    public GameController(SimpMessagingTemplate messagingTemplate, 
+                          com.gomoku.game.service.ConfrontationService confrontationService,
+                          com.gomoku.game.repository.UserRepository userRepository) {
         this.messagingTemplate = messagingTemplate;
+        this.confrontationService = confrontationService;
+        this.userRepository = userRepository;
     }
 
     @MessageMapping("/game.join")
@@ -145,6 +151,7 @@ public class GameController {
                 winMessage.setScores(room.getScores());
                 winMessage.setWinningLine(winningLine);
                 messagingTemplate.convertAndSend("/topic/game/" + gameId, winMessage);
+                recordConfrontation(room, winnerKey);
                 room.reset();
             } else {
                 startTurnTimer(gameId);
@@ -220,6 +227,7 @@ public class GameController {
         timeoutMessage.setContent(currentPlayer + " timed out! " + winner + " wins!");
         timeoutMessage.setScores(room.getScores());
         messagingTemplate.convertAndSend("/topic/game/" + gameId, timeoutMessage);
+        recordConfrontation(room, winner);
         room.reset();
     }
 
@@ -233,6 +241,34 @@ public class GameController {
         message.setType(GameMessage.MessageType.CHAT);
         message.setTimestamp(System.currentTimeMillis());
         messagingTemplate.convertAndSend("/topic/game/" + gameId, message);
+    }
+
+    private void recordConfrontation(GameRoom room, String winnerUsername) {
+        if (room.getMode() != GameMessage.GameMode.MULTIPLE) return;
+        
+        List<String> players = new ArrayList<>(room.getPlayers());
+        if (players.size() != 2) return;
+        
+        // Look up both players in DB - if either is not a registered user, skip
+        var user1Opt = userRepository.findByUsername(players.get(0));
+        var user2Opt = userRepository.findByUsername(players.get(1));
+        
+        if (user1Opt.isPresent() && user2Opt.isPresent()) {
+            var user1 = user1Opt.get();
+            var user2 = user2Opt.get();
+            
+            // Find which user is the winner
+            Long winnerId = null;
+            if (winnerUsername.equals(user1.getUsername())) {
+                winnerId = user1.getId();
+            } else if (winnerUsername.equals(user2.getUsername())) {
+                winnerId = user2.getId();
+            }
+            
+            if (winnerId != null) {
+                confrontationService.recordWin(user1.getId(), user2.getId(), winnerId);
+            }
+        }
     }
 
     private static class GameRoom {

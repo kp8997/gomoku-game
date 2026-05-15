@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Moon, Sun, Layout, LogOut } from 'lucide-react';
+import { Moon, Sun, Layout, LogOut, User as UserIcon, ChevronDown } from 'lucide-react';
 import TurnTimer from './TurnTimer';
+import UserDropdown from './UserDropdown';
 
 interface HeaderProps {
   isJoined: boolean;
@@ -19,12 +20,19 @@ interface HeaderProps {
   gameMode: 'SINGLE' | 'MULTIPLE';
   currentTurnSymbol: 'X' | 'O';
   playerCount: number;
+  onOpenAuth: () => void;
+  onOpenProfile: () => void;
+  isAuthenticated: boolean;
+  userAvatar: string | null;
+  userFullName: string | null;
 }
 
 const Header: React.FC<HeaderProps> = ({
   isJoined, scores, showDrawer, setShowDrawer, isLightMode, setIsLightMode, isMyTurn, leaveGame, username,
-  turnStartTime, turnDuration, isGameOver, gameMode, currentTurnSymbol, playerCount
+  turnStartTime, turnDuration, isGameOver, gameMode, currentTurnSymbol, playerCount,
+  onOpenAuth, onOpenProfile, isAuthenticated, userAvatar, userFullName
 }) => {
+  const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const getInitials = (name: string) => {
     if (!name) return '';
     return name.split(' ')
@@ -116,13 +124,38 @@ const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
-        <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
-          {username && (
-            <span className="text-[10px] md:text-xs font-black text-blue-500 uppercase tracking-widest hidden md:inline whitespace-nowrap">
-              HI {username}
-            </span>
-          )}
-          <div className="text-[var(--text-muted)] text-[10px] sm:text-xs uppercase tracking-widest font-bold hidden lg:inline">
+        <div className="flex items-center gap-1 sm:gap-2 md:gap-4 relative">
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-white/5 transition-all group cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-full overflow-hidden bg-white/10 border border-glass-border flex items-center justify-center group-hover:border-brand transition-colors">
+              {isAuthenticated && userAvatar ? (
+                <img src={userAvatar} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <UserIcon size={16} className="text-content-muted group-hover:text-brand transition-colors" />
+              )}
+            </div>
+            <div className="hidden md:flex flex-col items-start leading-tight">
+              <span className="text-[10px] font-black text-content-muted uppercase tracking-widest group-hover:text-brand transition-colors">
+                Hi,
+              </span>
+              <span className="text-xs font-bold text-content truncate max-w-[100px]">
+                {isAuthenticated ? userFullName : username}
+              </span>
+            </div>
+            <ChevronDown size={14} className={`text-content-muted group-hover:text-content transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          <UserDropdown 
+            isOpen={isDropdownOpen}
+            onClose={() => setIsDropdownOpen(false)}
+            onOpenAuth={onOpenAuth}
+            onOpenProfile={onOpenProfile}
+            username={username}
+          />
+
+          <div className="text-[var(--text-muted)] text-[10px] sm:text-xs uppercase tracking-widest font-bold hidden xl:inline">
             20x20 Arena
           </div>
         </div>
