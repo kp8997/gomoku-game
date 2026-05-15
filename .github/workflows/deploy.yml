@@ -29,5 +29,5 @@ jobs:
             # Pull latest changes
             git pull origin master
             
-            # Build and restart only the backend service
-            docker compose up -d --build backend
+            # Build and restart backend with its database dependency
+            docker compose up -d --build postgres backend

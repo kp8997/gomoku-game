@@ -9,8 +9,34 @@ services:
     ports:
       - "8888:8888"
     restart: unless-stopped
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=gomoku_db
+      - DB_USER=admin-gomoku
+      - DB_PASSWORD=gomoku_password
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - gomoku-network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: gomoku-postgres
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_DB=gomoku_db
+      - POSTGRES_USER=admin-gomoku
+      - POSTGRES_PASSWORD=gomoku_password
     volumes:
-      - gomoku-db:/app/data
+      - gomoku-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin-gomoku -d gomoku_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - gomoku-network
 
@@ -35,4 +61,4 @@ networks:
     driver: bridge
 
 volumes:
-  gomoku-db:
+  gomoku-pg-data:

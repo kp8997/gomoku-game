@@ -48,10 +48,10 @@ Every plan **must** include these sections in this exact order:
 4. **Completeness**: Every file that will be created or modified must be listed. No surprises during execution.
 5. **Constraint-Driven**: Rules section captures all hard requirements upfront to prevent regressions.
 
-### Current Plans
 | ID | Feature | Status | File |
 |:---|:---|:---|:---|
 | 01 | Authentication, Profile & Confrontation Records | ✅ Implemented | `ai-feature-plan/01-ai-auth-feature-plan.md` |
+| 02 | PostgreSQL Migration | ✅ Implemented | `ai-feature-plan/02-ai-postgresql-migration-feature-plan.md` |
 
 
 ## 1. Project Architecture
@@ -63,7 +63,7 @@ Every plan **must** include these sections in this exact order:
 | **Frontend** | React 19 + TypeScript | Vite 8, Tailwind CSS 4.0, Framer Motion 12 |
 | **Icons** | Lucide React | `Moon`, `Sun`, `Layout`, `LogOut`, `User`, `RefreshCw`, `Copy`, `Check`, `History`, `MessageSquare`, `Send`, `X`, `Hash`, `Trophy` |
 | **WebSocket** | SockJS + StompJS | Endpoint: `/ws-gomoku`, Topic: `/topic/game/{room}` |
-| **Deployment** | Docker Compose | Backend `:8888`, Frontend `:9999`, Network: `gomoku-network` |
+| **Deployment** | Docker Compose | Backend `:8888`, Frontend `:9999`, PostgreSQL `:5434`, Network: `gomoku-network` |
 | **CI/CD** | GitHub Actions | Auto-deploy to Oracle Cloud via SSH |
 | **Hosting** | Oracle Cloud (Backend) + Vercel (Frontend) | Nginx reverse proxy with SSL for WSS |
 
@@ -475,3 +475,10 @@ network: gomoku-network (bridge)
 - **Root Cause**: The component lacked a `startTime > 0` check, and the initial `turnDuration` of 5s satisfied the `timeLeft <= 15s` condition immediately on mount.
 - **Fix**: Added `startTime > 0` to the visibility condition.
 - **Cleanup**: Updated default `turnDuration` in `App.tsx` to 60s to align with backend constants and manifest.
+
+### Session: PostgreSQL Migration [2026-05-16]
+- **Migration**: Swapped SQLite for PostgreSQL to support production-scale persistence.
+- **Infrastructure**: Added `postgres:16-alpine` service to `docker-compose.yml` with healthchecks.
+- **Credentials**: Configured dedicated account `admin-gomoku` for the `gomoku_db` database.
+- **Connectivity**: Exposed PostgreSQL on external port `5434` as requested.
+- **Configuration**: Updated backend `application.properties` with environment-variable-backed PostgreSQL connection string and dialect.

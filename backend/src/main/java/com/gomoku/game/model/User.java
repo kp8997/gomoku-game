@@ -22,8 +22,7 @@ public class User {
     @Column(nullable = false)
     private String fullName;
 
-    @Lob
-    @Column(name = "avatar")
+    @Column(name = "avatar", columnDefinition = "TEXT")
     private String avatar; // Base64 encoded image string
 
     @CreationTimestamp
