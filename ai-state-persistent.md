@@ -1,6 +1,59 @@
 
 # Schema & Logic Manifest [2026-05-16]
 
+## 0. AI Feature Plan Protocol
+
+> **MANDATORY**: Before coding any new feature, create a detailed plan document first.
+
+### Naming Convention
+- **Format**: `{NN}-ai-{feature-name}-feature-plan.md`
+- **Location**: `ai-feature-plan/` directory at project root
+- **Numbering**: Sequential, zero-padded (`01`, `02`, `03`...)
+- **Examples**: `01-ai-auth-feature-plan.md`, `02-ai-matchmaking-feature-plan.md`
+
+### Required Sections (Template)
+
+Every plan **must** include these sections in this exact order:
+
+| # | Section | Purpose |
+|:---|:---|:---|
+| 1 | **Objective** | What the feature does, why, and what's preserved (backward compat) |
+| 2 | **Database Schema** | Tables, columns, types, constraints, indexes, relationships |
+| 3 | **Backend Architecture** | Dependencies, config, file structure, REST API endpoints, security, validation rules, core logic |
+| 4 | **Frontend Architecture** | File structure, modified files, TypeScript interfaces, state management, validation rules, API layer |
+| 5 | **UI/UX Specification** | Component behavior, conditional rendering, interaction details, design tokens |
+| 6 | **Integration Points** | How the feature connects to existing systems (WebSocket, state sync, etc.) |
+| 7 | **Docker Deployment** | Volume mounts, env vars, config changes needed for containerized deployment |
+| 8 | **Constraints & Rules** | Numbered list of non-negotiable rules and constraints |
+| 9 | **Execution Phases** | Ordered phases with numbered steps — backend first, then frontend, then polish |
+| 10 | **File Modification Summary** | Tables listing every file to CREATE and every file to MODIFY with purpose/change |
+
+### Header Format
+
+```markdown
+# Feature Plan #NN — Feature Title
+
+> **Plan ID**: `NN`  
+> **Status**: 🔲 Not Started | 🔄 In Progress | ✅ Implemented  
+> **Created**: YYYY-MM-DD  
+> **Last Updated**: YYYY-MM-DD  
+> **Scope**: Brief scope description  
+> **Stack**: Technologies involved
+```
+
+### Key Principles
+1. **Clarity**: Any AI model (not just the one that wrote it) must be able to execute the plan without ambiguity.
+2. **Precision**: Include exact file paths, exact interface shapes, exact SQL, exact validation regex.
+3. **Consistency**: All plans follow the same section order, table formats, and code block styles.
+4. **Completeness**: Every file that will be created or modified must be listed. No surprises during execution.
+5. **Constraint-Driven**: Rules section captures all hard requirements upfront to prevent regressions.
+
+### Current Plans
+| ID | Feature | Status | File |
+|:---|:---|:---|:---|
+| 01 | Authentication, Profile & Confrontation Records | ✅ Implemented | `ai-feature-plan/01-ai-auth-feature-plan.md` |
+
+
 ## 1. Project Architecture
 
 ### Stack
@@ -20,21 +73,53 @@ backend/src/main/java/com/gomoku/game/
 ├── GomokuApplication.java      # Spring Boot entry point
 ├── WebSocketConfig.java        # STOMP broker config (/topic, /app)
 ├── GameMessage.java            # Message schema + inner classes (Move, ChatMessage, enums)
-└── GameController.java         # Game logic, room management, timer, win detection
+├── GameController.java         # Game logic, room management, timer, win detection, confrontation recording
+├── model/
+│   ├── User.java               # JPA entity (manual builder, no Lombok)
+│   └── ConfrontationRecord.java # JPA entity (canonical pair)
+├── repository/
+│   ├── UserRepository.java
+│   └── ConfrontationRepository.java
+├── dto/
+│   ├── SignupRequest.java
+│   ├── LoginRequest.java
+│   ├── AuthResponse.java
+│   ├── ProfileUpdateRequest.java
+│   ├── UserProfileResponse.java
+│   └── ConfrontationDTO.java
+├── service/
+│   ├── AuthService.java        # Signup validation, login, token gen
+│   ├── UserService.java        # Profile CRUD
+│   └── ConfrontationService.java # H2H record/query
+├── security/
+│   ├── SecurityConfig.java     # HTTP security filter chain
+│   ├── JwtTokenProvider.java   # JWT creation & validation
+│   └── JwtAuthenticationFilter.java # OncePerRequestFilter
+└── controller/
+    ├── AuthController.java     # POST /api/auth/signup, /api/auth/login
+    └── UserController.java     # GET/PUT /api/user/profile
 
 frontend/src/
-├── App.tsx                     # Root: state management, WebSocket, routing
+├── App.tsx                     # Root: state management, WebSocket, routing, auth integration
 ├── index.css                   # Design system: tokens, dark mode, glassmorphism
-├── types.ts                    # TypeScript interfaces (Move, ChatMessage, GameMessage)
+├── main.tsx                    # Entry point, wrapped in AuthProvider
+├── types.ts                    # TypeScript interfaces (Move, ChatMessage, GameMessage, auth types)
+├── api/
+│   └── authApi.ts              # fetch wrappers for auth & profile endpoints
+├── context/
+│   └── AuthContext.tsx          # React Context for auth state (user, token, login/logout)
 └── components/
-    ├── Header.tsx              # Scores, timer, drawer toggle, theme, exit
-    ├── InformationScreen.tsx   # Pre-game: name, mode select, join/copy
+    ├── Header.tsx              # Scores, timer, drawer toggle, theme, exit, auth identity (sticky)
+    ├── InformationScreen.tsx   # Pre-game: name, mode select, join/copy, login prompt
     ├── MainGame.tsx            # Board grid, winning line SVG, winner popup
     ├── GameDrawer.tsx          # Side panel: tabs for History & Chat
     ├── ChatPanel.tsx           # Real-time chat with inline/standalone modes
     ├── HistorySection.tsx      # Move history list
     ├── TurnTimer.tsx           # Circular SVG countdown timer
-    └── TimeoutWarning.tsx      # Global timeout warning overlay
+    ├── TimeoutWarning.tsx      # Global timeout warning overlay
+    ├── AuthModal.tsx           # Login/Signup modal (tabbed, glassmorphism)
+    ├── UserDropdown.tsx        # User menu dropdown (auth-only, click-outside)
+    └── ProfileModal.tsx        # Profile editor + confrontation records
 ```
 
 ## 2. WebSocket Schema (GameMessage.java)
@@ -149,6 +234,10 @@ GameMessage { type, content?, sender?, row?, col?, gameId?, mode?, history?, cha
 | `serverGameMode` | `'SINGLE'\|'MULTIPLE'\|null` | `null` | Server-reported mode (locks UI) |
 | `isRoomFull` | `boolean` | `false` | Blocks join button |
 | `roomFullReason` | `string\|null` | `null` | Displayed in warning banner |
+| `isAuthenticated` | `boolean` | `false` | Auth state from AuthContext |
+| `user` | `AuthResponse\|null` | `null` | Logged-in user details |
+| `showAuthModal` | `boolean` | `false` | Login/Signup modal toggle |
+| `showProfileModal` | `boolean` | `false` | Profile editor modal toggle |
 
 ### Derived State
 ```typescript
@@ -351,26 +440,38 @@ network: gomoku-network (bridge)
 - **SSL**: Let's Encrypt certificates for custom domain (WSS support).
 - **Docker Port Mapping**: Backend 8888, Frontend 9999.
 
-### Session: TimeoutWarning Overlay [2026-05-14]
-- **Component**: `TimeoutWarning.tsx` — global `fixed inset-0` overlay with `pointer-events-none`.
-- **Radial Mask**: Center 35% transparent (board clear), edges receive blur + tint.
-- **Color Progression**: Yellow (15s) → Red (5s). Pulse speed accelerates in urgent phase.
-- **UX Decision**: Initial full-screen blur blocked cell clicks during critical final seconds → solved with radial mask to keep game grid fully interactive.
-- **Blur Values**: Warning=3px (edges), Urgent=5px (edges). Center always 0.
-- **Vignette**: `inset box-shadow` with pulsing opacity for peripheral awareness.
-- **Urgent Edge Flash**: 4px red border flashing at 0.4s interval.
+### Session: Authentication & Security Hardening [2026-05-16]
+- **Architecture**: Introduced SQLite persistence with JWT-based stateless auth.
+- **SQLite Volume**: Configured `gomoku-db` named volume in `docker-compose.yml` mapped to `/app/data` to ensure data persistence across container restarts.
+- **Backend Validation**: `AuthService.validateSignup` enforces strict regex: `min 8 chars`, `1+ letter`, `1+ digit`, `1+ special`.
+- **Frontend Validation**: `AuthModal.tsx` mirrors backend rules with real-time UI hints and regex enforcement.
+- **Header Visibility Logic**:
+  - **Anonymous + Info Screen**: User identity section hidden to keep landing page clean.
+  - **Anonymous + In Game**: Static "Hi, [Name]" display to provide feedback without exposing account menus.
+  - **Authenticated**: Full interactive identity section with dropdown.
+- **Sticky Header**: Added `sticky top-0` and `z-50` to the header. Combined with `flex-1` on the content area to ensure the header stays fixed during overflow scrolling on small screens.
+- **Dropdown UX**: Implemented `dropdownRef` with a global `mousedown` listener to close the `UserDropdown` when clicking anywhere outside the identity section.
+- **Type-Only Imports**: Switched all type imports to `import type` to satisfy `verbatimModuleSyntax` and resolve build errors.
 
-### Session: Input Focus Stability [2026-05-14]
-- **Issue**: Name input showed dark background on focus in light mode.
-- **Root Cause**: Specificity/consistency issues with hardcoded `dark:focus` utilities.
-- **Refactor**: Centralized `--color-input-bg` and `--color-input-focus` in `index.css`.
-- **Outcome**: Inputs now automatically adapt their focus state based on the theme variable, eliminating "back and forth" CSS bugs.
+### Session: AI Feature Plan Protocol [2026-05-16]
+- **Protocol**: Mandated the creation of standardized feature plans in `ai-feature-plan/` before any code modification.
+- **Template**: Enforced a 10-section template (Objective → Schema → Architecture → UI/UX → Integration → Docker → Constraints → Phases → Summary) for cross-session and cross-model clarity.
+- **Naming**: `{NN}-ai-{feature-name}-feature-plan.md`.
+
+## 14. Authentication Variable Mappings
+- **JWT Key**: `jwt.secret` in `application.properties`.
+- **Auth Headers**: `Authorization: Bearer <token>`.
+- **LocalStorage Keys**: `gomoku_token`, `gomoku_user`.
+- **Password Regex**: `/[!@#$%^&*(),.?":{}|<>]/.test(password)`.
+- **Avatar Limit**: 500KB (Base64 encoded).
+
+## 15. UI Logic Refinements
+- **Header Sticky**: `h-16 w-full sticky top-0 bg-[var(--glass-bg)] backdrop-blur-xl z-50`.
+- **Click-Outside**: `dropdownRef.current && !dropdownRef.current.contains(event.target)`.
+- **Identity Condition**: `(isJoined || isAuthenticated) && ...` wrapping the user section in `Header.tsx`.
 
 ### Session: TimeoutWarning Logic Correction [2026-05-14]
 - **Bug**: Global `TimeoutWarning` overlay appeared on the pre-game information screen.
 - **Root Cause**: The component lacked a `startTime > 0` check, and the initial `turnDuration` of 5s satisfied the `timeLeft <= 15s` condition immediately on mount.
 - **Fix**: Added `startTime > 0` to the visibility condition.
 - **Cleanup**: Updated default `turnDuration` in `App.tsx` to 60s to align with backend constants and manifest.
-
-
-

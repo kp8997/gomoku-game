@@ -1,32 +1,29 @@
 ```markdown
-# Session Snapshot: Gomoku Optimization & Stability [2026-05-16]
+# Session Snapshot: Authentication & Security Hardening [2026-05-16]
 
-## 1. Architectural Core
-- **Source of Truth**: Java backend (Spring Boot) manages authoritative game state, turn timers (ScheduledExecutorService), and room sessions.
-- **State Sync**: React frontend synchronizes with `turnStartTime` (ms) and `turnDuration` (default 60s) for predictive circular timer rendering.
-- **Turn Logic**: Explicit `turnSymbol` ('X' or 'O') derived from history length drives UI coloring, decoupling state from race conditions.
-- **Identity Management**: Anonymous sessions with randomly generated usernames (ADJECTIVES × ANIMALS). No `localStorage` persistence.
+## 1. Architectural Decisions & Decisions
+- **Persistence**: Switched from stateless anonymous sessions to persistent SQLite-backed user accounts. Named volume `gomoku-db` ensures data survives container rebuilds.
+- **Security**: Implemented JWT-based stateless authentication. All `/api/user/**` endpoints require a Bearer token.
+- **Validation Sync**: Rigid synchronization of regex-based password validation (min 8 chars, 1+ letter, 1+ number, 1+ special) and username length (min 3 chars) across React (`AuthModal.tsx`) and Spring Boot (`AuthService.java`).
+- **UI Identity Logic**:
+  - Anonymous players on `InformationScreen`: Identity section hidden.
+  - Anonymous players in-game: Static "Hi, [Name]" display (non-interactive).
+  - Authenticated players: "Hi, [FullName]" button with `UserDropdown` and click-outside closure.
+- **Header**: Refactored to `sticky top-0` with `z-50` to maintain global controls (timer, theme, exit) during vertical scroll on mobile/small viewports.
 
-## 2. Design System & UX
-- **Theme Engine**: Tailwind 4.0 with CSS variables in `index.css`. Glassmorphism (backdrop-blur, glass-bg) applied globally via `.glass-card`.
-- **Input Stability**: Centralized `--color-input-bg` and `--color-input-focus` tokens ensure consistent light/dark mode behavior on focus without utility conflicts.
-- **Responsive Breakpoints**: 
-  - **<425px**: Ultra-compact header. Scores as `X: 0`. Exit text hidden.
-  - **768px - 1024px**: Initial-based names (e.g., "Swift Dragon" -> "SD").
-  - **>1024px**: Full usernames and "20x20 Arena" badge.
+## 2. Established Constraints
+- **Lombok Avoidance**: Explicit manual getters/setters/builders in Java to prevent JDK 21 reflection/build conflicts.
+- **Type Safety**: Enforced `import type` in TypeScript to comply with `verbatimModuleSyntax`.
+- **Stateless Backend**: Game state remains in memory (GameRoom); user records/H2H stats persisted to SQLite.
+- **Backward Compatibility**: Anonymous play must remain fully functional and unhindered by the auth system.
 
-## 3. Critical Logic Refinements (Current Session)
-- **Timeout Logic**: `TimeoutWarning` visibility now strictly requires `startTime > 0`. Prevents the yellow/red vignette from appearing on the Information Screen due to stale or default state.
-- **State Initialization**: Default `turnDuration` in `App.tsx` corrected to 60s to align with backend constants and prevent premature warning triggers.
-- **Winning Effects**: SVG `<motion.line>` strike-through with path-length animation (0.8s) and symbol-matched glow effects.
+## 3. Core Logic & Variable Mappings
+- **Password Regex**: `/[!@#$%^&*(),.?":{}|<>]/.test(password)` (special character requirement).
+- **Sticky Layout**: Header uses `sticky top-0`, content wrapper uses `flex-1`.
+- **Dropdown State**: `isDropdownOpen` managed in `Header.tsx`, scoped by `dropdownRef` for click-outside detection.
 
-## 4. Current State (Git: master)
-- **Frontend**: Optimized for iPhone 12 Pro (390px) up to 4K Desktop. All header controls (Drawer, Scores, Timer, Theme, Exit) fit without overflow.
-- **Backend**: Robust room lifecycle and 4-thread pool timer management.
-- **Deployment**: Docker-compose ready; Nginx configured for WSS/SSL.
-
-## 5. Next Step Logic
-- **UI Consistency**: Review and update Winner/Exit modals to use initials abbreviation logic for mobile consistency.
-- **Component Audit**: Scan other interactive components for hardcoded `dark:focus` utilities and migrate them to the new CSS token system.
-- **UX Polish**: Implement "Draw" request capability for Multiplayer mode.
+## 4. Next Step Logic
+- **Profile Customization**: Enable avatar upload functionality with Base64 encoding and 500KB cap.
+- **H2H Records**: Populate the `ProfileModal` with real-time head-to-head statistics fetched from the backend.
+- **Leaderboard**: (Future) Consider a global ranking based on win/loss records.
 ```
