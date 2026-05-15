@@ -1,42 +1,32 @@
 ```markdown
-# Session Snapshot: Gomoku Optimization & Stability [2026-05-14]
+# Session Snapshot: Gomoku Optimization & Stability [2026-05-16]
 
 ## 1. Architectural Core
-- **Source of Truth**: The Java backend (GameController) manages the authoritative game state, turn timers (ScheduledExecutorService), and room sessions.
-- **State Sync**: Frontend (React) synchronizes with `turnStartTime` (ms) and `turnDuration` (60s) for predictive local timer rendering.
-- **Turn Logic**: Explicit `turnSymbol` ('X' or 'O') is used to drive UI coloring and validation, decoupling turn state from history length to prevent race conditions.
-- **Identity Management**: Anonymous sessions with randomly generated usernames. Names are persisted in memory on the backend per room but never in `localStorage` on the frontend.
+- **Source of Truth**: Java backend (Spring Boot) manages authoritative game state, turn timers (ScheduledExecutorService), and room sessions.
+- **State Sync**: React frontend synchronizes with `turnStartTime` (ms) and `turnDuration` (default 60s) for predictive circular timer rendering.
+- **Turn Logic**: Explicit `turnSymbol` ('X' or 'O') derived from history length drives UI coloring, decoupling state from race conditions.
+- **Identity Management**: Anonymous sessions with randomly generated usernames (ADJECTIVES × ANIMALS). No `localStorage` persistence.
 
-## 2. Established Constraints & Patterns
-- **Responsive Header**: 
-  - **Mobile (<425px)**: Ultra-compact. Scores show 'X: 0', 'O: 0'. Timer labels hidden.
-  - **Tablet (768px - 1024px)**: Names abbreviated to initials (e.g., "Swift Dragon" -> "SD"). Horizontal layout.
-  - **Desktop (>1024px)**: Full names ("Player X" or custom username).
-- **Single Mode**: 
-  - Labels strictly "Player X" and "Player O".
-  - Victory as either symbol counts as a local "Win" for the user.
-- **Design System**: Tailwind 4.0 with glassmorphism (backdrop-blur, glass-bg). Fixed input focus bugs where light mode inputs turned dark on focus.
+## 2. Design System & UX
+- **Theme Engine**: Tailwind 4.0 with CSS variables in `index.css`. Glassmorphism (backdrop-blur, glass-bg) applied globally via `.glass-card`.
+- **Input Stability**: Centralized `--color-input-bg` and `--color-input-focus` tokens ensure consistent light/dark mode behavior on focus without utility conflicts.
+- **Responsive Breakpoints**: 
+  - **<425px**: Ultra-compact header. Scores as `X: 0`. Exit text hidden.
+  - **768px - 1024px**: Initial-based names (e.g., "Swift Dragon" -> "SD").
+  - **>1024px**: Full usernames and "20x20 Arena" badge.
 
-## 3. Critical Fixes & Logic Refinement
-- **Header Synchronization**: Initializing `scores` with 0 for every joined player ensures names appear in the header immediately, even before any wins.
-- **Join Sequence**: `JOIN` message now sets `GameMode` before `addSession` to prevent placeholder "Player X/O" names from leaking into Multiplayer rooms.
-- **Timeout Win**: Artificial delays removed for timeout victories; 3.5s delay preserved for 5-in-a-row to allow line animation.
-- **Move Deduplication**: Frontend filters duplicate WebSocket `MOVE` messages to prevent double-processing.
+## 3. Critical Logic Refinements (Current Session)
+- **Timeout Logic**: `TimeoutWarning` visibility now strictly requires `startTime > 0`. Prevents the yellow/red vignette from appearing on the Information Screen due to stale or default state.
+- **State Initialization**: Default `turnDuration` in `App.tsx` corrected to 60s to align with backend constants and prevent premature warning triggers.
+- **Winning Effects**: SVG `<motion.line>` strike-through with path-length animation (0.8s) and symbol-matched glow effects.
 
 ## 4. Current State (Git: master)
-- **Frontend**: Fully optimized for iPhone 12 Pro (390px) and Tablet (768px). All header controls (Drawer, Scores, Timer, Theme, Exit) fit adequately.
-- **Backend**: Robust room lifecycle and timer management.
-- **Deployment**: Docker-compose production ready.
+- **Frontend**: Optimized for iPhone 12 Pro (390px) up to 4K Desktop. All header controls (Drawer, Scores, Timer, Theme, Exit) fit without overflow.
+- **Backend**: Robust room lifecycle and 4-thread pool timer management.
+- **Deployment**: Docker-compose ready; Nginx configured for WSS/SSL.
 
 ## 5. Next Step Logic
-- **UI Consistency**: Ensure all modals (Winner, Exit) respect the same responsive abbreviation patterns as the header.
-- **Feature Expansion**: Consider implementing "Draw" requests or "Undo" functionality (Single Mode only).
-- **Performance**: Monitor WebSocket heartbeat overhead on low-bandwidth mobile connections.
-## 6. Session Note: Input Focus Stability [2026-05-14]
-- **Bug**: Name input in light mode displayed dark background on focus.
-- **Root Cause**: Recurring inconsistency caused by hardcoding `dark:focus` utilities across components, which failed to cleanly override browser/Tailwind states during dynamic theme toggling.
-- **Solution**: Centralized input colors into the design system (`index.css`). Added `--color-input-bg` and `--color-input-focus` tokens that respond directly to the `.dark` class.
-- **Implementation**: Refactored `InformationScreen.tsx` and `ChatPanel.tsx` to use these tokens, ensuring a "single source of truth" for input aesthetics across modes.
-- **Bug Fix (Timeout)**: `TimeoutWarning` was appearing on the `InformationScreen` due to a low default `turnDuration` (5s) and missing `startTime > 0` check. Added strict check to ensure warning only triggers during an active, counting turn.
-- **Next Step**: Audit other interactive elements for similar hardcoded theme dependencies.
+- **UI Consistency**: Review and update Winner/Exit modals to use initials abbreviation logic for mobile consistency.
+- **Component Audit**: Scan other interactive components for hardcoded `dark:focus` utilities and migrate them to the new CSS token system.
+- **UX Polish**: Implement "Draw" request capability for Multiplayer mode.
 ```

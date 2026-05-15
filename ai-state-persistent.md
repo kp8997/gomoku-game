@@ -1,5 +1,5 @@
 
-# Schema & Logic Manifest [2026-05-14]
+# Schema & Logic Manifest [2026-05-16]
 
 ## 1. Project Architecture
 
