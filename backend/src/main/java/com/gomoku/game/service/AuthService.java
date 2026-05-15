@@ -24,6 +24,8 @@ public class AuthService {
     private JwtTokenProvider tokenProvider;
 
     public AuthResponse signup(SignupRequest request) {
+        validateSignup(request);
+        
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new RuntimeException("Username already exists");
         }
@@ -63,5 +65,28 @@ public class AuthService {
                 .fullName(user.getFullName())
                 .avatar(user.getAvatar())
                 .build();
+    }
+
+    private void validateSignup(SignupRequest request) {
+        if (request.getUsername() == null || request.getUsername().length() < 3) {
+            throw new RuntimeException("Username must be at least 3 characters long");
+        }
+        
+        String password = request.getPassword();
+        if (password == null || password.length() < 8) {
+            throw new RuntimeException("Password must be at least 8 characters long");
+        }
+        
+        boolean hasLetter = password.chars().anyMatch(Character::isLetter);
+        boolean hasDigit = password.chars().anyMatch(Character::isDigit);
+        boolean hasSpecial = password.matches(".*[!@#$%^&*(),.?\":{}|<>].*");
+        
+        if (!hasLetter || !hasDigit || !hasSpecial) {
+            throw new RuntimeException("Password must contain at least one letter, one number, and one special character");
+        }
+        
+        if (request.getFullName() == null || request.getFullName().trim().isEmpty()) {
+            throw new RuntimeException("Full name is required");
+        }
     }
 }

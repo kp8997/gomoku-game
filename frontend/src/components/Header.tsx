@@ -33,6 +33,26 @@ const Header: React.FC<HeaderProps> = ({
   onOpenAuth, onOpenProfile, isAuthenticated, userAvatar, userFullName
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
   const getInitials = (name: string) => {
     if (!name) return '';
     return name.split(' ')
@@ -42,7 +62,7 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="h-16 w-full flex items-center justify-between px-2 sm:px-6 bg-[var(--glass-bg)] backdrop-blur-xl border-b border-[var(--glass-border)] z-50">
+    <header className="h-16 w-full flex items-center justify-between px-2 sm:px-6 bg-[var(--glass-bg)] backdrop-blur-xl border-b border-[var(--glass-border)] z-50 sticky top-0">
       <div className="flex items-center gap-2 sm:gap-4 flex-1">
         {isJoined && (
           <>
@@ -124,41 +144,63 @@ const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-2 sm:gap-4 md:gap-6">
-        <div className="flex items-center gap-1 sm:gap-2 md:gap-4 relative">
-          <button
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-white/5 transition-all group cursor-pointer"
-          >
-            <div className="w-8 h-8 rounded-full overflow-hidden bg-white/10 border border-glass-border flex items-center justify-center group-hover:border-brand transition-colors">
-              {isAuthenticated && userAvatar ? (
-                <img src={userAvatar} alt="Avatar" className="w-full h-full object-cover" />
-              ) : (
-                <UserIcon size={16} className="text-content-muted group-hover:text-brand transition-colors" />
-              )}
-            </div>
-            <div className="hidden md:flex flex-col items-start leading-tight">
-              <span className="text-[10px] font-black text-content-muted uppercase tracking-widest group-hover:text-brand transition-colors">
-                Hi,
-              </span>
-              <span className="text-xs font-bold text-content truncate max-w-[100px]">
-                {isAuthenticated ? userFullName : username}
-              </span>
-            </div>
-            <ChevronDown size={14} className={`text-content-muted group-hover:text-content transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
-          </button>
+        {(isJoined || isAuthenticated) && (
+          <div ref={dropdownRef} className="flex items-center gap-1 sm:gap-2 md:gap-4 relative">
+            {isAuthenticated ? (
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-white/5 transition-all group cursor-pointer"
+              >
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-white/10 border border-glass-border flex items-center justify-center group-hover:border-brand transition-colors">
+                  {userAvatar ? (
+                    <img src={userAvatar} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <UserIcon size={16} className="text-content-muted group-hover:text-brand transition-colors" />
+                  )}
+                </div>
+                <div className="hidden md:flex flex-col items-start leading-tight">
+                  <span className="text-[10px] font-black text-content-muted uppercase tracking-widest group-hover:text-brand transition-colors">
+                    Hi,
+                  </span>
+                  <span className="text-xs font-bold text-content truncate max-w-[100px]">
+                    {userFullName}
+                  </span>
+                </div>
+                <ChevronDown size={14} className={`text-content-muted group-hover:text-content transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 px-2 py-1.5 rounded-xl bg-white/5 border border-glass-border">
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-white/10 border border-glass-border flex items-center justify-center">
+                  <UserIcon size={16} className="text-content-muted" />
+                </div>
+                <div className="hidden md:flex flex-col items-start leading-tight">
+                  <span className="text-[10px] font-black text-content-muted uppercase tracking-widest">
+                    Hi,
+                  </span>
+                  <span className="text-xs font-bold text-content truncate max-w-[100px]">
+                    {username}
+                  </span>
+                </div>
+              </div>
+            )}
 
-          <UserDropdown 
-            isOpen={isDropdownOpen}
-            onClose={() => setIsDropdownOpen(false)}
-            onOpenAuth={onOpenAuth}
-            onOpenProfile={onOpenProfile}
-            username={username}
-          />
+            {isAuthenticated && (
+              <div className="absolute top-full right-0 mt-1 z-50">
+                <UserDropdown 
+                  isOpen={isDropdownOpen}
+                  onClose={() => setIsDropdownOpen(false)}
+                  onOpenAuth={onOpenAuth}
+                  onOpenProfile={onOpenProfile}
+                  username={username}
+                />
+              </div>
+            )}
 
-          <div className="text-[var(--text-muted)] text-[10px] sm:text-xs uppercase tracking-widest font-bold hidden xl:inline">
-            20x20 Arena
+            <div className="text-[var(--text-muted)] text-[10px] sm:text-xs uppercase tracking-widest font-bold hidden xl:inline">
+              20x20 Arena
+            </div>
           </div>
-        </div>
+        )}
         {isJoined && (
           <button
             onClick={leaveGame}

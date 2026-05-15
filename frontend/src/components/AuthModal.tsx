@@ -34,11 +34,38 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const validateForm = () => {
+    if (activeTab === 'signup') {
+      if (username.length < 3) {
+        setError('Username must be at least 3 characters long');
+        return false;
+      }
+      if (password.length < 8) {
+        setError('Password must be at least 8 characters long');
+        return false;
+      }
+      const hasLetter = /[a-zA-Z]/.test(password);
+      const hasNumber = /[0-9]/.test(password);
+      const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+      if (!hasLetter || !hasNumber || !hasSpecial) {
+        setError('Password must contain letters, numbers, and special characters');
+        return false;
+      }
+      if (!fullName.trim()) {
+        setError('Full name is required');
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setIsLoading(true);
 
+    if (!validateForm()) return;
+
+    setIsLoading(true);
     try {
       if (activeTab === 'login') {
         await login({ username, password });
@@ -161,6 +188,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 bg-input-bg rounded-xl border border-glass-border focus:bg-input-focus focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all outline-none"
                 />
+                {activeTab === 'signup' && (
+                  <p className="text-[9px] text-content-muted mt-1 ml-1 uppercase tracking-tighter">Min 3 characters</p>
+                )}
               </div>
 
               <div className="relative">
@@ -173,6 +203,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 bg-input-bg rounded-xl border border-glass-border focus:bg-input-focus focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all outline-none"
                 />
+                {activeTab === 'signup' && (
+                  <p className="text-[9px] text-content-muted mt-1 ml-1 uppercase tracking-tighter">Min 8 chars, must have letters, numbers & special chars</p>
+                )}
               </div>
 
               <button
