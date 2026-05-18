@@ -320,6 +320,11 @@ const App: React.FC = () => {
     setBoard(Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null)));
     setUnreadCount(0);
     isChatOpenRef.current = false;
+    setIsRoomFull(false);
+    setRoomFullReason(null);
+    setServerGameMode(null);
+    setPlayerCount(0);
+    setMySymbol(null);
   };
 
   const handleChatOpen = () => {

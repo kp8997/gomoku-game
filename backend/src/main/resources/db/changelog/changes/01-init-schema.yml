@@ -2,7 +2,6 @@ databaseChangeLog:
   - changeSet:
       id: 1-baseline-schema
       author: gomoku
-      logicalFilePath: db/changelog/changes/01-init-schema.xml
       preConditions:
         - onFail: MARK_RAN
         - not:
@@ -97,7 +96,6 @@ databaseChangeLog:
   - changeSet:
       id: 2-allow-anonymous-confrontations
       author: gomoku
-      logicalFilePath: db/changelog/changes/01-init-schema.xml
       changes:
         - dropNotNullConstraint:
             tableName: confrontation_records

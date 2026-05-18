@@ -1,20 +1,18 @@
-# Session Snapshot: Chat UX, Notifications & STOMP Room Management [2026-05-19]
+# Session Snapshot: Database Fixes, Room Resets & Eager Loading [2026-05-19]
 
 ## 1. Architectural Decisions & Changes
-- **Chat Unread Tracker Fix**: Addressed a bug where `unreadCount` failed to increment after the chat was closed. Implemented an `onClose` callback in `ChatBubble.tsx` that cascades up to `App.tsx`, successfully resetting `isChatOpenRef.current = false`.
-- **Web Audio Notification**: Built a `playNotificationSound()` function using the native Web Audio API (no external assets). Generates a clean 450Hz->350Hz descending sine wave (like a soft wooden tap/bubble pop) with an organic amplitude envelope to alert users of incoming messages cleanly and comfortably.
-- **Message Overflow Resolution**: Prevented chat containers from breaking layout bounds when dealing with non-breaking gibberish/typos by applying the Tailwind `break-words` class to both the main chat bubble and the newly introduced chat preview popup.
-- **Chat Preview Toast**: Added a glassmorphic preview popup near the chat bubble icon. It displays the latest incoming message when the chat is closed for 4 seconds, replacing existing previews dynamically if new messages arrive rapidly.
-- **STOMP Room Disconnect Rework**: Redesigned the "Exit" button logic. Instead of just resetting React state, `App.tsx` now explicitly sends a STOMP `/app/game.leave` message. Added a new `@MessageMapping("/game.leave")` backend endpoint in `GameController.java` that removes the player from the room's `activeSessions`, accurately syncing player counts to lobby observers without severing their STOMP WebSocket connection.
+- **Hibernate LazyInitializationException Fix**: Resolved `org.hibernate.LazyInitializationException` within the WebSocket message-handling thread context. When joining a room, the backend retrieves equipped user effects using `findByUser_UsernameIn()`. Because WebSocket annotation handlers run outside active Hibernate sessions, accessing lazy relations (like `e.getUser()`) crashed the join pipeline. Implemented a high-performance `@Query` using a JPQL `JOIN FETCH e.user` in `UserEquippedEffectRepository` to fetch the relation eagerly in a single database round-trip.
+- **Stale Room State Reset on Exit**: Addressed a critical bug where users exiting an active/full arena were blocked from rejoining or creating new games. The client-side state variables (`isRoomFull`, `roomFullReason`, `serverGameMode`, `playerCount`, `mySymbol`) did not clear upon exit, causing the pre-game `InformationScreen` to render in an un-interactive "Arena Full" state. Added explicit state resets to the `leaveGame()` handler in `App.tsx`.
+- **Pre-Game Screen Integrity**: Anonymous and authenticated users are now routed cleanly back to a pristine pre-game lobby state with fully operational inputs and buttons.
 
 ## 2. Established Constraints
-- **Docker Rebuild Rule**: Frontend and backend container rebuilds (`docker compose up --build -d <service>`) are mandatory after any source code change to ensure logic accurately applies to the containerized environment.
-- **No External Audio Assets**: UI Sounds must use `window.AudioContext` to keep the application lightweight and standalone.
+- **WebSocket Transaction/Session Boundaries**: All JPA repository queries executed within STOMP/WebSocket controllers must eagerly fetch lazy-loaded properties (via `JOIN FETCH` or `EntityGraph`) to prevent runtime lazy initialization exceptions.
+- **Pre-Game State Cleansing**: Whenever a user leaves or is disconnected from a room, the React frontend must cleanly reset all lobby and room-specific variables to avoid UI lockups or false-positive state displays.
 
 ## 3. Variable Mappings & Core Logic
-- **`isChatOpenRef`**: A `useRef<boolean>` in `App.tsx` that is rigorously synced with `ChatBubble`'s `isOpen` state to accurately calculate `unreadCount` increments exclusively for closed-state background messages.
-- **`previewMessage` & `previewTimeoutRef`**: States within `ChatBubble.tsx` managing the lifespan (4000ms) of the incoming message preview toast.
+- **`UserEquippedEffectRepository.findByUser_UsernameIn`**: Upgraded to use an explicit fetch join JPQL query to eagerly initialize related user profiles.
+- **`App.tsx:leaveGame()`**: Resets `isRoomFull`, `roomFullReason`, `serverGameMode`, `playerCount`, and `mySymbol` to default values.
 
 ## 4. Next Step Logic
-- **Online Matchmaking & Room Listing**: Expand STOMP capabilities to broadcast a list of all active non-full rooms to the Informative Screen to allow global matchmaking and easy lobby browsing.
-- **Typing Indicators**: Introduce `/app/game.typing` STOMP events to render typing indicator dots inside the `ChatBubble` preview toast.
+- **Typing Indicators**: Integrate real-time typing indicators within the chat bubble panel utilizing transient WebSocket messages.
+- **Spectator Mode & Lobby Explorer**: Establish spectator access allowing users to observe active, full arenas from the `InformationScreen`.

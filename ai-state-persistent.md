@@ -533,3 +533,8 @@ network: gomoku-network (bridge)
 - **Message Wrapping**: Forced `break-words` on all chat message elements to gracefully contain long consecutive character strings without overflowing the layout.
 - **Chat Preview Toast**: Added an animated, auto-dismissing (4s) popup next to the closed chat bubble to preview new incoming STOMP chat messages.
 - **STOMP Clean Exit**: Added `/game.leave` STOMP endpoint in `GameController.java`. The `leaveGame()` hook now fires this message to formally remove the player from `activeSessions` while keeping the socket open, enabling real-time `ROOM_STATUS` occupancy updates in the pre-game lobby.
+
+### Session: Database Eager Loading & Room State Reset [2026-05-19]
+- **Hibernate LazyInitializationException Fix**: Resolved `org.hibernate.LazyInitializationException` by adding an explicit JPQL `JOIN FETCH e.user` in `UserEquippedEffectRepository.findByUser_UsernameIn()` since WebSocket threads operate outside of active Spring JPA transaction sessions.
+- **Stale Room State Cleansing**: Added comprehensive state-clearing actions to `leaveGame()` in `App.tsx` resetting `isRoomFull`, `roomFullReason`, `serverGameMode`, `playerCount`, and `mySymbol` so exiting players cleanly land on a fully functional landing page screen and can rejoin or start a new game instantly.
+
