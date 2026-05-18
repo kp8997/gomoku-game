@@ -1,0 +1,108 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1-baseline-schema
+      author: gomoku
+      logicalFilePath: db/changelog/changes/01-init-schema.xml
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: users
+      changes:
+        - createTable:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: username
+                  type: VARCHAR(255)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: password
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: full_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: avatar
+                  type: TEXT
+              - column:
+                  name: created_at
+                  type: TIMESTAMP(6)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP(6)
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: confrontation_records
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: user_a_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_confrontation_user_a
+                    referencedTableName: users
+                    referencedColumnNames: id
+              - column:
+                  name: user_b_id
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_confrontation_user_b
+                    referencedTableName: users
+                    referencedColumnNames: id
+              - column:
+                  name: user_a_wins
+                  type: INTEGER
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: user_b_wins
+                  type: INTEGER
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP(6)
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: confrontation_records
+            columnNames: user_a_id,user_b_id
+            constraintName: uq_confrontation_users
+
+  - changeSet:
+      id: 2-allow-anonymous-confrontations
+      author: gomoku
+      logicalFilePath: db/changelog/changes/01-init-schema.xml
+      changes:
+        - dropNotNullConstraint:
+            tableName: confrontation_records
+            columnName: user_b_id
+            columnDataType: BIGINT
+        - sql:
+            dbms: postgresql
+            sql: CREATE UNIQUE INDEX IF NOT EXISTS idx_confrontation_user_a_anon ON confrontation_records (user_a_id) WHERE user_b_id IS NULL;

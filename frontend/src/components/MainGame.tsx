@@ -4,6 +4,7 @@ import { Trophy } from 'lucide-react';
 import { type Move, type ChatMessage } from '../types';
 import GameDrawer from './GameDrawer';
 import ChatBubble from './ChatBubble';
+import { SymbolRenderer } from './achievements/SymbolRenderer';
 
 interface MainGameProps {
   board: (string | null)[][];
@@ -22,11 +23,12 @@ interface MainGameProps {
   unreadCount: number;
   onChatOpen: () => void;
   onChatClose: () => void;
+  symbolEffects?: Record<string, string>;
 }
 
 const MainGame: React.FC<MainGameProps> = ({
   board, history, winner, gameId, showDrawer, setShowDrawer, isMyTurn, makeMove, resetGame,
-  chatMessages, onSendMessage, username, winningLine, unreadCount, onChatOpen, onChatClose
+  chatMessages, onSendMessage, username, winningLine, unreadCount, onChatOpen, onChatClose, symbolEffects
 }) => {
   const [showWinnerPopup, setShowWinnerPopup] = React.useState(false);
 
@@ -144,12 +146,9 @@ const MainGame: React.FC<MainGameProps> = ({
                           <motion.div
                             initial={{ scale: 0, rotate: -45 }}
                             animate={{ scale: 1, rotate: 0 }}
-                            className={`
-                              flex items-center justify-center text-xl sm:text-2xl font-black z-10 select-none
-                              ${cell === 'X' ? 'text-blue-600 drop-shadow-[0_0_10px_rgba(37,99,235,0.5)]' : 'text-pink-600 drop-shadow-[0_0_10px_rgba(219,39,119,0.5)]'}
-                            `}
+                            className="flex items-center justify-center text-xl sm:text-2xl font-black z-10 select-none w-full h-full"
                           >
-                            {cell}
+                            <SymbolRenderer symbol={cell} effectKey={symbolEffects?.[cell]} />
                           </motion.div>
                         )}
                       </div>

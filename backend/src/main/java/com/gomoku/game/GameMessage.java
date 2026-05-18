@@ -20,6 +20,7 @@ public class GameMessage {
     private long turnStartTime;
     private int turnDuration;
     private String playerSymbol;
+    private java.util.Map<String, String> symbolEffects;
 
     public static class ChatMessage {
         private String sender;
@@ -251,5 +252,13 @@ public class GameMessage {
 
     public void setPlayerSymbol(String playerSymbol) {
         this.playerSymbol = playerSymbol;
+    }
+
+    public java.util.Map<String, String> getSymbolEffects() {
+        return symbolEffects;
+    }
+
+    public void setSymbolEffects(java.util.Map<String, String> symbolEffects) {
+        this.symbolEffects = symbolEffects;
     }
 }

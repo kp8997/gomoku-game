@@ -1,4 +1,4 @@
-import type { LoginRequest, SignupRequest, AuthResponse, UserProfile, ConfrontationRecord, UserStatsDTO } from '../types';
+import type { LoginRequest, SignupRequest, AuthResponse, UserProfile, ConfrontationRecord, UserStatsDTO, AchievementResponse } from '../types';
 
 const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8888`;
 
@@ -56,5 +56,33 @@ export const authApi = {
     });
     if (!response.ok) throw new Error('Failed to fetch stats');
     return response.json();
+  },
+
+  getAchievements: async (token: string): Promise<AchievementResponse> => {
+    const response = await fetch(`${API_BASE}/api/user/achievements`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!response.ok) throw new Error('Failed to fetch achievements');
+    return response.json();
+  },
+
+  equipEffect: async (token: string, effectKey: string): Promise<void> => {
+    const response = await fetch(`${API_BASE}/api/user/achievements/equip`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ effectKey }),
+    });
+    if (!response.ok) throw new Error('Failed to equip effect');
+  },
+
+  unequipEffect: async (token: string): Promise<void> => {
+    const response = await fetch(`${API_BASE}/api/user/achievements/unequip`, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!response.ok) throw new Error('Failed to unequip effect');
   },
 };

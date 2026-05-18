@@ -25,6 +25,7 @@ public class GameController {
     private final SimpMessagingTemplate messagingTemplate;
     private final com.gomoku.game.service.ConfrontationService confrontationService;
     private final com.gomoku.game.repository.UserRepository userRepository;
+    private final com.gomoku.game.repository.UserEquippedEffectRepository equippedEffectRepository;
     private final Map<String, GameRoom> games = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
     private final Map<String, ScheduledFuture<?>> gameTimers = new ConcurrentHashMap<>();
@@ -32,10 +33,12 @@ public class GameController {
 
     public GameController(SimpMessagingTemplate messagingTemplate, 
                           com.gomoku.game.service.ConfrontationService confrontationService,
-                          com.gomoku.game.repository.UserRepository userRepository) {
+                          com.gomoku.game.repository.UserRepository userRepository,
+                          com.gomoku.game.repository.UserEquippedEffectRepository equippedEffectRepository) {
         this.messagingTemplate = messagingTemplate;
         this.confrontationService = confrontationService;
         this.userRepository = userRepository;
+        this.equippedEffectRepository = equippedEffectRepository;
     }
 
     @MessageMapping("/game.join")
@@ -77,9 +80,25 @@ public class GameController {
         message.setTurnStartTime(room.getTurnStartTime());
         message.setTurnDuration(TURN_DURATION_SECONDS);
         message.setPlayerSymbol(room.getPlayerSymbol(message.getSender()));
+        message.setSymbolEffects(getRoomSymbolEffects(room));
         messagingTemplate.convertAndSend("/topic/game/" + gameId, message);
         
         broadcastStatus(gameId);
+    }
+
+    private Map<String, String> getRoomSymbolEffects(GameRoom room) {
+        Map<String, String> effects = new HashMap<>();
+        List<String> playerList = new ArrayList<>(room.getPlayers());
+        if (!playerList.isEmpty()) {
+            List<com.gomoku.game.model.UserEquippedEffect> equipped = equippedEffectRepository.findByUser_UsernameIn(playerList);
+            for (com.gomoku.game.model.UserEquippedEffect e : equipped) {
+                String sym = room.getPlayerSymbol(e.getUser().getUsername());
+                if (sym != null) {
+                    effects.put(sym, e.getEffectKey());
+                }
+            }
+        }
+        return effects;
     }
 
     @MessageMapping("/game.status")
@@ -185,6 +204,7 @@ public class GameController {
             startMessage.setSender("SYSTEM");
             startMessage.setTurnStartTime(0); // Explicitly 0 at start
             startMessage.setTurnDuration(TURN_DURATION_SECONDS);
+            startMessage.setSymbolEffects(getRoomSymbolEffects(room));
             messagingTemplate.convertAndSend("/topic/game/" + gameId, startMessage);
         }
     }

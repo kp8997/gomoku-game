@@ -29,6 +29,7 @@ export interface GameMessage {
   turnStartTime?: number;
   turnDuration?: number;
   playerSymbol?: string;
+  symbolEffects?: Record<string, string>;
 }
 
 // Auth
@@ -70,4 +71,30 @@ export interface UserStatsDTO {
   totalLosses: number;
   totalMatches: number;
   winRate: number;
+}
+
+export type EffectType = 'FIRE_PHOENIX' | 'DRAGON_LIGHTNING' | 'CHERRY_BLOSSOM' | 'DARK_SLASH' | null;
+
+export interface AchievementDTO {
+  key: string;
+  category: 'WIN_RATE' | 'MATCHES' | 'WINS';
+  label: string;
+  description: string;
+  unlocked: boolean;
+  unlockedAt: string | null;
+  threshold: number;
+}
+
+export interface EffectDTO {
+  key: EffectType;
+  unlocked: boolean;
+  requirementLabel: string;
+}
+
+export interface AchievementResponse {
+  winRateBadges: AchievementDTO[];
+  matchBadges: AchievementDTO[];
+  winBadges: AchievementDTO[];
+  effects: EffectDTO[];
+  equippedEffect: EffectType;
 }

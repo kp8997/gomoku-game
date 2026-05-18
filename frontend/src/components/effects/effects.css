@@ -1,0 +1,81 @@
+/* Fire Phoenix */
+@keyframes flicker {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+.animate-flicker { animation: flicker 2s infinite ease-in-out; }
+
+@keyframes ember-rise {
+  0% { transform: translateY(0) scale(1); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 0; }
+  100% { transform: translateY(-15px) scale(0.5); opacity: 0; }
+}
+.animate-ember-1 { animation: ember-rise 1.5s infinite linear; }
+.animate-ember-2 { animation: ember-rise 2s infinite linear 0.4s; }
+.animate-ember-3 { animation: ember-rise 1.8s infinite linear 0.8s; }
+.animate-ember-4 { animation: ember-rise 2.2s infinite linear 0.2s; }
+.animate-ember-5 { animation: ember-rise 1.6s infinite linear 0.6s; }
+
+/* Dragon Lightning */
+@keyframes lightning-aura {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  10%, 20% { opacity: 0.5; transform: scale(1.1); }
+  15% { opacity: 0.2; }
+}
+.animate-lightning-aura { animation: lightning-aura 3s infinite ease-in-out; }
+
+@keyframes lightning-flash {
+  0%, 95%, 100% { opacity: 1; filter: brightness(1); }
+  96%, 98% { opacity: 0.8; filter: brightness(1.5); }
+}
+.animate-lightning-flash { animation: lightning-flash 4s infinite; }
+
+@keyframes arc-draw {
+  0% { stroke-dasharray: 0 100; opacity: 0; }
+  10% { stroke-dasharray: 100 0; opacity: 1; }
+  20%, 100% { opacity: 0; }
+}
+.animate-arc-1 { animation: arc-draw 2s infinite linear; stroke-dasharray: 100; stroke-dashoffset: 100; }
+.animate-arc-2 { animation: arc-draw 2.5s infinite linear 0.5s; stroke-dasharray: 100; stroke-dashoffset: 100; }
+.animate-arc-3 { animation: arc-draw 1.8s infinite linear 1s; stroke-dasharray: 100; stroke-dashoffset: 100; }
+
+/* Cherry Blossom */
+@keyframes bloom-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.2); opacity: 0.5; }
+}
+.animate-bloom-pulse { animation: bloom-pulse 3s infinite ease-in-out; }
+
+@keyframes petal-drift {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 0.8; }
+  100% { transform: translate(15px, 15px) rotate(180deg); opacity: 0; }
+}
+.animate-petal-1 { animation: petal-drift 3s infinite linear; }
+.animate-petal-2 { animation: petal-drift 4s infinite linear 0.5s; }
+.animate-petal-3 { animation: petal-drift 3.5s infinite linear 1s; }
+.animate-petal-4 { animation: petal-drift 2.8s infinite linear 1.5s; }
+.animate-petal-5 { animation: petal-drift 4.2s infinite linear 2s; }
+
+/* Dark Slash */
+@keyframes dark-wisp {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.5; }
+  50% { transform: scale(1.1) rotate(10deg); opacity: 0.7; }
+}
+.animate-dark-wisp { animation: dark-wisp 4s infinite ease-in-out; }
+
+@keyframes slash-draw {
+  0% { transform: scaleX(0); opacity: 0; }
+  10% { transform: scaleX(1); opacity: 1; }
+  20%, 100% { transform: scaleX(1); opacity: 0; }
+}
+.animate-slash-1 { animation: slash-draw 2s infinite cubic-bezier(0.1, 0.9, 0.2, 1); transform-origin: left; }
+.animate-slash-2 { animation: slash-draw 2.5s infinite cubic-bezier(0.1, 0.9, 0.2, 1) 0.3s; transform-origin: right; }
+
+@keyframes slash-reveal {
+  0%, 10%, 100% { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+  5% { clip-path: polygon(0 0, 100% 0, 100% 0, 0 0); }
+}
+.animate-slash-reveal { animation: slash-reveal 3s infinite; }

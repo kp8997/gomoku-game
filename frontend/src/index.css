@@ -16,6 +16,7 @@
   /* Glassmorphism Defaults (Light Mode) */
   --color-glass-bg: rgba(255, 255, 255, 0.85);
   --color-glass-border: rgba(15, 23, 42, 0.1);
+  --color-achievement-border: #e2e8f0;
 
   /* Board Specifics (Light Mode) - Clearer Grid */
   --color-board-grid: #64748b;
@@ -39,6 +40,7 @@
     --color-content-muted: #94a3b8;
     --color-glass-bg: rgba(15, 23, 42, 0.6);
     --color-glass-border: rgba(255, 255, 255, 0.1);
+    --color-achievement-border: #1e293b;
     /* Bright & Clear Board for Dark Mode */
     --color-board-grid: #475569;
     --color-board-cell: #1e293b;

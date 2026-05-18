@@ -1,6 +1,6 @@
 import React from 'react';
-import { History as HistoryIcon, X as CloseIcon, Hash } from 'lucide-react';
-import HistorySection from './HistorySection';
+import { X as CloseIcon, Hash, Trophy } from 'lucide-react';
+import { AchievementPanel } from './achievements/AchievementPanel';
 import { type Move } from '../types';
 
 interface GameDrawerProps {
@@ -11,7 +11,6 @@ interface GameDrawerProps {
 
 const GameDrawer: React.FC<GameDrawerProps> = ({
   setShowDrawer,
-  history,
   gameId,
 }) => {
   const closeDrawer = () => setShowDrawer(false);
@@ -19,29 +18,26 @@ const GameDrawer: React.FC<GameDrawerProps> = ({
   return (
     <div className="h-full bg-glass-bg backdrop-blur-3xl border-r border-slate-200/50 dark:border-white/5 rounded-br-3xl flex flex-col shadow-xl overflow-hidden">
       {/* Drawer Header */}
-      <div className="p-4 border-b border-glass-border flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
-            <HistoryIcon size={18} className="text-blue-500" />
+      <div className="p-4 border-b border-glass-border flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+              <Trophy size={18} className="text-blue-500" />
+            </div>
+            <h2 className="font-bold text-content">Arena Panel</h2>
           </div>
-          <h2 className="font-bold text-content">Game History</h2>
-          {history.length > 0 && (
-            <span className="text-[10px] bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full font-black">
-              {history.length}
-            </span>
-          )}
+          <button
+            onClick={closeDrawer}
+            className="p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors text-content-muted border-none bg-transparent shadow-none"
+          >
+            <CloseIcon size={20} />
+          </button>
         </div>
-        <button
-          onClick={closeDrawer}
-          className="p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-full transition-colors text-content-muted border-none bg-transparent shadow-none"
-        >
-          <CloseIcon size={20} />
-        </button>
       </div>
 
-      {/* Drawer Content — Move History only */}
-      <div className="flex-1 overflow-hidden flex flex-col">
-        <HistorySection history={history} />
+      {/* Drawer Content */}
+      <div className="flex-1 overflow-hidden flex flex-col bg-background/50">
+        <AchievementPanel />
       </div>
 
       {/* Footer */}
@@ -58,3 +54,4 @@ const GameDrawer: React.FC<GameDrawerProps> = ({
 };
 
 export default GameDrawer;
+

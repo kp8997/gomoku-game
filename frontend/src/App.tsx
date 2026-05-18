@@ -85,6 +85,7 @@ const App: React.FC = () => {
   const [mySymbol, setMySymbol] = useState<string | null>(null);
   const [playerCount, setPlayerCount] = useState<number>(0);
   const [turnSymbol, setTurnSymbol] = useState<'X' | 'O'>('X');
+  const [symbolEffects, setSymbolEffects] = useState<Record<string, string>>({});
 
   // Occupancy
   const [serverGameMode, setServerGameMode] = useState<'SINGLE' | 'MULTIPLE' | null>(null);
@@ -228,6 +229,7 @@ const App: React.FC = () => {
         if (message.turnDuration !== undefined) setTurnDuration(message.turnDuration);
         if (message.sender === username && message.playerSymbol) setMySymbol(message.playerSymbol);
         if (message.playerCount !== undefined) setPlayerCount(message.playerCount);
+        if (message.symbolEffects) setSymbolEffects(message.symbolEffects);
         setIsJoined(true);
         break;
       case 'MOVE':
@@ -276,6 +278,7 @@ const App: React.FC = () => {
         setBoard(Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null)));
         if (message.turnStartTime !== undefined) setTurnStartTime(message.turnStartTime);
         if (message.turnDuration !== undefined) setTurnDuration(message.turnDuration);
+        if (message.symbolEffects) setSymbolEffects(message.symbolEffects);
         break;
     }
   };
@@ -408,6 +411,7 @@ const App: React.FC = () => {
             unreadCount={unreadCount}
             onChatOpen={handleChatOpen}
             onChatClose={handleChatClose}
+            symbolEffects={symbolEffects}
           />
         )}
       </div>
