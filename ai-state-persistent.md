@@ -527,4 +527,9 @@ network: gomoku-network (bridge)
 - **Navigation & Dropdowns**: Added `backPath` and `backLabel` props to `<Header>` to enable back navigation from `/history` and `/settings` cleanly to `/`. Enabled full `<UserDropdown>` interactivity across all routes.
 - **AuthInformationScreen**: Built a premium lobby pre-game dashboard specifically for logged-in users on `/`. It displays user avatar, initials, glowing online badge, read-only identity detail link to settings, and self-contained stats widget displaying live Wins, Losses, and Win Rate.
 
-
+### Session: Chat UX, Notifications & STOMP Room Management [2026-05-19]
+- **Chat Unread Tracker**: Reconciled `App.tsx` `isChatOpenRef` with `ChatBubble.tsx` using an explicit `onClose` callback to correctly trace the unread state machine.
+- **Native Web Audio API**: Replaced silent notifications with a native `AudioContext` 450Hz-350Hz sine wave "bubble pop" / "wood tap" for new chat messages.
+- **Message Wrapping**: Forced `break-words` on all chat message elements to gracefully contain long consecutive character strings without overflowing the layout.
+- **Chat Preview Toast**: Added an animated, auto-dismissing (4s) popup next to the closed chat bubble to preview new incoming STOMP chat messages.
+- **STOMP Clean Exit**: Added `/game.leave` STOMP endpoint in `GameController.java`. The `leaveGame()` hook now fires this message to formally remove the player from `activeSessions` while keeping the socket open, enabling real-time `ROOM_STATUS` occupancy updates in the pre-game lobby.

@@ -1,21 +1,20 @@
-```markdown
-# Session Snapshot: Lobby Dashboards & Unified Page Headers [2026-05-19]
+# Session Snapshot: Chat UX, Notifications & STOMP Room Management [2026-05-19]
 
 ## 1. Architectural Decisions & Changes
-- **Redirect Loop Resolution**: Resolved the authenticated page redirect loop inside `App.tsx` by replacing the rigid effect with a `sessionStorage` flag (`hasRedirectedAuthLanding`), enabling authenticated players to navigate from `/history` or `/settings` to `/` (game arena) cleanly.
-- **Unified Global Header**: Deprecated duplicated static `<header>` blocks in `MatchHistoryPage.tsx` and `SettingsPage.tsx` in favor of the global `<Header>` component. Updated `HeaderProps` to make game-specific variables (like timer and scores) optional.
-- **Navigation Enhancements**: Integrated `backPath` and `backLabel` props inside the `<Header>` component to allow smooth navigations between `/settings`, `/history`, and the `/` game lobby arena.
-- **Lobby Dashboard (`AuthInformationScreen`)**: Created and integrated a gorgeous glassmorphic pre-game lobby dashboard specifically for authenticated players on `/`. It displays profile details, glowing online indicators, a self-contained live Wins/Losses/Win Rate stats widget (fetched from `/api/user/stats`), and navigation shortcuts.
+- **Chat Unread Tracker Fix**: Addressed a bug where `unreadCount` failed to increment after the chat was closed. Implemented an `onClose` callback in `ChatBubble.tsx` that cascades up to `App.tsx`, successfully resetting `isChatOpenRef.current = false`.
+- **Web Audio Notification**: Built a `playNotificationSound()` function using the native Web Audio API (no external assets). Generates a clean 450Hz->350Hz descending sine wave (like a soft wooden tap/bubble pop) with an organic amplitude envelope to alert users of incoming messages cleanly and comfortably.
+- **Message Overflow Resolution**: Prevented chat containers from breaking layout bounds when dealing with non-breaking gibberish/typos by applying the Tailwind `break-words` class to both the main chat bubble and the newly introduced chat preview popup.
+- **Chat Preview Toast**: Added a glassmorphic preview popup near the chat bubble icon. It displays the latest incoming message when the chat is closed for 4 seconds, replacing existing previews dynamically if new messages arrive rapidly.
+- **STOMP Room Disconnect Rework**: Redesigned the "Exit" button logic. Instead of just resetting React state, `App.tsx` now explicitly sends a STOMP `/app/game.leave` message. Added a new `@MessageMapping("/game.leave")` backend endpoint in `GameController.java` that removes the player from the room's `activeSessions`, accurately syncing player counts to lobby observers without severing their STOMP WebSocket connection.
 
 ## 2. Established Constraints
-- **TypeScript Strict Mode**: Strictly avoid unused variables or imports to prevent Rolldown/TSC build failures in the Docker pipeline.
-- **Optional Header Props**: All game-specific parameters in the global `<Header>` are optional (`?`) to prevent mock data overhead when rendering headers on non-game dashboard pages.
+- **Docker Rebuild Rule**: Frontend and backend container rebuilds (`docker compose up --build -d <service>`) are mandatory after any source code change to ensure logic accurately applies to the containerized environment.
+- **No External Audio Assets**: UI Sounds must use `window.AudioContext` to keep the application lightweight and standalone.
 
 ## 3. Variable Mappings & Core Logic
-- **`sessionStorage.getItem('hasRedirectedAuthLanding')`**: Boolean tracker that ensures the initial landing redirect to `/history` only fires once per browser session.
-- **Self-Contained Fetching**: `AuthInformationScreen` directly handles fetch requests to `authApi.getStats(token)` inside a unified `useEffect` loop, preventing parent component re-renders.
+- **`isChatOpenRef`**: A `useRef<boolean>` in `App.tsx` that is rigorously synced with `ChatBubble`'s `isOpen` state to accurately calculate `unreadCount` increments exclusively for closed-state background messages.
+- **`previewMessage` & `previewTimeoutRef`**: States within `ChatBubble.tsx` managing the lifespan (4000ms) of the incoming message preview toast.
 
 ## 4. Next Step Logic
-- **Online Matchmaking**: Ready to integrate global multiplayer lobbies under the disabled "Online" network buttons when the backend matchmaking brokers are deployed.
-- **Profile Customization Expansion**: Extend the base settings dashboard to allow custom themes or cursor effects for authenticated players.
-```
+- **Online Matchmaking & Room Listing**: Expand STOMP capabilities to broadcast a list of all active non-full rooms to the Informative Screen to allow global matchmaking and easy lobby browsing.
+- **Typing Indicators**: Introduce `/app/game.typing` STOMP events to render typing indicator dots inside the `ChatBubble` preview toast.
