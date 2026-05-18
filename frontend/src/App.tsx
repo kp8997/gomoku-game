@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import SockJS from 'sockjs-client';
 import Stomp from 'stompjs';
-import { useNavigate } from 'react-router-dom';
 import './index.css';
 
 // Components
 import Header from './components/Header';
 import InformationScreen from './components/InformationScreen';
+import AuthInformationScreen from './components/AuthInformationScreen';
 import MainGame from './components/MainGame';
 import TimeoutWarning from './components/TimeoutWarning';
 import AuthModal from './components/AuthModal';
@@ -33,7 +33,6 @@ const ANIMALS = [
 
 const App: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
 
   const [username, setUsername] = useState<string>('');
   const [isJoined, setIsJoined] = useState<boolean>(false);
@@ -98,12 +97,7 @@ const App: React.FC = () => {
     }
   }, [isAuthenticated, user]);
 
-  // Authenticated users: redirect to /history on app entry (before joining game)
-  useEffect(() => {
-    if (isAuthenticated && !isJoined) {
-      navigate('/history');
-    }
-  }, [isAuthenticated]);
+
 
   // WebSocket setup
   useEffect(() => {
@@ -119,9 +113,15 @@ const App: React.FC = () => {
     const client = Stomp.over(socket);
     client.debug = () => { };
 
+    let isActive = true;
+
     const connectToBackend = () => {
       client.connect({},
         () => {
+          if (!isActive) {
+            client.disconnect(() => {});
+            return;
+          }
           stompClient.current = client;
           client.subscribe(`/topic/game/${room}`, (payload) => {
             handleMessage(JSON.parse(payload.body));
@@ -129,6 +129,7 @@ const App: React.FC = () => {
           client.send("/app/game.status", {}, JSON.stringify({ gameId: room }));
         },
         (error) => {
+          if (!isActive) return;
           console.warn("Backend unavailable or connection failed:", error);
           setTimeout(connectToBackend, 5000);
         }
@@ -138,6 +139,7 @@ const App: React.FC = () => {
     connectToBackend();
 
     return () => {
+      isActive = false;
       if (client.connected) {
         client.disconnect(() => { });
       }
@@ -316,23 +318,38 @@ const App: React.FC = () => {
 
       <div className="flex-1 flex flex-col relative overflow-hidden">
         {!isJoined ? (
-          <InformationScreen
-            username={username}
-            setUsername={setUsername}
-            generateRandomName={generateRandomName}
-            gameId={gameId}
-            gameMode={gameMode}
-            setGameMode={setGameMode}
-            copied={copied}
-            copyToClipboard={copyToClipboard}
-            connect={connect}
-            isRoomFull={isRoomFull}
-            roomFullReason={roomFullReason}
-            serverGameMode={serverGameMode}
-            createNewRoom={createNewRoom}
-            onOpenAuth={() => setShowAuthModal(true)}
-            isAuthenticated={isAuthenticated}
-          />
+          isAuthenticated ? (
+            <AuthInformationScreen
+              gameId={gameId}
+              gameMode={gameMode}
+              setGameMode={setGameMode}
+              copied={copied}
+              copyToClipboard={copyToClipboard}
+              connect={connect}
+              isRoomFull={isRoomFull}
+              roomFullReason={roomFullReason}
+              serverGameMode={serverGameMode}
+              createNewRoom={createNewRoom}
+            />
+          ) : (
+            <InformationScreen
+              username={username}
+              setUsername={setUsername}
+              generateRandomName={generateRandomName}
+              gameId={gameId}
+              gameMode={gameMode}
+              setGameMode={setGameMode}
+              copied={copied}
+              copyToClipboard={copyToClipboard}
+              connect={connect}
+              isRoomFull={isRoomFull}
+              roomFullReason={roomFullReason}
+              serverGameMode={serverGameMode}
+              createNewRoom={createNewRoom}
+              onOpenAuth={() => setShowAuthModal(true)}
+              isAuthenticated={isAuthenticated}
+            />
+          )
         ) : (
           <MainGame
             board={board}

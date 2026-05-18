@@ -48,6 +48,12 @@ Every plan **must** include these sections in this exact order:
 4. **Completeness**: Every file that will be created or modified must be listed. No surprises during execution.
 5. **Constraint-Driven**: Rules section captures all hard requirements upfront to prevent regressions.
 
+### Docker Execution Rules
+- **MANDATORY REBUILDS**: Whenever you modify any code inside the `backend/` or `frontend/` folders, you **MUST** rebuild and restart the corresponding container to ensure changes take effect:
+  - For backend changes: `docker compose up --build -d backend`
+  - For frontend changes: `docker compose up --build -d frontend`
+  - To clean-build without cache: `docker compose build --no-cache <service> && docker compose up -d <service>`
+
 | ID | Feature | Status | File |
 |:---|:---|:---|:---|
 | 01 | Authentication, Profile & Confrontation Records | ✅ Implemented | `ai-feature-plan/01-ai-auth-feature-plan.md` |

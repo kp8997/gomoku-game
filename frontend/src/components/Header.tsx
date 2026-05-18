@@ -1,36 +1,40 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Moon, Sun, Layout, LogOut, User as UserIcon, ChevronDown } from 'lucide-react';
+import { Moon, Sun, Layout, LogOut, User as UserIcon, ChevronDown, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import TurnTimer from './TurnTimer';
 import UserDropdown from './UserDropdown';
 
 interface HeaderProps {
   isJoined: boolean;
-  scores: Record<string, number>;
-  showDrawer: boolean;
-  setShowDrawer: (val: boolean) => void;
+  scores?: Record<string, number>;
+  showDrawer?: boolean;
+  setShowDrawer?: (val: boolean) => void;
   isLightMode: boolean;
   setIsLightMode: (val: boolean) => void;
-  isMyTurn: boolean;
-  leaveGame: () => void;
-  username: string;
-  turnStartTime: number;
-  turnDuration: number;
-  isGameOver: boolean;
-  gameMode: 'SINGLE' | 'MULTIPLE';
-  currentTurnSymbol: 'X' | 'O';
-  playerCount: number;
-  onOpenAuth: () => void;
+  isMyTurn?: boolean;
+  leaveGame?: () => void;
+  username?: string;
+  turnStartTime?: number;
+  turnDuration?: number;
+  isGameOver?: boolean;
+  gameMode?: 'SINGLE' | 'MULTIPLE';
+  currentTurnSymbol?: 'X' | 'O';
+  playerCount?: number;
+  onOpenAuth?: () => void;
   isAuthenticated: boolean;
   userAvatar: string | null;
   userFullName: string | null;
+  backPath?: string;
+  backLabel?: string;
 }
 
 const Header: React.FC<HeaderProps> = ({
-  isJoined, scores, showDrawer, setShowDrawer, isLightMode, setIsLightMode, isMyTurn, leaveGame, username,
-  turnStartTime, turnDuration, isGameOver, gameMode, currentTurnSymbol, playerCount,
-  onOpenAuth: _onOpenAuth, isAuthenticated, userAvatar, userFullName
+  isJoined, scores = {}, showDrawer = false, setShowDrawer, isLightMode, setIsLightMode, isMyTurn = false, leaveGame, username = '',
+  turnStartTime = 0, turnDuration = 60, isGameOver = false, gameMode = 'MULTIPLE', currentTurnSymbol = 'X', playerCount = 0,
+  onOpenAuth: _onOpenAuth, isAuthenticated, userAvatar, userFullName, backPath, backLabel
 }) => {
+  const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
@@ -63,10 +67,19 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <header className="h-16 w-full flex items-center justify-between px-2 sm:px-6 bg-[var(--glass-bg)] backdrop-blur-xl border-b border-[var(--glass-border)] z-50 sticky top-0">
       <div className="flex items-center gap-2 sm:gap-4 flex-1">
+        {!isJoined && backPath && (
+          <button
+            onClick={() => navigate(backPath)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/5 transition-all text-content-muted hover:text-content group cursor-pointer border border-glass-border mr-2"
+          >
+            <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+            <span className="text-xs font-bold uppercase tracking-wider hidden sm:inline">{backLabel || 'Back'}</span>
+          </button>
+        )}
         {isJoined && (
           <>
             <button
-              onClick={() => setShowDrawer(!showDrawer)}
+              onClick={() => setShowDrawer?.(!showDrawer)}
               className={`group relative backdrop-blur-md border border-glass-border rounded-xl p-2 sm:p-3 flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:shadow-inner cursor-pointer ${showDrawer ? 'bg-blue-500/20 border-blue-500/50' : 'bg-glass-bg hover:bg-black/5 dark:hover:bg-white/5'}`}
               title="Toggle Game Panel"
             >

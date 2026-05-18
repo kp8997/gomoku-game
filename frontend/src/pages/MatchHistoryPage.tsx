@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft, Settings, Trophy, TrendingDown, Swords, User as UserIcon,
+  Trophy, TrendingDown, Swords,
   Loader2, Ghost, Shield
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../api/authApi';
 import type { ConfrontationRecord, UserStatsDTO } from '../types';
+import Header from '../components/Header';
 
 const MatchHistoryPage: React.FC = () => {
   const navigate = useNavigate();
@@ -97,56 +98,17 @@ const MatchHistoryPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-surface text-content">
-      {/* Sticky Header */}
-      <header className="h-16 w-full flex items-center justify-between px-4 sm:px-6 bg-[var(--glass-bg)] backdrop-blur-xl border-b border-[var(--glass-border)] z-50 sticky top-0">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-white/5 transition-all text-content-muted hover:text-content group"
-          >
-            <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
-            <span className="text-xs font-bold uppercase tracking-wider hidden sm:inline">Back to Arena</span>
-          </button>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* User identity */}
-          {user && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-glass-border">
-              <div className="w-7 h-7 rounded-full overflow-hidden bg-white/10 border border-glass-border flex items-center justify-center">
-                {user.avatar ? (
-                  <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
-                ) : (
-                  <UserIcon size={14} className="text-content-muted" />
-                )}
-              </div>
-              <span className="text-xs font-bold text-content hidden sm:inline">{user.fullName}</span>
-            </div>
-          )}
-          <button
-            onClick={() => navigate('/settings')}
-            className="p-2 rounded-xl hover:bg-white/5 transition-all text-content-muted hover:text-content"
-            title="Settings"
-          >
-            <Settings size={18} />
-          </button>
-          {/* Theme toggle */}
-          <button
-            onClick={() => setIsDarkMode(!isDarkMode)}
-            className="p-2 rounded-full hover:bg-white/5 transition-all text-content-muted hover:text-content"
-            title="Toggle theme"
-          >
-            {isDarkMode ? (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-yellow-400">
-                <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-              </svg>
-            ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-content-muted">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-              </svg>
-            )}
-          </button>
-        </div>
-      </header>
+      {/* Global Header */}
+      <Header
+        isJoined={false}
+        isLightMode={!isDarkMode}
+        setIsLightMode={(val) => setIsDarkMode(!val)}
+        isAuthenticated={isAuthenticated}
+        userAvatar={user?.avatar || null}
+        userFullName={user?.fullName || null}
+        backPath="/"
+        backLabel="Back to Arena"
+      />
 
       {/* Page Content */}
       <main className="flex-1 px-4 py-8 max-w-2xl mx-auto w-full">
