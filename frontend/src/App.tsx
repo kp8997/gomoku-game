@@ -31,6 +31,36 @@ const ANIMALS = [
   "Turtle", "Otter", "Falcon", "Lynx", "Phoenix", "Leopard"
 ];
 
+const playNotificationSound = () => {
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    // Sine wave gives the softest, roundest natural tone (like a wooden block or marimba)
+    osc.type = 'sine';
+    
+    // Start at a gentle frequency and slightly drop it to sound more organic
+    osc.frequency.setValueAtTime(450, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(350, ctx.currentTime + 0.2);
+    
+    // Higher volume (0.8 max) while keeping the organic percussive envelope
+    gainNode.gain.setValueAtTime(0, ctx.currentTime);
+    gainNode.gain.linearRampToValueAtTime(0.8, ctx.currentTime + 0.01); // Quick soft attack, louder
+    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3); // Natural decay
+
+    osc.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 0.3);
+  } catch (e) {
+    console.warn('Audio play failed', e);
+  }
+};
+
 const App: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
 
@@ -168,9 +198,11 @@ const App: React.FC = () => {
           content: message.content || '',
           timestamp: message.timestamp || Date.now()
         }]);
-        // Increment unread count if chat is closed and message is from someone else
-        if (!isChatOpenRef.current && message.sender !== username) {
-          setUnreadCount(prev => prev + 1);
+        if (message.sender !== username) {
+          playNotificationSound();
+          if (!isChatOpenRef.current) {
+            setUnreadCount(prev => prev + 1);
+          }
         }
         break;
       case 'JOIN':
@@ -281,11 +313,16 @@ const App: React.FC = () => {
     setHistory([]);
     setBoard(Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null)));
     setUnreadCount(0);
+    isChatOpenRef.current = false;
   };
 
   const handleChatOpen = () => {
     isChatOpenRef.current = true;
     setUnreadCount(0);
+  };
+
+  const handleChatClose = () => {
+    isChatOpenRef.current = false;
   };
 
   const isMyTurn = (gameMode === 'SINGLE' || (
@@ -367,6 +404,7 @@ const App: React.FC = () => {
             winningLine={winningLine}
             unreadCount={unreadCount}
             onChatOpen={handleChatOpen}
+            onChatClose={handleChatClose}
           />
         )}
       </div>

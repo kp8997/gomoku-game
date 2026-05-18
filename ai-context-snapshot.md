@@ -1,24 +1,21 @@
 ```markdown
-# Session Snapshot: Match History & Liquibase Migration [2026-05-18]
+# Session Snapshot: Lobby Dashboards & Unified Page Headers [2026-05-19]
 
 ## 1. Architectural Decisions & Changes
-- **Database Migration Tool**: Introduced **Liquibase** as the single source of truth for database schema evolution, moving away from Hibernate `ddl-auto=update` to `validate`.
-- **Match Tracking Redesign**: Modified the existing `confrontation_records` table rather than creating a new `match_records` table. This elegant design keeps everything additive and avoids schema bloat.
-- **Anonymous Opponent Support**: Dropped the `NOT NULL` constraint on `user_b_id` in `confrontation_records`. An authenticated user playing against an anonymous opponent is now recorded with `user_a_id = authUser.id` and `user_b_id = NULL`.
-- **Data Integrity**: Implemented a **PostgreSQL partial unique index** (`CREATE UNIQUE INDEX ... WHERE user_b_id IS NULL`) to ensure that each authenticated user has at most one cumulative anonymous stats tracking row. The JPA `@UniqueConstraint` was removed to prevent conflicts with this partial index.
+- **Redirect Loop Resolution**: Resolved the authenticated page redirect loop inside `App.tsx` by replacing the rigid effect with a `sessionStorage` flag (`hasRedirectedAuthLanding`), enabling authenticated players to navigate from `/history` or `/settings` to `/` (game arena) cleanly.
+- **Unified Global Header**: Deprecated duplicated static `<header>` blocks in `MatchHistoryPage.tsx` and `SettingsPage.tsx` in favor of the global `<Header>` component. Updated `HeaderProps` to make game-specific variables (like timer and scores) optional.
+- **Navigation Enhancements**: Integrated `backPath` and `backLabel` props inside the `<Header>` component to allow smooth navigations between `/settings`, `/history`, and the `/` game lobby arena.
+- **Lobby Dashboard (`AuthInformationScreen`)**: Created and integrated a gorgeous glassmorphic pre-game lobby dashboard specifically for authenticated players on `/`. It displays profile details, glowing online indicators, a self-contained live Wins/Losses/Win Rate stats widget (fetched from `/api/user/stats`), and navigation shortcuts.
 
 ## 2. Established Constraints
-- **Lombok Avoidance**: Kept the codebase Lombok-free. Manually defined standard getters, setters, and builders for `UserStatsDTO`.
-- **Schema Validation**: Hibernate is strictly configured to `validate`. Liquibase owns the schema.
-- **Null Safety in JPQL**: Any JPQL query touching `userB` must explicitly handle `IS NULL` or use `LEFT JOIN FETCH` since `userB` is now fully nullable.
+- **TypeScript Strict Mode**: Strictly avoid unused variables or imports to prevent Rolldown/TSC build failures in the Docker pipeline.
+- **Optional Header Props**: All game-specific parameters in the global `<Header>` are optional (`?`) to prevent mock data overhead when rendering headers on non-game dashboard pages.
 
-## 3. Core Logic & Variable Mappings
-- **Win Rate Calculation**: `(Total Wins / (Total Wins + Total Losses)) * 100`. Available via `GET /api/user/stats`.
-- **Auth vs Auth**: Tracks H2H record (`user_a_wins`, `user_b_wins`).
-- **Auth vs Anon**: Tracks cumulative record against all anonymous players under a single row for the auth user.
-- **Anon vs Anon**: Skipped entirely (no persistent identity).
+## 3. Variable Mappings & Core Logic
+- **`sessionStorage.getItem('hasRedirectedAuthLanding')`**: Boolean tracker that ensures the initial landing redirect to `/history` only fires once per browser session.
+- **Self-Contained Fetching**: `AuthInformationScreen` directly handles fetch requests to `authApi.getStats(token)` inside a unified `useEffect` loop, preventing parent component re-renders.
 
 ## 4. Next Step Logic
-- **Frontend Integration**: Consume the new `GET /api/user/stats` endpoint to display total wins, losses, matches, and win rate on the `ProfileModal` or a dedicated Leaderboard.
-- **Data Display**: Ensure the UI handles "Anonymous Players" elegantly when listing match history.
+- **Online Matchmaking**: Ready to integrate global multiplayer lobbies under the disabled "Online" network buttons when the backend matchmaking brokers are deployed.
+- **Profile Customization Expansion**: Extend the base settings dashboard to allow custom themes or cursor effects for authenticated players.
 ```

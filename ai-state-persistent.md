@@ -122,6 +122,7 @@ frontend/src/
 └── components/
     ├── Header.tsx              # Scores, timer, drawer toggle, theme, exit, auth identity (sticky)
     ├── InformationScreen.tsx   # Pre-game: name, mode select, join/copy, login prompt (anon only)
+    ├── AuthInformationScreen.tsx # Pre-game lobby dashboard for authenticated users with quick stats
     ├── MainGame.tsx            # Board grid, winning line SVG, winner popup, ChatBubble
     ├── GameDrawer.tsx          # Side panel: Move History only (chat removed)
     ├── ChatBubble.tsx          # Floating bottom-right chat bubble with notification badge
@@ -519,4 +520,11 @@ network: gomoku-network (bridge)
 - **Header**: Removed `onOpenProfile` prop. `UserDropdown` now receives only `isOpen` + `onClose`.
 - **ProfileModal Deleted**: Fully replaced by `SettingsPage` + `MatchHistoryPage`.
 - **App.tsx State Additions**: `unreadCount` (number), `isChatOpenRef` (Ref\<boolean\>).
+
+### Session: Lobby Dashboards & Unified Page Headers [2026-05-19]
+- **Redirect Loop Resolution**: Resolved `App.tsx` redirect loop. Instead of instantly routing authenticated users to `/history` on every landing on `/`, added a `sessionStorage` flag `hasRedirectedAuthLanding` to only redirect them once per tab session.
+- **Unified Global Header**: Deprecated custom `<header>` HTML in `MatchHistoryPage.tsx` and `SettingsPage.tsx`. Integrated the interactive global `<Header>` component across all routes by making game-specific props optional.
+- **Navigation & Dropdowns**: Added `backPath` and `backLabel` props to `<Header>` to enable back navigation from `/history` and `/settings` cleanly to `/`. Enabled full `<UserDropdown>` interactivity across all routes.
+- **AuthInformationScreen**: Built a premium lobby pre-game dashboard specifically for logged-in users on `/`. It displays user avatar, initials, glowing online badge, read-only identity detail link to settings, and self-contained stats widget displaying live Wins, Losses, and Win Rate.
+
 

@@ -21,11 +21,12 @@ interface MainGameProps {
   winningLine: Move[];
   unreadCount: number;
   onChatOpen: () => void;
+  onChatClose: () => void;
 }
 
 const MainGame: React.FC<MainGameProps> = ({
   board, history, winner, gameId, showDrawer, setShowDrawer, isMyTurn, makeMove, resetGame,
-  chatMessages, onSendMessage, username, winningLine, unreadCount, onChatOpen
+  chatMessages, onSendMessage, username, winningLine, unreadCount, onChatOpen, onChatClose
 }) => {
   const [showWinnerPopup, setShowWinnerPopup] = React.useState(false);
 
@@ -236,6 +237,7 @@ const MainGame: React.FC<MainGameProps> = ({
         currentUser={username}
         unreadCount={unreadCount}
         onOpen={onChatOpen}
+        onClose={onChatClose}
       />
     </LayoutGroup>
   );

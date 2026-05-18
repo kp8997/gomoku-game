@@ -9,6 +9,7 @@ interface ChatBubbleProps {
   currentUser: string;
   unreadCount: number;
   onOpen: () => void;
+  onClose: () => void;
 }
 
 const ChatBubble: React.FC<ChatBubbleProps> = ({
@@ -17,6 +18,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
   currentUser,
   unreadCount,
   onOpen,
+  onClose,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState('');
@@ -35,6 +37,8 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
   const handleToggle = () => {
     if (!isOpen) {
       onOpen(); // resets unread count
+    } else {
+      onClose();
     }
     setIsOpen(prev => !prev);
   };
@@ -71,7 +75,10 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
                 <span className="text-xs font-black uppercase tracking-widest text-content">Chat Arena</span>
               </div>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  setIsOpen(false);
+                  onClose();
+                }}
                 className="p-1 rounded-lg hover:bg-white/10 transition-colors text-content-muted hover:text-content"
               >
                 <X size={14} />
