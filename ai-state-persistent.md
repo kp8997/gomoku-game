@@ -482,3 +482,16 @@ network: gomoku-network (bridge)
 - **Credentials**: Configured dedicated account `admin-gomoku` for the `gomoku_db` database.
 - **Connectivity**: Exposed PostgreSQL on external port `5434` as requested.
 - **Configuration**: Updated backend `application.properties` with environment-variable-backed PostgreSQL connection string and dialect.
+
+### Session: Match History & Liquibase Migration [2026-05-18]
+- **Database Versioning**: Introduced **Liquibase** to manage all database schema evolution. Changed Spring Boot `spring.jpa.hibernate.ddl-auto` from `update` to `validate` to ensure Liquibase is the single source of truth.
+- **Match Tracking Redesign**: Modified the `confrontation_records` table to support matches against anonymous users without requiring a new table.
+  - Made `user_b_id` nullable.
+  - Added a **PostgreSQL partial unique index** (`idx_confrontation_user_a_anon`) where `user_b_id IS NULL` to ensure at most one cumulative anonymous stats row per authenticated user.
+  - Removed the JPA `@UniqueConstraint` on the entity to prevent conflicts with the partial index.
+- **Logic Mapping**: 
+  - **Auth vs Auth**: Recorded head-to-head between two registered users.
+  - **Auth vs Anon**: Recorded as cumulative wins/losses for the authenticated user under the `user_b_id = NULL` row.
+  - **Anon vs Anon**: Skipped entirely.
+- **Win Rate Statistics**: Implemented `GET /api/user/stats` returning `UserStatsDTO` (Total Wins, Total Losses, Total Matches, Win Rate). Win rate is derived by aggregating both H2H rows and the anonymous stats row.
+- **Null-Safe JPQL**: Upgraded `ConfrontationRepository` queries to use `LEFT JOIN FETCH` and explicit `IS NULL` checks since implicit inner joins drop anonymous rows.

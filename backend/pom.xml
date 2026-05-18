@@ -44,6 +44,12 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!-- Database Migration -->
+		<dependency>
+			<groupId>org.liquibase</groupId>
+			<artifactId>liquibase-core</artifactId>
+		</dependency>
+
 		<!-- Spring Security -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

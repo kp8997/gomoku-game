@@ -16,6 +16,9 @@ public interface ConfrontationRepository extends JpaRepository<ConfrontationReco
     @Query("SELECT c FROM ConfrontationRecord c WHERE (c.userA.id = :u1 AND c.userB.id = :u2) OR (c.userA.id = :u2 AND c.userB.id = :u1)")
     Optional<ConfrontationRecord> findBetweenUsers(@Param("u1") Long userId1, @Param("u2") Long userId2);
 
-    @Query("SELECT c FROM ConfrontationRecord c WHERE c.userA.id = :userId OR c.userB.id = :userId")
+    @Query("SELECT c FROM ConfrontationRecord c LEFT JOIN FETCH c.userB WHERE c.userA.id = :userId OR (c.userB IS NOT NULL AND c.userB.id = :userId)")
     List<ConfrontationRecord> findAllByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT c FROM ConfrontationRecord c WHERE c.userA.id = :userId AND c.userB IS NULL")
+    Optional<ConfrontationRecord> findAnonymousRecordForUser(@Param("userId") Long userId);
 }

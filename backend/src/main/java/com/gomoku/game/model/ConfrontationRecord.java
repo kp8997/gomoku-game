@@ -6,8 +6,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "confrontation_records", 
-       uniqueConstraints = {@UniqueConstraint(columnNames = {"user_a_id", "user_b_id"})})
+@Table(name = "confrontation_records")
 public class ConfrontationRecord {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,7 +17,7 @@ public class ConfrontationRecord {
     private User userA;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_b_id", nullable = false)
+    @JoinColumn(name = "user_b_id", nullable = true)
     private User userB;
 
     @Column(name = "user_a_wins", nullable = false)

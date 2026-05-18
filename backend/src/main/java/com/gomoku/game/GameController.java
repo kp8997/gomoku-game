@@ -249,26 +249,22 @@ public class GameController {
         List<String> players = new ArrayList<>(room.getPlayers());
         if (players.size() != 2) return;
         
-        // Look up both players in DB - if either is not a registered user, skip
         var user1Opt = userRepository.findByUsername(players.get(0));
         var user2Opt = userRepository.findByUsername(players.get(1));
         
         if (user1Opt.isPresent() && user2Opt.isPresent()) {
+            // Case 1: Both authenticated
             var user1 = user1Opt.get();
             var user2 = user2Opt.get();
-            
-            // Find which user is the winner
-            Long winnerId = null;
-            if (winnerUsername.equals(user1.getUsername())) {
-                winnerId = user1.getId();
-            } else if (winnerUsername.equals(user2.getUsername())) {
-                winnerId = user2.getId();
-            }
-            
-            if (winnerId != null) {
-                confrontationService.recordWin(user1.getId(), user2.getId(), winnerId);
-            }
+            Long winnerId = winnerUsername.equals(user1.getUsername()) ? user1.getId() : user2.getId();
+            confrontationService.recordWin(user1.getId(), user2.getId(), winnerId);
+        } else if (user1Opt.isPresent() || user2Opt.isPresent()) {
+            // Case 2: One authenticated, one anonymous
+            var authUser = user1Opt.isPresent() ? user1Opt.get() : user2Opt.get();
+            Long winnerId = winnerUsername.equals(authUser.getUsername()) ? authUser.getId() : null;
+            confrontationService.recordWin(authUser.getId(), null, winnerId);
         }
+        // Case 3: Both anonymous -> skip (no persistent identity)
     }
 
     private static class GameRoom {
