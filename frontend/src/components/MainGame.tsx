@@ -3,6 +3,7 @@ import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { Trophy } from 'lucide-react';
 import { type Move, type ChatMessage } from '../types';
 import GameDrawer from './GameDrawer';
+import ChatBubble from './ChatBubble';
 
 interface MainGameProps {
   board: (string | null)[][];
@@ -18,20 +19,19 @@ interface MainGameProps {
   onSendMessage: (content: string) => void;
   username: string;
   winningLine: Move[];
+  unreadCount: number;
+  onChatOpen: () => void;
 }
 
 const MainGame: React.FC<MainGameProps> = ({
   board, history, winner, gameId, showDrawer, setShowDrawer, isMyTurn, makeMove, resetGame,
-  chatMessages, onSendMessage, username, winningLine
+  chatMessages, onSendMessage, username, winningLine, unreadCount, onChatOpen
 }) => {
   const [showWinnerPopup, setShowWinnerPopup] = React.useState(false);
 
   React.useEffect(() => {
     if (winner) {
-      // If it's a timeout win (no winning line), show immediately.
-      // Otherwise, wait for the line animation to finish.
       const delay = winningLine && winningLine.length > 0 ? 2500 : 0;
-
       if (delay === 0) {
         setShowWinnerPopup(true);
       } else {
@@ -51,7 +51,7 @@ const MainGame: React.FC<MainGameProps> = ({
         layout
         className="flex-1 flex flex-col lg:flex-row min-h-0 relative overflow-hidden"
       >
-        {/* Sidebar Drawer - History & Chat */}
+        {/* Sidebar Drawer - History only */}
         <AnimatePresence>
           {showDrawer && (
             <motion.div
@@ -66,9 +66,6 @@ const MainGame: React.FC<MainGameProps> = ({
               <GameDrawer
                 setShowDrawer={setShowDrawer}
                 history={history}
-                chatMessages={chatMessages}
-                onSendMessage={onSendMessage}
-                username={username}
                 gameId={gameId}
               />
             </motion.div>
@@ -107,13 +104,12 @@ const MainGame: React.FC<MainGameProps> = ({
                       <div
                         key={`${r}-${c}`}
                         className={`
-                      w-8 h-8 sm:w-10 sm:h-10 bg-board-cell border-[1px] border-board-grid flex items-center justify-center transition-colors relative group
-                      ${isWinningCell ? 'z-40' : ''}
-                      ${isMyTurn && !winner ? 'cursor-pointer hover:bg-black/5 dark:hover:bg-white/5' : 'cursor-not-allowed opacity-90'}
-                    `}
+                          w-8 h-8 sm:w-10 sm:h-10 bg-board-cell border-[1px] border-board-grid flex items-center justify-center transition-colors relative group
+                          ${isWinningCell ? 'z-40' : ''}
+                          ${isMyTurn && !winner ? 'cursor-pointer hover:bg-black/5 dark:hover:bg-white/5' : 'cursor-not-allowed opacity-90'}
+                        `}
                         onClick={() => isMyTurn && !winner && makeMove(r, c)}
                       >
-                        {/* Minimal Cell Background */}
                         <div className="absolute inset-0 bg-black/5 dark:bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
                         {isLastMove && (
@@ -143,15 +139,14 @@ const MainGame: React.FC<MainGameProps> = ({
                           />
                         )}
 
-
                         {cell && (
                           <motion.div
                             initial={{ scale: 0, rotate: -45 }}
                             animate={{ scale: 1, rotate: 0 }}
                             className={`
-                            flex items-center justify-center text-xl sm:text-2xl font-black z-10 select-none
-                            ${cell === 'X' ? 'text-blue-600 drop-shadow-[0_0_10px_rgba(37,99,235,0.5)]' : 'text-pink-600 drop-shadow-[0_0_10px_rgba(219,39,119,0.5)]'}
-                          `}
+                              flex items-center justify-center text-xl sm:text-2xl font-black z-10 select-none
+                              ${cell === 'X' ? 'text-blue-600 drop-shadow-[0_0_10px_rgba(37,99,235,0.5)]' : 'text-pink-600 drop-shadow-[0_0_10px_rgba(219,39,119,0.5)]'}
+                            `}
                           >
                             {cell}
                           </motion.div>
@@ -233,6 +228,15 @@ const MainGame: React.FC<MainGameProps> = ({
           </AnimatePresence>
         </motion.div>
       </motion.div>
+
+      {/* Floating Chat Bubble */}
+      <ChatBubble
+        messages={chatMessages}
+        onSendMessage={onSendMessage}
+        currentUser={username}
+        unreadCount={unreadCount}
+        onOpen={onChatOpen}
+      />
     </LayoutGroup>
   );
 };

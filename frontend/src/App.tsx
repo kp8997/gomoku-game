@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import SockJS from 'sockjs-client';
 import Stomp from 'stompjs';
+import { useNavigate } from 'react-router-dom';
 import './index.css';
 
 // Components
@@ -9,7 +10,6 @@ import InformationScreen from './components/InformationScreen';
 import MainGame from './components/MainGame';
 import TimeoutWarning from './components/TimeoutWarning';
 import AuthModal from './components/AuthModal';
-import ProfileModal from './components/ProfileModal';
 
 // Types
 import { type Move, type GameMessage, type ChatMessage } from './types';
@@ -33,6 +33,8 @@ const ANIMALS = [
 
 const App: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
   const [username, setUsername] = useState<string>('');
   const [isJoined, setIsJoined] = useState<boolean>(false);
   const [board, setBoard] = useState<(string | null)[][]>(
@@ -44,7 +46,7 @@ const App: React.FC = () => {
   const [winner, setWinner] = useState<string | null>(null);
   const [showDrawer, setShowDrawer] = useState<boolean>(false);
   const [scores, setScores] = useState<Record<string, number>>({});
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => localStorage.getItem('gomoku_theme') !== 'light');
   const [copied, setCopied] = useState<boolean>(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [winningLine, setWinningLine] = useState<Move[]>([]);
@@ -55,23 +57,24 @@ const App: React.FC = () => {
   const [playerCount, setPlayerCount] = useState<number>(0);
   const [turnSymbol, setTurnSymbol] = useState<'X' | 'O'>('X');
 
-  // Occupancy States
+  // Occupancy
   const [serverGameMode, setServerGameMode] = useState<'SINGLE' | 'MULTIPLE' | null>(null);
   const [isRoomFull, setIsRoomFull] = useState<boolean>(false);
   const [roomFullReason, setRoomFullReason] = useState<string | null>(null);
 
-  // Auth Modals
+  // Auth modal
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
-  const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
+
+  // Chat bubble state
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const isChatOpenRef = useRef<boolean>(false);
 
   const stompClient = useRef<Stomp.Client | null>(null);
 
+  // Theme sync + localStorage
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    document.documentElement.classList.toggle('dark', isDarkMode);
+    localStorage.setItem('gomoku_theme', isDarkMode ? 'dark' : 'light');
   }, [isDarkMode]);
 
   const generateRandomName = () => {
@@ -86,6 +89,7 @@ const App: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Sync username with auth state
   useEffect(() => {
     if (isAuthenticated && user) {
       setUsername(user.username);
@@ -94,6 +98,14 @@ const App: React.FC = () => {
     }
   }, [isAuthenticated, user]);
 
+  // Authenticated users: redirect to /history on app entry (before joining game)
+  useEffect(() => {
+    if (isAuthenticated && !isJoined) {
+      navigate('/history');
+    }
+  }, [isAuthenticated]);
+
+  // WebSocket setup
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const room = urlParams.get('room') || Math.random().toString(36).substring(7);
@@ -102,7 +114,6 @@ const App: React.FC = () => {
       window.history.replaceState({}, '', `?room=${room}`);
     }
 
-    // Connect early to check room status (but don't block render)
     const backendUrl = import.meta.env.VITE_WS_URL || `http://${window.location.hostname}:8888/ws-gomoku`;
     const socket = new SockJS(backendUrl);
     const client = Stomp.over(socket);
@@ -115,14 +126,11 @@ const App: React.FC = () => {
           client.subscribe(`/topic/game/${room}`, (payload) => {
             handleMessage(JSON.parse(payload.body));
           });
-          // Query room status immediately
           client.send("/app/game.status", {}, JSON.stringify({ gameId: room }));
         },
         (error) => {
           console.warn("Backend unavailable or connection failed:", error);
-          // We don't block the UI, user can still see the screen
-          // We might want to retry later or just let them try to 'Join' manually
-          setTimeout(connectToBackend, 5000); // Simple retry
+          setTimeout(connectToBackend, 5000);
         }
       );
     };
@@ -139,13 +147,11 @@ const App: React.FC = () => {
   const handleMessage = (message: GameMessage) => {
     switch (message.type) {
       case 'ROOM_STATUS':
-        console.log("Received ROOM_STATUS:", message);
         if (message.mode) setGameMode(message.mode);
         setServerGameMode(message.mode || null);
         const currentCount = message.playerCount || 0;
         setPlayerCount(currentCount);
         const max = (message.mode === 'SINGLE' && currentCount <= 1) ? 1 : 2;
-
         if (currentCount >= max) {
           setIsRoomFull(true);
           setRoomFullReason(`Arena is currently full (${currentCount}/${max}). Please try a different room or wait for a slot.`);
@@ -160,6 +166,10 @@ const App: React.FC = () => {
           content: message.content || '',
           timestamp: message.timestamp || Date.now()
         }]);
+        // Increment unread count if chat is closed and message is from someone else
+        if (!isChatOpenRef.current && message.sender !== username) {
+          setUnreadCount(prev => prev + 1);
+        }
         break;
       case 'JOIN':
         if (message.scores) setScores(message.scores);
@@ -191,10 +201,9 @@ const App: React.FC = () => {
           setHistory(prevHistory => {
             const isDuplicate = prevHistory.some(m => m.row === message.row && m.col === message.col);
             if (isDuplicate) return prevHistory;
-            
+
             const symbol = message.content || (prevHistory.length % 2 === 0 ? 'X' : 'O');
-            
-            // Schedule updates for other states
+
             setBoard(prevBoard => {
               const next = prevBoard.map(row => [...row]);
               next[message.row!][message.col!] = symbol;
@@ -217,8 +226,6 @@ const App: React.FC = () => {
         setWinner(message.winner || 'Someone');
         if (message.scores) setScores(message.scores);
         if (message.winningLine) setWinningLine(message.winningLine);
-
-        // Update local stats
         if (message.winner) {
           const isWinner = gameMode === 'SINGLE' || message.winner === username;
           setStats(prev => ({
@@ -241,7 +248,7 @@ const App: React.FC = () => {
 
   const createNewRoom = () => {
     const newRoom = Math.random().toString(36).substring(7);
-    window.location.href = `?room=${newRoom}`; // Hard refresh to reset everything properly
+    window.location.href = `?room=${newRoom}`;
   };
 
   const connect = () => {
@@ -251,12 +258,7 @@ const App: React.FC = () => {
 
   const makeMove = (row: number, col: number) => {
     if (board[row][col] || winner || !isJoined) return;
-
-    // Prevent consecutive moves in MULTIPLE mode
-    if (gameMode === 'MULTIPLE' && history.length > 0 && history[history.length - 1].player === username) {
-      return;
-    }
-
+    if (gameMode === 'MULTIPLE' && history.length > 0 && history[history.length - 1].player === username) return;
     stompClient.current?.send("/app/game.move", {}, JSON.stringify({ sender: username, type: 'MOVE', row, col, gameId }));
   };
 
@@ -276,7 +278,12 @@ const App: React.FC = () => {
     setWinningLine([]);
     setHistory([]);
     setBoard(Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null)));
-    // We stay connected but logically "leave" the match screen
+    setUnreadCount(0);
+  };
+
+  const handleChatOpen = () => {
+    isChatOpenRef.current = true;
+    setUnreadCount(0);
   };
 
   const isMyTurn = (gameMode === 'SINGLE' || (
@@ -302,7 +309,6 @@ const App: React.FC = () => {
         currentTurnSymbol={turnSymbol}
         playerCount={playerCount}
         onOpenAuth={() => setShowAuthModal(true)}
-        onOpenProfile={() => setShowProfileModal(true)}
         isAuthenticated={isAuthenticated}
         userAvatar={user?.avatar || null}
         userFullName={user?.fullName || null}
@@ -342,26 +348,24 @@ const App: React.FC = () => {
             onSendMessage={sendChatMessage}
             username={username}
             winningLine={winningLine}
+            unreadCount={unreadCount}
+            onChatOpen={handleChatOpen}
           />
         )}
       </div>
 
       {/* Global Timeout Warning Overlay */}
-      <TimeoutWarning 
+      <TimeoutWarning
         startTime={turnStartTime}
         duration={turnDuration}
         isMyTurn={isMyTurn}
         isPaused={!!winner}
       />
 
-      {/* Auth Modals */}
-      <AuthModal 
+      {/* Auth Modal */}
+      <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
-      />
-      <ProfileModal 
-        isOpen={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
       />
     </div>
   );

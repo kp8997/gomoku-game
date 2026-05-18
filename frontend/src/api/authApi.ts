@@ -1,4 +1,4 @@
-import type { LoginRequest, SignupRequest, AuthResponse, UserProfile, ConfrontationRecord } from '../types';
+import type { LoginRequest, SignupRequest, AuthResponse, UserProfile, ConfrontationRecord, UserStatsDTO } from '../types';
 
 const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8888`;
 
@@ -47,6 +47,14 @@ export const authApi = {
       body: JSON.stringify(data),
     });
     if (!response.ok) throw new Error('Failed to update profile');
+    return response.json();
+  },
+
+  getStats: async (token: string): Promise<UserStatsDTO> => {
+    const response = await fetch(`${API_BASE}/api/user/stats`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!response.ok) throw new Error('Failed to fetch stats');
     return response.json();
   },
 };

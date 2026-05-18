@@ -52,6 +52,8 @@ Every plan **must** include these sections in this exact order:
 |:---|:---|:---|:---|
 | 01 | Authentication, Profile & Confrontation Records | ✅ Implemented | `ai-feature-plan/01-ai-auth-feature-plan.md` |
 | 02 | PostgreSQL Migration | ✅ Implemented | `ai-feature-plan/02-ai-postgresql-migration-feature-plan.md` |
+| 03 | Match History & Liquibase Migration | ✅ Implemented | `ai-feature-plan/03-ai-match-history-feature-plan.md` |
+| 04 | UI Overhaul: History Page, Chat Bubble, Settings, Auth Landing | ✅ Implemented | `ai-feature-plan/04-ai-ui-overhaul-feature-plan.md` |
 
 
 ## 1. Project Architecture
@@ -100,26 +102,29 @@ backend/src/main/java/com/gomoku/game/
     └── UserController.java     # GET/PUT /api/user/profile
 
 frontend/src/
-├── App.tsx                     # Root: state management, WebSocket, routing, auth integration
+├── App.tsx                     # Root: state management, WebSocket, routing, auth integration, chat unread state
 ├── index.css                   # Design system: tokens, dark mode, glassmorphism
-├── main.tsx                    # Entry point, wrapped in AuthProvider
-├── types.ts                    # TypeScript interfaces (Move, ChatMessage, GameMessage, auth types)
+├── main.tsx                    # Entry point: BrowserRouter + Routes (/, /history, /settings) + AuthProvider
+├── types.ts                    # TypeScript interfaces (Move, ChatMessage, GameMessage, auth types, UserStatsDTO)
 ├── api/
-│   └── authApi.ts              # fetch wrappers for auth & profile endpoints
+│   └── authApi.ts              # fetch wrappers for auth, profile, stats endpoints
 ├── context/
 │   └── AuthContext.tsx          # React Context for auth state (user, token, login/logout)
+├── pages/
+│   ├── MatchHistoryPage.tsx    # /history: stats dashboard + confrontation records (auth-guarded)
+│   └── SettingsPage.tsx        # /settings: profile editor + account management (auth-guarded)
 └── components/
     ├── Header.tsx              # Scores, timer, drawer toggle, theme, exit, auth identity (sticky)
-    ├── InformationScreen.tsx   # Pre-game: name, mode select, join/copy, login prompt
-    ├── MainGame.tsx            # Board grid, winning line SVG, winner popup
-    ├── GameDrawer.tsx          # Side panel: tabs for History & Chat
-    ├── ChatPanel.tsx           # Real-time chat with inline/standalone modes
+    ├── InformationScreen.tsx   # Pre-game: name, mode select, join/copy, login prompt (anon only)
+    ├── MainGame.tsx            # Board grid, winning line SVG, winner popup, ChatBubble
+    ├── GameDrawer.tsx          # Side panel: Move History only (chat removed)
+    ├── ChatBubble.tsx          # Floating bottom-right chat bubble with notification badge
+    ├── ChatPanel.tsx           # Real-time chat (used inline inside ChatBubble)
     ├── HistorySection.tsx      # Move history list
     ├── TurnTimer.tsx           # Circular SVG countdown timer
     ├── TimeoutWarning.tsx      # Global timeout warning overlay
     ├── AuthModal.tsx           # Login/Signup modal (tabbed, glassmorphism)
-    ├── UserDropdown.tsx        # User menu dropdown (auth-only, click-outside)
-    └── ProfileModal.tsx        # Profile editor + confrontation records
+    └── UserDropdown.tsx        # User menu dropdown (navigate to /history, /settings)
 ```
 
 ## 2. WebSocket Schema (GameMessage.java)
@@ -495,3 +500,17 @@ network: gomoku-network (bridge)
   - **Anon vs Anon**: Skipped entirely.
 - **Win Rate Statistics**: Implemented `GET /api/user/stats` returning `UserStatsDTO` (Total Wins, Total Losses, Total Matches, Win Rate). Win rate is derived by aggregating both H2H rows and the anonymous stats row.
 - **Null-Safe JPQL**: Upgraded `ConfrontationRepository` queries to use `LEFT JOIN FETCH` and explicit `IS NULL` checks since implicit inner joins drop anonymous rows.
+
+### Session: UI Overhaul — Routes, Chat Bubble, History & Settings Pages [2026-05-19]
+- **Client-Side Routing**: Added `react-router-dom` v7. Three routes: `/` (game), `/history` (match history), `/settings` (profile editor).
+- **MatchHistoryPage** (`/history`): Auth-guarded page with 2×2/4-col stats grid (wins, losses, matches, win rate) + confrontation records list with win-rate progress bars.
+- **SettingsPage** (`/settings`): Auth-guarded profile editor with avatar upload, success toast, readonly username, logout button.
+- **ChatBubble**: Floating 56px circle at `bottom-6 right-6`, `z-[55]`. Expands above bubble to 320px panel. Red notification badge counts messages from others when chat is closed. `isChatOpenRef` in `App.tsx` tracks bubble state to prevent race conditions.
+- **GameDrawer Simplified**: Removed tab toggle system and `ChatPanel`. Now shows only Move History with a move-count badge.
+- **Authenticated Landing**: `App.tsx` `useEffect` redirects to `/history` when `isAuthenticated && !isJoined`. Anonymous users stay on `InformationScreen`.
+- **UserDropdown Navigation**: Replaced `onOpenProfile()` modal + placeholder Settings with `navigate('/history')` and `navigate('/settings')`. Logout now navigates to `/`.
+- **Theme Persistence**: `isDarkMode` stored in `localStorage` key `gomoku_theme` across all route navigations.
+- **Header**: Removed `onOpenProfile` prop. `UserDropdown` now receives only `isOpen` + `onClose`.
+- **ProfileModal Deleted**: Fully replaced by `SettingsPage` + `MatchHistoryPage`.
+- **App.tsx State Additions**: `unreadCount` (number), `isChatOpenRef` (Ref\<boolean\>).
+

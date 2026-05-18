@@ -64,3 +64,10 @@ export interface ConfrontationRecord {
   wins: number;
   losses: number;
 }
+
+export interface UserStatsDTO {
+  totalWins: number;
+  totalLosses: number;
+  totalMatches: number;
+  winRate: number;
+}

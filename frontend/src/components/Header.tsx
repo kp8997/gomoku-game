@@ -21,7 +21,6 @@ interface HeaderProps {
   currentTurnSymbol: 'X' | 'O';
   playerCount: number;
   onOpenAuth: () => void;
-  onOpenProfile: () => void;
   isAuthenticated: boolean;
   userAvatar: string | null;
   userFullName: string | null;
@@ -30,7 +29,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({
   isJoined, scores, showDrawer, setShowDrawer, isLightMode, setIsLightMode, isMyTurn, leaveGame, username,
   turnStartTime, turnDuration, isGameOver, gameMode, currentTurnSymbol, playerCount,
-  onOpenAuth, onOpenProfile, isAuthenticated, userAvatar, userFullName
+  onOpenAuth: _onOpenAuth, isAuthenticated, userAvatar, userFullName
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
@@ -186,12 +185,9 @@ const Header: React.FC<HeaderProps> = ({
 
             {isAuthenticated && (
               <div className="absolute top-full right-0 mt-1 z-50">
-                <UserDropdown 
+                <UserDropdown
                   isOpen={isDropdownOpen}
                   onClose={() => setIsDropdownOpen(false)}
-                  onOpenAuth={onOpenAuth}
-                  onOpenProfile={onOpenProfile}
-                  username={username}
                 />
               </div>
             )}
