@@ -101,6 +101,20 @@ public class GameController {
         messagingTemplate.convertAndSend("/topic/game/" + gameId, status);
     }
 
+    @MessageMapping("/game.leave")
+    public void leaveGame(@Payload GameMessage message, SimpMessageHeaderAccessor headerAccessor) {
+        String gameId = message.getGameId();
+        String sessionId = headerAccessor.getSessionId();
+        if (gameId != null) {
+            GameRoom room = games.get(gameId);
+            if (room != null) {
+                room.removeSession(sessionId);
+                stopTurnTimer(gameId);
+                broadcastStatus(gameId);
+            }
+        }
+    }
+
     @EventListener
     public void handleSessionDisconnect(SessionDisconnectEvent event) {
         SimpMessageHeaderAccessor headerAccessor = SimpMessageHeaderAccessor.wrap(event.getMessage());

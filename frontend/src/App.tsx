@@ -307,6 +307,9 @@ const App: React.FC = () => {
   };
 
   const leaveGame = () => {
+    if (stompClient.current && stompClient.current.connected) {
+      stompClient.current.send("/app/game.leave", {}, JSON.stringify({ sender: username, type: 'LEAVE', gameId }));
+    }
     setIsJoined(false);
     setWinner(null);
     setWinningLine([]);
