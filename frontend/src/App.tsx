@@ -336,6 +336,20 @@ const App: React.FC = () => {
     isChatOpenRef.current = false;
   };
 
+  const handleEffectChange = (effectKey: string | null) => {
+    setSymbolEffects(prev => {
+      const next = { ...prev };
+      if (mySymbol) {
+        if (effectKey) {
+          next[mySymbol] = effectKey;
+        } else {
+          delete next[mySymbol];
+        }
+      }
+      return next;
+    });
+  };
+
   const isMyTurn = (gameMode === 'SINGLE' || (
     mySymbol ? turnSymbol === mySymbol : history.length === 0 || history[history.length - 1].player !== username
   )) && (gameMode === 'SINGLE' || playerCount >= 2);
@@ -417,6 +431,8 @@ const App: React.FC = () => {
             onChatOpen={handleChatOpen}
             onChatClose={handleChatClose}
             symbolEffects={symbolEffects}
+            hasMoves={history.length > 0}
+            onEffectChange={handleEffectChange}
           />
         )}
       </div>

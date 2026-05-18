@@ -24,11 +24,14 @@ interface MainGameProps {
   onChatOpen: () => void;
   onChatClose: () => void;
   symbolEffects?: Record<string, string>;
+  hasMoves?: boolean;
+  onEffectChange?: (key: string | null) => void;
 }
 
 const MainGame: React.FC<MainGameProps> = ({
   board, history, winner, gameId, showDrawer, setShowDrawer, isMyTurn, makeMove, resetGame,
-  chatMessages, onSendMessage, username, winningLine, unreadCount, onChatOpen, onChatClose, symbolEffects
+  chatMessages, onSendMessage, username, winningLine, unreadCount, onChatOpen, onChatClose, symbolEffects,
+  hasMoves, onEffectChange
 }) => {
   const [showWinnerPopup, setShowWinnerPopup] = React.useState(false);
 
@@ -70,6 +73,8 @@ const MainGame: React.FC<MainGameProps> = ({
                 setShowDrawer={setShowDrawer}
                 history={history}
                 gameId={gameId}
+                hasMoves={hasMoves}
+                onEffectChange={onEffectChange}
               />
             </motion.div>
           )}
@@ -173,7 +178,9 @@ const MainGame: React.FC<MainGameProps> = ({
                     const x2 = `${((end.col + 0.5) / numCols) * 100}%`;
                     const y2 = `${((end.row + 0.5) / numRows) * 100}%`;
 
-                    return (
+                    const winningEffect = symbolEffects?.[winningSymbol];
+
+                    const defaultLine = (
                       <motion.line
                         x1={x1} y1={y1} x2={x2} y2={y2}
                         stroke={winningSymbol === 'X' ? '#2563eb' : '#db2677'}
@@ -182,11 +189,50 @@ const MainGame: React.FC<MainGameProps> = ({
                         initial={{ pathLength: 0, opacity: 0 }}
                         animate={{ pathLength: 1, opacity: 1 }}
                         transition={{ duration: 0.8, ease: "easeOut" }}
-                        style={{
-                          filter: `drop-shadow(0 0 10px ${winningSymbol === 'X' ? '#2563eb' : '#db2677'})`
-                        }}
+                        style={{ filter: `drop-shadow(0 0 10px ${winningSymbol === 'X' ? '#2563eb' : '#db2677'})` }}
                       />
                     );
+
+                    if (!winningEffect) return defaultLine;
+
+                    switch (winningEffect) {
+                      case 'FIRE_PHOENIX':
+                        return (
+                          <g>
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#b91c1c" strokeWidth="16" strokeLinecap="round" style={{ filter: 'blur(4px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.6 }} transition={{ duration: 0.8 }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ea580c" strokeWidth="8" strokeLinecap="round" className="animate-pulse" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.8 }} style={{ filter: 'drop-shadow(0 0 10px #f97316)' }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fde047" strokeWidth="2" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.8 }} />
+                          </g>
+                        );
+                      case 'DRAGON_LIGHTNING':
+                        return (
+                          <g className="animate-lightning-flash">
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#0891b2" strokeWidth="12" strokeLinecap="square" style={{ filter: 'blur(6px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.5 }} transition={{ duration: 0.3 }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#22d3ee" strokeWidth="4" strokeLinecap="square" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.3 }} style={{ filter: 'drop-shadow(0 0 12px #22d3ee)' }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth="1" strokeLinecap="square" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.3 }} />
+                          </g>
+                        );
+                      case 'CHERRY_BLOSSOM':
+                        return (
+                          <g>
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fbcfe8" strokeWidth="16" strokeLinecap="round" style={{ filter: 'blur(3px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.4 }} transition={{ duration: 1.2 }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#f472b6" strokeWidth="8" strokeLinecap="round" strokeDasharray="15, 8" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 1.2 }} style={{ filter: 'drop-shadow(0 0 8px #f472b6)' }} />
+                          </g>
+                        );
+                      case 'DARK_SLASH':
+                        const isX = winningSymbol === 'X';
+                        const darkBase = isX ? '#312e81' : '#7f1d1d';
+                        const darkMain = isX ? '#4f46e5' : '#dc2626';
+                        return (
+                          <g>
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={darkBase} strokeWidth="20" strokeLinecap="round" style={{ filter: 'blur(4px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.7 }} transition={{ duration: 0.4, ease: "easeOut" }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={darkMain} strokeWidth="8" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.5, ease: "easeOut" }} style={{ filter: `drop-shadow(0 0 10px ${darkMain})` }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth="2" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.6 }} transition={{ duration: 0.6, ease: "easeOut" }} />
+                          </g>
+                        );
+                      default:
+                        return defaultLine;
+                    }
                   })()}
                 </svg>
               )}

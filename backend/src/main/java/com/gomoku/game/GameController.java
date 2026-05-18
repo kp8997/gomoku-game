@@ -308,7 +308,7 @@ public class GameController {
         private final List<GameMessage.ChatMessage> chatHistory = new ArrayList<>();
         private final java.util.Set<String> players = new java.util.LinkedHashSet<>();
         private final java.util.Set<String> activeSessions = new java.util.HashSet<>();
-        private final Map<String, Integer> scores = new HashMap<>();
+        private final Map<String, Integer> scores = new java.util.LinkedHashMap<>();
         private String lastPlayer = null;
         private GameMessage.GameMode mode = GameMessage.GameMode.SINGLE;
         private long turnStartTime = 0;

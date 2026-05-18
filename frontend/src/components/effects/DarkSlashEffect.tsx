@@ -7,24 +7,29 @@ interface Props {
 
 const DarkSlashEffect: React.FC<Props> = ({ symbol }) => {
   const isX = symbol === 'X';
-  // X = cool dark purple/indigo, O = deep crimson/black
-  const colorClass = isX ? 'text-indigo-950 dark:text-indigo-200 drop-shadow-[0_0_8px_#312e81]' 
-                         : 'text-red-950 dark:text-red-200 drop-shadow-[0_0_8px_#7f1d1d]';
-  const slashColor = isX ? 'bg-indigo-500' : 'bg-red-500';
+  
+  // Standard text color with a heavy, dark shadow
+  const colorClass = isX 
+    ? 'text-indigo-900 dark:text-indigo-300 drop-shadow-[0_0_6px_rgba(67,56,202,0.8)]' 
+    : 'text-rose-950 dark:text-rose-400 drop-shadow-[0_0_6px_rgba(225,29,72,0.8)]';
+    
+  const slashColor = isX ? 'bg-indigo-600/35' : 'bg-rose-600/35';
 
   return (
     <div className="relative flex items-center justify-center w-full h-full overflow-hidden">
-      {/* Dark Energy Aura */}
-      <div className={`absolute inset-0 rounded-full opacity-60 blur-md animate-dark-wisp mix-blend-multiply dark:mix-blend-screen ${isX ? 'bg-indigo-800' : 'bg-red-800'}`}></div>
+      {/* Deep Void Aura */}
+      <div className={`absolute inset-0 rounded-full blur-[8px] opacity-50 animate-pulse ${isX ? 'bg-indigo-900' : 'bg-rose-900'}`} style={{ animationDuration: '4s' }}></div>
       
-      {/* Slashes */}
-      <div className="absolute inset-0 pointer-events-none z-20 mix-blend-overlay">
-        <div className={`absolute h-0.5 w-[140%] ${slashColor} top-[40%] left-[-20%] rotate-45 animate-slash-1 shadow-[0_0_4px_${isX?'#4338ca':'#dc2626'}]`}></div>
-        <div className={`absolute h-0.5 w-[140%] ${slashColor} top-[60%] left-[-20%] -rotate-12 animate-slash-2 shadow-[0_0_4px_${isX?'#4338ca':'#dc2626'}]`}></div>
+      {/* Active Animated Background Slash Marks */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+        <div className={`absolute w-[140%] h-[3px] rounded-full ${slashColor} animate-active-slash-1`} />
+        <div className={`absolute w-[140%] h-[2px] rounded-full ${slashColor} animate-active-slash-2`} />
+        <div className={`absolute w-[140%] h-[1.5px] rounded-full ${slashColor} animate-active-slash-3`} />
+        <div className={`absolute w-[140%] h-[1px] rounded-full ${slashColor} animate-active-slash-4`} />
       </div>
       
-      {/* Core Symbol */}
-      <span className={`relative z-10 font-black animate-slash-reveal ${colorClass} tracking-tighter`}>
+      {/* Standard Text Symbol for Perfect Size Consistency */}
+      <span className={`relative z-10 font-bold ${colorClass}`}>
         {symbol}
       </span>
     </div>

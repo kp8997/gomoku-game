@@ -5,7 +5,12 @@ import type { AchievementResponse, EffectType } from '../../types';
 import { BadgeCard } from './BadgeCard';
 import { EffectCard } from './EffectCard';
 
-export const AchievementPanel: React.FC = () => {
+interface AchievementPanelProps {
+  hasMoves?: boolean;
+  onEffectChange?: (key: EffectType) => void;
+}
+
+export const AchievementPanel: React.FC<AchievementPanelProps> = ({ hasMoves, onEffectChange }) => {
   const { token, isAuthenticated } = useAuth();
   const [data, setData] = useState<AchievementResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,6 +41,7 @@ export const AchievementPanel: React.FC = () => {
   }, [isAuthenticated, token]);
 
   const handleEquip = async (effectKey: EffectType) => {
+    if (hasMoves) return;
     if (!token || !data) return;
     try {
       if (effectKey) {
@@ -45,6 +51,9 @@ export const AchievementPanel: React.FC = () => {
       }
       // Optimistic update
       setData({ ...data, equippedEffect: effectKey });
+      if (onEffectChange) {
+        onEffectChange(effectKey);
+      }
     } catch (err) {
       console.error('Failed to equip effect:', err);
     }
@@ -123,6 +132,7 @@ export const AchievementPanel: React.FC = () => {
               effect={{ key: null, unlocked: true, requirementLabel: '' }}
               isEquipped={!data.equippedEffect}
               onEquip={handleEquip}
+              hasMoves={hasMoves}
             />
             {data.effects.map(effect => (
               <EffectCard
@@ -130,6 +140,7 @@ export const AchievementPanel: React.FC = () => {
                 effect={effect}
                 isEquipped={data.equippedEffect === effect.key}
                 onEquip={handleEquip}
+                hasMoves={hasMoves}
               />
             ))}
           </div>
