@@ -22,7 +22,9 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState('');
+  const [previewMessage, setPreviewMessage] = useState<ChatMessage | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const previewTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -33,6 +35,24 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
       scrollToBottom();
     }
   }, [messages, isOpen]);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (!isOpen && lastMessage.sender !== currentUser) {
+        setPreviewMessage(lastMessage);
+        if (previewTimeoutRef.current) clearTimeout(previewTimeoutRef.current);
+        previewTimeoutRef.current = setTimeout(() => setPreviewMessage(null), 4000);
+      }
+    }
+  }, [messages, isOpen, currentUser]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setPreviewMessage(null);
+      if (previewTimeoutRef.current) clearTimeout(previewTimeoutRef.current);
+    }
+  }, [isOpen]);
 
   const handleToggle = () => {
     if (!isOpen) {
@@ -112,7 +132,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
                       </div>
                       <div
                         className={`
-                          max-w-[85%] px-3 py-2 rounded-xl text-xs font-medium leading-relaxed shadow-sm
+                          max-w-[85%] px-3 py-2 rounded-xl text-xs font-medium leading-relaxed shadow-sm break-words
                           ${isMe
                             ? 'bg-blue-600 text-white rounded-tr-none'
                             : 'bg-slate-100 dark:bg-white/10 text-content rounded-tl-none border border-glass-border'
@@ -154,14 +174,38 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Floating Bubble Button */}
-      <motion.button
-        whileHover={{ scale: 1.08 }}
-        whileTap={{ scale: 0.94 }}
-        onClick={handleToggle}
-        className="relative w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-500/30 flex items-center justify-center transition-colors border-none"
-        title="Chat"
-      >
+      <div className="relative">
+        {/* Preview Popup */}
+        <AnimatePresence>
+          {!isOpen && previewMessage && (
+            <motion.div
+              initial={{ opacity: 0, x: 20, scale: 0.9 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 10, scale: 0.9 }}
+              className="absolute right-[120%] top-1/2 -translate-y-1/2 min-w-[200px] max-w-[280px] bg-slate-900/90 dark:bg-white/90 backdrop-blur-md rounded-2xl p-3 shadow-2xl cursor-pointer pointer-events-auto border border-glass-border"
+              onClick={handleToggle}
+            >
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <User size={12} className="text-blue-400 dark:text-blue-600" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-white dark:text-slate-900 truncate">
+                  {previewMessage.sender}
+                </span>
+              </div>
+              <p className="text-xs font-medium text-slate-200 dark:text-slate-700 line-clamp-2 leading-relaxed break-words">
+                {previewMessage.content}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Floating Bubble Button */}
+        <motion.button
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.94 }}
+          onClick={handleToggle}
+          className="relative w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-500/30 flex items-center justify-center transition-colors border-none pointer-events-auto"
+          title="Chat"
+        >
         <AnimatePresence mode="wait">
           {isOpen ? (
             <motion.span
@@ -201,6 +245,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
         </AnimatePresence>
       </motion.button>
     </div>
+  </div>
   );
 };
 
