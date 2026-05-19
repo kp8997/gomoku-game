@@ -139,7 +139,11 @@ const App: React.FC = () => {
       window.history.replaceState({}, '', `?room=${room}`);
     }
 
-    const backendUrl = import.meta.env.VITE_WS_URL || `http://${window.location.hostname}:8888/ws-gomoku`;
+    const isHttps = window.location.protocol === 'https:';
+    const backendUrl = import.meta.env.VITE_WS_URL || 
+      (isHttps 
+        ? `https://${window.location.hostname}/ws-gomoku` 
+        : `http://${window.location.hostname}:8888/ws-gomoku`);
     const socket = new SockJS(backendUrl);
     const client = Stomp.over(socket);
     client.debug = () => { };
