@@ -1,9 +1,6 @@
 import type { LoginRequest, SignupRequest, AuthResponse, UserProfile, ConfrontationRecord, UserStatsDTO, AchievementResponse } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_URL || 
-  (window.location.protocol === 'https:' 
-    ? `https://${window.location.hostname}` 
-    : `http://${window.location.hostname}:8888`);
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8888';
 
 export const authApi = {
   signup: async (data: SignupRequest): Promise<AuthResponse> => {

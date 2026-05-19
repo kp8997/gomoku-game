@@ -41,11 +41,11 @@ const playNotificationSound = () => {
 
     // Sine wave gives the softest, roundest natural tone (like a wooden block or marimba)
     osc.type = 'sine';
-    
+
     // Start at a gentle frequency and slightly drop it to sound more organic
     osc.frequency.setValueAtTime(450, ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(350, ctx.currentTime + 0.2);
-    
+
     // Higher volume (0.8 max) while keeping the organic percussive envelope
     gainNode.gain.setValueAtTime(0, ctx.currentTime);
     gainNode.gain.linearRampToValueAtTime(0.8, ctx.currentTime + 0.01); // Quick soft attack, louder
@@ -139,11 +139,7 @@ const App: React.FC = () => {
       window.history.replaceState({}, '', `?room=${room}`);
     }
 
-    const isHttps = window.location.protocol === 'https:';
-    const backendUrl = import.meta.env.VITE_WS_URL || 
-      (isHttps 
-        ? `https://${window.location.hostname}/ws-gomoku` 
-        : `http://${window.location.hostname}:8888/ws-gomoku`);
+    const backendUrl = import.meta.env.VITE_WS_URL || 'http://localhost:8888/ws-gomoku';
     const socket = new SockJS(backendUrl);
     const client = Stomp.over(socket);
     client.debug = () => { };
@@ -154,7 +150,7 @@ const App: React.FC = () => {
       client.connect({},
         () => {
           if (!isActive) {
-            client.disconnect(() => {});
+            client.disconnect(() => { });
             return;
           }
           stompClient.current = client;
