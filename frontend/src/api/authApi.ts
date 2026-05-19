@@ -5,6 +5,9 @@ const API_BASE = import.meta.env.VITE_API_URL ||
     ? `https://${window.location.hostname}` 
     : `http://${window.location.hostname}:8888`);
 
+console.log('Gomoku API Base resolved to:', API_BASE);
+console.log('VITE_API_URL env variable is:', import.meta.env.VITE_API_URL);
+
 export const authApi = {
   signup: async (data: SignupRequest): Promise<AuthResponse> => {
     const response = await fetch(`${API_BASE}/api/auth/signup`, {

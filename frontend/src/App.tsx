@@ -144,6 +144,8 @@ const App: React.FC = () => {
       (isHttps 
         ? `https://${window.location.hostname}/ws-gomoku` 
         : `http://${window.location.hostname}:8888/ws-gomoku`);
+    console.log('Gomoku WebSocket URL resolved to:', backendUrl);
+    console.log('VITE_WS_URL env variable is:', import.meta.env.VITE_WS_URL);
     const socket = new SockJS(backendUrl);
     const client = Stomp.over(socket);
     client.debug = () => { };
