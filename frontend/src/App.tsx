@@ -184,6 +184,7 @@ const App: React.FC = () => {
         setServerGameMode(message.mode || null);
         const currentCount = message.playerCount || 0;
         setPlayerCount(currentCount);
+        if (message.scores) setScores(message.scores);
         const max = (message.mode === 'SINGLE' && currentCount <= 1) ? 1 : 2;
         if (currentCount >= max) {
           setIsRoomFull(true);
@@ -234,6 +235,9 @@ const App: React.FC = () => {
         break;
       case 'MOVE':
         if (message.row !== undefined && message.col !== undefined) {
+          if (!mySymbol && message.sender) {
+            setMySymbol(message.sender === username ? (message.content || null) : (message.content === 'X' ? 'O' : 'X'));
+          }
           setHistory(prevHistory => {
             const isDuplicate = prevHistory.some(m => m.row === message.row && m.col === message.col);
             if (isDuplicate) return prevHistory;
@@ -269,12 +273,14 @@ const App: React.FC = () => {
             losses: isWinner ? prev.losses : prev.losses + 1
           }));
         }
+        setMySymbol(null);
         break;
       case 'START':
         setWinner(null);
         setWinningLine([]);
         setHistory([]);
         setTurnSymbol('X');
+        setMySymbol(null);
         setBoard(Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null)));
         if (message.turnStartTime !== undefined) setTurnStartTime(message.turnStartTime);
         if (message.turnDuration !== undefined) setTurnDuration(message.turnDuration);
@@ -294,8 +300,7 @@ const App: React.FC = () => {
   };
 
   const makeMove = (row: number, col: number) => {
-    if (board[row][col] || winner || !isJoined) return;
-    if (gameMode === 'MULTIPLE' && history.length > 0 && history[history.length - 1].player === username) return;
+    if (board[row][col] || winner || !isJoined || !isMyTurn) return;
     stompClient.current?.send("/app/game.move", {}, JSON.stringify({ sender: username, type: 'MOVE', row, col, gameId }));
   };
 
@@ -339,11 +344,11 @@ const App: React.FC = () => {
   const handleEffectChange = (effectKey: string | null) => {
     setSymbolEffects(prev => {
       const next = { ...prev };
-      if (mySymbol) {
+      if (username) {
         if (effectKey) {
-          next[mySymbol] = effectKey;
+          next[username] = effectKey;
         } else {
-          delete next[mySymbol];
+          delete next[username];
         }
       }
       return next;

@@ -75,7 +75,7 @@ public class GameController {
         message.setHistory(room.getHistory());
         message.setChatHistory(room.getChatHistory());
         message.setMode(room.getMode());
-        message.setScores(room.getScores());
+        message.setScores(room.getActiveScores());
         message.setPlayerCount(room.getActiveSessionCount());
         message.setTurnStartTime(room.getTurnStartTime());
         message.setTurnDuration(TURN_DURATION_SECONDS);
@@ -92,10 +92,7 @@ public class GameController {
         if (!playerList.isEmpty()) {
             List<com.gomoku.game.model.UserEquippedEffect> equipped = equippedEffectRepository.findByUser_UsernameIn(playerList);
             for (com.gomoku.game.model.UserEquippedEffect e : equipped) {
-                String sym = room.getPlayerSymbol(e.getUser().getUsername());
-                if (sym != null) {
-                    effects.put(sym, e.getEffectKey());
-                }
+                effects.put(e.getUser().getUsername(), e.getEffectKey());
             }
         }
         return effects;
@@ -114,6 +111,7 @@ public class GameController {
         if (room != null) {
             status.setPlayerCount(room.getActiveSessionCount());
             status.setMode(room.getMode());
+            status.setScores(room.getActiveScores());
         } else {
             status.setPlayerCount(0);
         }
@@ -156,13 +154,43 @@ public class GameController {
         GameRoom room = games.get(gameId);
         
         if (room != null && room.isValidMove(message.getRow(), message.getCol())) {
+            String symbol;
             if (room.getMode() == GameMessage.GameMode.MULTIPLE) {
-                if (message.getSender().equals(room.getLastPlayer())) {
-                    return;
+                String sender = message.getSender();
+                if (!room.getPlayers().contains(sender)) {
+                    return; // Not an active player in this room
                 }
+                
+                if (room.getHistory().isEmpty()) {
+                    symbol = "X";
+                    room.assignPlayerSymbol(sender, "X");
+                    for (String p : room.getPlayers()) {
+                        if (!p.equals(sender)) {
+                            room.assignPlayerSymbol(p, "O");
+                        }
+                    }
+                } else {
+                    symbol = room.getPlayerSymbol(sender);
+                    if (symbol == null) {
+                        // Dynamically assign remaining symbol if player joined/re-joined late
+                        String firstPlayer = room.getHistory().get(0).getPlayer();
+                        if (sender.equals(firstPlayer)) {
+                            symbol = "X";
+                        } else {
+                            symbol = "O";
+                        }
+                        room.assignPlayerSymbol(sender, symbol);
+                    }
+                    
+                    String lastSymbol = room.getHistory().get(room.getHistory().size() - 1).getSymbol();
+                    if (symbol.equals(lastSymbol)) {
+                        return; // Not their turn
+                    }
+                }
+            } else {
+                symbol = room.getNextSymbol();
             }
 
-            String symbol = room.getNextSymbol();
             room.makeMove(message.getSender(), message.getRow(), message.getCol(), symbol);
             
             message.setType(GameMessage.MessageType.MOVE);
@@ -181,7 +209,7 @@ public class GameController {
                 winMessage.setSender("SYSTEM");
                 winMessage.setWinner(winnerKey);
                 winMessage.setContent(winnerKey + " wins!");
-                winMessage.setScores(room.getScores());
+                winMessage.setScores(room.getActiveScores());
                 winMessage.setWinningLine(winningLine);
                 messagingTemplate.convertAndSend("/topic/game/" + gameId, winMessage);
                 recordConfrontation(room, winnerKey);
@@ -259,7 +287,7 @@ public class GameController {
         timeoutMessage.setSender("SYSTEM");
         timeoutMessage.setWinner(winner);
         timeoutMessage.setContent(currentPlayer + " timed out! " + winner + " wins!");
-        timeoutMessage.setScores(room.getScores());
+        timeoutMessage.setScores(room.getActiveScores());
         messagingTemplate.convertAndSend("/topic/game/" + gameId, timeoutMessage);
         recordConfrontation(room, winner);
         room.reset();
@@ -307,8 +335,9 @@ public class GameController {
         private final List<GameMessage.Move> history = new ArrayList<>();
         private final List<GameMessage.ChatMessage> chatHistory = new ArrayList<>();
         private final java.util.Set<String> players = new java.util.LinkedHashSet<>();
-        private final java.util.Set<String> activeSessions = new java.util.HashSet<>();
+        private final Map<String, String> sessionToUser = new java.util.concurrent.ConcurrentHashMap<>();
         private final Map<String, Integer> scores = new java.util.LinkedHashMap<>();
+        private final Map<String, String> playerSymbols = new java.util.concurrent.ConcurrentHashMap<>();
         private String lastPlayer = null;
         private GameMessage.GameMode mode = GameMessage.GameMode.SINGLE;
         private long turnStartTime = 0;
@@ -318,7 +347,7 @@ public class GameController {
         }
 
         public void addSession(String sessionId, String username) {
-            activeSessions.add(sessionId);
+            sessionToUser.put(sessionId, username);
             players.add(username);
             
             // Initialize scores so names appear in header immediately
@@ -331,11 +360,17 @@ public class GameController {
         }
 
         public void removeSession(String sessionId) {
-            activeSessions.remove(sessionId);
+            String username = sessionToUser.remove(sessionId);
+            if (username != null) {
+                // Only remove the player from active room players list if no other open tabs/sessions remain for them
+                if (!sessionToUser.containsValue(username)) {
+                    players.remove(username);
+                }
+            }
         }
 
         public int getActiveSessionCount() {
-            return activeSessions.size();
+            return sessionToUser.size();
         }
 
         public boolean isValidMove(int r, int c) {
@@ -380,6 +415,19 @@ public class GameController {
             return scores;
         }
 
+        public Map<String, Integer> getActiveScores() {
+            Map<String, Integer> active = new java.util.LinkedHashMap<>();
+            if (mode == GameMessage.GameMode.SINGLE) {
+                active.put("Player X", scores.getOrDefault("Player X", 0));
+                active.put("Player O", scores.getOrDefault("Player O", 0));
+            } else {
+                for (String p : players) {
+                    active.put(p, scores.getOrDefault(p, 0));
+                }
+            }
+            return active;
+        }
+
         public java.util.Set<String> getPlayers() {
             return players;
         }
@@ -392,12 +440,15 @@ public class GameController {
             return turnStartTime;
         }
 
+        public void assignPlayerSymbol(String username, String symbol) {
+            playerSymbols.put(username, symbol);
+        }
+
         public String getPlayerSymbol(String username) {
-            List<String> playerList = new ArrayList<>(players);
-            int index = playerList.indexOf(username);
-            if (index == 0) return "X";
-            if (index == 1) return "O";
-            return null;
+            if (mode == GameMessage.GameMode.SINGLE) {
+                return null;
+            }
+            return playerSymbols.get(username);
         }
 
         public List<GameMessage.Move> getWinningLine(int r, int c) {
@@ -431,6 +482,7 @@ public class GameController {
             }
             history.clear();
             chatHistory.clear();
+            playerSymbols.clear();
             lastPlayer = null;
             turnStartTime = 0;
         }

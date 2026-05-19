@@ -147,15 +147,27 @@ const MainGame: React.FC<MainGameProps> = ({
                           />
                         )}
 
-                        {cell && (
-                          <motion.div
-                            initial={{ scale: 0, rotate: -45 }}
-                            animate={{ scale: 1, rotate: 0 }}
-                            className="flex items-center justify-center text-xl sm:text-2xl font-black z-10 select-none w-full h-full"
-                          >
-                            <SymbolRenderer symbol={cell} effectKey={symbolEffects?.[cell]} />
-                          </motion.div>
-                        )}
+                        {cell && (() => {
+                          const move = history.find(m => m.row === r && m.col === c);
+                          const effectKey = move?.player ? symbolEffects?.[move.player] : undefined;
+                          console.log("GRID RENDER:", {
+                            r, c,
+                            cell,
+                            move,
+                            player: move?.player,
+                            effectKey,
+                            symbolEffects
+                          });
+                          return (
+                            <motion.div
+                              initial={{ scale: 0, rotate: -45 }}
+                              animate={{ scale: 1, rotate: 0 }}
+                              className="flex items-center justify-center text-xl sm:text-2xl font-black z-10 select-none w-full h-full"
+                            >
+                              <SymbolRenderer symbol={cell} effectKey={effectKey} />
+                            </motion.div>
+                          );
+                        })()}
                       </div>
                     );
                   });
@@ -178,7 +190,7 @@ const MainGame: React.FC<MainGameProps> = ({
                     const x2 = `${((end.col + 0.5) / numCols) * 100}%`;
                     const y2 = `${((end.row + 0.5) / numRows) * 100}%`;
 
-                    const winningEffect = symbolEffects?.[winningSymbol];
+                    const winningEffect = winner ? symbolEffects?.[winner] : undefined;
 
                     const defaultLine = (
                       <motion.line
