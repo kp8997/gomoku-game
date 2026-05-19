@@ -5,10 +5,10 @@
   --color-brand: #3b82f6;
   --color-brand-dark: #1d4ed8;
   --color-accent: #ec4899;
-  
+
   /* Backgrounds */
   --color-surface: #f1f5f9;
-  
+
   /* Text Defaults (Light Mode) */
   --color-content: #0f172a;
   --color-content-muted: #334155;
@@ -32,7 +32,7 @@
   body {
     @apply transition-colors duration-300;
   }
-  
+
   /* Dark Mode Overrides */
   .dark {
     --color-surface: #131c2e;
@@ -56,9 +56,11 @@
     width: 6px;
     height: 6px;
   }
+
   .custom-scrollbar::-webkit-scrollbar-track {
     @apply bg-transparent;
   }
+
   .custom-scrollbar::-webkit-scrollbar-thumb {
     @apply bg-slate-300 dark:bg-slate-700 rounded-full hover:bg-slate-400 dark:hover:bg-slate-600;
   }
@@ -104,10 +106,10 @@ body {
   @apply absolute h-[var(--size-of-icon)] w-[var(--size-of-icon)] rounded-full left-[var(--slider-offset)] top-1/2 -translate-y-1/2 bg-white shadow-md transition-all duration-300;
 }
 
-.game-mode-switch input:checked + .game-mode-slider {
+.game-mode-switch input:checked+.game-mode-slider {
   @apply bg-blue-600;
 }
 
-.game-mode-switch input:checked + .game-mode-slider:before {
+.game-mode-switch input:checked+.game-mode-slider:before {
   left: calc(100% - (var(--size-of-icon) + var(--slider-offset)));
 }
