@@ -8,22 +8,12 @@ DECLARE
         'WINS_10', 'WINS_20', 'WINS_50', 'WINS_100', 'WINS_150', 'WINS_200', 'WINS_250', 'WINS_300', 'WINS_400', 'WINS_500', 'WINS_750', 'WINS_1000'
     ];
 BEGIN
-    -- Ensure admin user exists in the database
-    INSERT INTO users (username, password, full_name, avatar, created_at, updated_at)
-    VALUES (
-        'admin', 
-        '$2a$10$3zP2KqE9R3m68J4m3e2eOuKzDq5XvW3N96iN597.dG7W/4r077oW9W', -- BCrypt hash of 'admin123!'
-        'Admin User', 
-        'admin', 
-        NOW(), 
-        NOW()
-    )
-    ON CONFLICT (username) DO NOTHING;
-
-    -- Retrieve the admin user id
     SELECT id INTO v_user_id FROM users WHERE username = 'admin';
+    
+    IF v_user_id IS NULL THEN
+        RAISE EXCEPTION 'User admin not found';
+    END IF;
 
-    -- Seed all achievements for the admin user
     FOREACH v_key IN ARRAY v_keys
     LOOP
         INSERT INTO user_achievements (user_id, achievement_key, unlocked_at)
