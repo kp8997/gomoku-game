@@ -6,6 +6,7 @@ import com.gomoku.game.dto.UserStatsDTO;
 import com.gomoku.game.model.User;
 import com.gomoku.game.model.UserAchievement;
 import com.gomoku.game.model.UserEquippedEffect;
+import com.gomoku.game.model.SymbolEffect;
 import com.gomoku.game.repository.UserAchievementRepository;
 import com.gomoku.game.repository.UserEquippedEffectRepository;
 import com.gomoku.game.repository.UserRepository;
@@ -35,6 +36,7 @@ public class AchievementService {
 
     private static final int[] WIN_RATE_THRESHOLDS = {50, 55, 60, 65, 75, 80, 85, 90, 95};
     private static final int[] MATCH_MILESTONES = {10, 20, 50, 100, 150, 200, 250, 300, 400, 500, 750, 1000};
+    private static final int[] WIN_MILESTONES = {10, 20, 30, 50, 100, 150, 200, 250, 300, 400, 500, 750, 1000};
 
     @Transactional
     public AchievementResponse getAchievements(Long userId) {
@@ -96,7 +98,7 @@ public class AchievementService {
         for (int m : MATCH_MILESTONES) {
             if (stats.getTotalMatches() >= m) tryUnlock(userId, "MATCHES_" + m);
         }
-        for (int w : MATCH_MILESTONES) {
+        for (int w : WIN_MILESTONES) {
             if (stats.getTotalWins() >= w) tryUnlock(userId, "WINS_" + w);
         }
     }
@@ -109,13 +111,13 @@ public class AchievementService {
     }
 
     private boolean isEffectUnlocked(String effectKey, Set<String> unlockedKeys) {
-        return switch (effectKey) {
-            case "FIRE_PHOENIX" -> unlockedKeys.contains("WINS_50") || unlockedKeys.stream().anyMatch(k -> k.startsWith("WINS_") && Integer.parseInt(k.split("_")[1]) >= 50);
-            case "DRAGON_LIGHTNING" -> unlockedKeys.contains("WINS_100") || unlockedKeys.stream().anyMatch(k -> k.startsWith("WINS_") && Integer.parseInt(k.split("_")[1]) >= 100);
-            case "CHERRY_BLOSSOM" -> unlockedKeys.contains("WIN_RATE_65") || unlockedKeys.stream().anyMatch(k -> k.startsWith("WIN_RATE_") && Integer.parseInt(k.split("_")[2]) >= 65);
-            case "DARK_SLASH" -> unlockedKeys.contains("WINS_200") || unlockedKeys.stream().anyMatch(k -> k.startsWith("WINS_") && Integer.parseInt(k.split("_")[1]) >= 200);
-            default -> false;
-        };
+        try {
+            SymbolEffect effect = SymbolEffect.valueOf(effectKey);
+            return unlockedKeys.contains(effect.getRequiredAchievementKey()) || 
+                   unlockedKeys.stream().anyMatch(k -> k.startsWith("WINS_") && Integer.parseInt(k.split("_")[1]) >= effect.getRequiredWins());
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 
     private AchievementResponse buildResponse(Set<String> unlockedKeys, List<UserAchievement> unlockedAchievements, String equippedEffect) {
@@ -132,15 +134,16 @@ public class AchievementService {
         for (int m : MATCH_MILESTONES) {
             String key = "MATCHES_" + m;
             matchBadges.add(new AchievementDTO(key, "MATCHES", m + " Matches", "Play " + m + " matches", unlockedKeys.contains(key), getUnlockedAt(key, unlockedAchievements), m));
-            
-            String wKey = "WINS_" + m;
-            winBadges.add(new AchievementDTO(wKey, "WINS", m + " Wins", "Win " + m + " matches", unlockedKeys.contains(wKey), getUnlockedAt(wKey, unlockedAchievements), m));
         }
 
-        effects.add(new AchievementResponse.EffectDTO("FIRE_PHOENIX", isEffectUnlocked("FIRE_PHOENIX", unlockedKeys), "Requires 50 Wins"));
-        effects.add(new AchievementResponse.EffectDTO("DRAGON_LIGHTNING", isEffectUnlocked("DRAGON_LIGHTNING", unlockedKeys), "Requires 100 Wins"));
-        effects.add(new AchievementResponse.EffectDTO("CHERRY_BLOSSOM", isEffectUnlocked("CHERRY_BLOSSOM", unlockedKeys), "Requires 65% Win Rate"));
-        effects.add(new AchievementResponse.EffectDTO("DARK_SLASH", isEffectUnlocked("DARK_SLASH", unlockedKeys), "Requires 200 Wins"));
+        for (int w : WIN_MILESTONES) {
+            String wKey = "WINS_" + w;
+            winBadges.add(new AchievementDTO(wKey, "WINS", w + " Wins", "Win " + w + " matches", unlockedKeys.contains(wKey), getUnlockedAt(wKey, unlockedAchievements), w));
+        }
+
+        for (SymbolEffect effect : SymbolEffect.values()) {
+            effects.add(new AchievementResponse.EffectDTO(effect.name(), isEffectUnlocked(effect.name(), unlockedKeys), effect.getRequirementLabel()));
+        }
 
         return new AchievementResponse(winRateBadges, matchBadges, winBadges, effects, equippedEffect);
     }

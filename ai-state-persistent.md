@@ -550,3 +550,10 @@ network: gomoku-network (bridge)
 - **Winning Line Effects by Winner Username**: Upgraded the winning line strike-through animation so that it dynamically loads the winning player's cosmetic effect key using `symbolEffects[winner]` instead of `symbolEffects[winningSymbol]`.
 - **Clean Lobby & Score Refresh**: Propagated live scores `message.scores` into standard lobby updates (`ROOM_STATUS` / `JOIN`), so scores and player cards update in real-time. Added proper turn constraints (`isMyTurn`) on `makeMove` on the client side.
 
+### Session: Win Milestones Upgrade & Real-Time Cosmetic Sync [2026-05-20]
+- **Dynamic SymbolEffect Enum**: Replaced the hardcoded integer-based win count checks for unlocking effects with a dynamic `SymbolEffect` enum (`FIRE_PHOENIX` at 20 wins, `DRAGON_LIGHTNING` at 30 wins, `CHERRY_BLOSSOM` at 50 wins, and `DARK_SLASH` at 100 wins). The service streams and filters achievements against this enum to dynamically compute unlocked statuses and render descriptions.
+- **WebSocket Cosmetic Syncing**: Ensured player equipped effects are loaded eagerly (`findByUser_UsernameIn`) in the backend and broadcasted during every `JOIN`, `MOVE`, and `START` room event. The client-side state is updated on every Stomp payload, ensuring opponent visual cell-placements and winning strike-through lines reflect cosmetic upgrades in real-time.
+- **Milestones Database Seeding**: Updated `WIN_MILESTONES` array in `AchievementService.java` to explicitly track the `30` win achievement, and updated the admin database initialization in `seed.sql` to include `'WINS_30'` in the conflict-safe set.
+- **Avatar Storage & Uploads**: Verified that user profile avatars are uploaded as base64 encoded strings (constrained to 500KB) and persisted directly as `TEXT` within the PostgreSQL `users` table via `UserService.java`.
+
+
