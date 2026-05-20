@@ -234,6 +234,7 @@ const App: React.FC = () => {
         setIsJoined(true);
         break;
       case 'MOVE':
+        if (message.symbolEffects) setSymbolEffects(message.symbolEffects);
         if (message.row !== undefined && message.col !== undefined) {
           if (!mySymbol && message.sender) {
             setMySymbol(message.sender === username ? (message.content || null) : (message.content === 'X' ? 'O' : 'X'));

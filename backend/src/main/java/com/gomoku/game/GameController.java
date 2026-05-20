@@ -197,6 +197,7 @@ public class GameController {
             message.setContent(symbol);
             message.setTurnStartTime(System.currentTimeMillis());
             message.setTurnDuration(TURN_DURATION_SECONDS);
+            message.setSymbolEffects(getRoomSymbolEffects(room));
             messagingTemplate.convertAndSend("/topic/game/" + gameId, message);
 
             List<GameMessage.Move> winningLine = room.getWinningLine(message.getRow(), message.getCol());

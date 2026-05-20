@@ -150,14 +150,6 @@ const MainGame: React.FC<MainGameProps> = ({
                         {cell && (() => {
                           const move = history.find(m => m.row === r && m.col === c);
                           const effectKey = move?.player ? symbolEffects?.[move.player] : undefined;
-                          console.log("GRID RENDER:", {
-                            r, c,
-                            cell,
-                            move,
-                            player: move?.player,
-                            effectKey,
-                            symbolEffects
-                          });
                           return (
                             <motion.div
                               initial={{ scale: 0, rotate: -45 }}

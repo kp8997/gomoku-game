@@ -181,13 +181,14 @@ GameMessage { type, content?, sender?, row?, col?, gameId?, mode?, history?, cha
 ## 4. Core Logic & Protocol
 
 ### A. Join & Initialization Flow
-1. **Client**: Sends `JOIN` with `gameId`, `sender` (random name), and requested `mode`.
+1. **Client**: Sends `JOIN` with `gameId`, `sender` (random name or authenticated username), and requested `mode`.
 2. **Backend**:
    - Sets `GameRoom.mode` **before** `addSession` to prevent "Player X/O" name leak into Multiplayer.
-   - `addSession`: Registers sessionId; **Initializes scores to 0** if missing → names appear in UI immediately.
+   - `addSession`: Registers `sessionId` to `username` mapping; **Initializes scores to 0** if missing → names appear in UI immediately.
    - For `SINGLE` mode: ensures `"Player X"` and `"Player O"` keys exist in `scores`.
    - For `MULTIPLE` mode: score key = actual username.
-3. **Broadcast**: Sends `JOIN` response (full state) to all subscribers of `/topic/game/{room}`.
+   - Eagerly loads user cosmetic effects (`JOIN FETCH e.user`) and broadcasts the mapping as `symbolEffects` (`username -> effectKey`).
+3. **Broadcast**: Sends `JOIN` response (full state, including unread chat count and dynamic equipped cosmetics) to all subscribers of `/topic/game/{room}`.
 4. **Room Status**: `broadcastStatus()` called after join to update occupancy for all clients.
 
 ### B. Turn & Time Management
@@ -378,14 +379,18 @@ const backendUrl = import.meta.env.VITE_WS_URL || `http://${window.location.host
 | `history` | `List<Move>` | Cleared on `reset()` |
 | `chatHistory` | `List<ChatMessage>` | Cleared on `reset()` |
 | `players` | `LinkedHashSet<String>` | Insertion-ordered (X=first, O=second) |
-| `activeSessions` | `HashSet<String>` | WebSocket session IDs |
+| `sessionToUser` | `ConcurrentHashMap<String, String>` | Map of WebSocket `sessionId` to `username` |
+| `playerSymbols` | `ConcurrentHashMap<String, String>` | Decoupled player-to-symbol (`username -> X/O`) mapping |
 | `scores` | `HashMap<String, Integer>` | Persists across rounds, cleared when room empties |
 | `lastPlayer` | `String` | For consecutive-move prevention |
 | `mode` | `GameMode` | Set on first JOIN |
 | `turnStartTime` | `long` | 0 at start/reset |
 
 ### Key Methods
-- `getPlayerSymbol(username)`: Index 0→"X", Index 1→"O", else null.
+- `addSession(sessionId, username)`: Associates a tab's session with a user. Tracks multi-tab access per user.
+- `removeSession(sessionId)`: Disassociates session; only removes username from active room list when no other open tabs/sessions remain for them.
+- `assignPlayerSymbol(username, symbol)`: Explicitly sets username's symbol inside `playerSymbols`.
+- `getPlayerSymbol(username)`: Resolves from `playerSymbols` instead of linked set index to support decoupled first-move assignments.
 - `getNextSymbol()`: `history.size() % 2 == 0 ? "X" : "O"`.
 - `getWinningLine(r, c)`: 4-directional scan from placed cell, returns `List<Move>` if ≥5 found.
 - `setMode(MULTIPLE)`: Cleans up "Player X"/"Player O" keys from scores if they have 0 value.
@@ -537,4 +542,11 @@ network: gomoku-network (bridge)
 ### Session: Database Eager Loading & Room State Reset [2026-05-19]
 - **Hibernate LazyInitializationException Fix**: Resolved `org.hibernate.LazyInitializationException` by adding an explicit JPQL `JOIN FETCH e.user` in `UserEquippedEffectRepository.findByUser_UsernameIn()` since WebSocket threads operate outside of active Spring JPA transaction sessions.
 - **Stale Room State Cleansing**: Added comprehensive state-clearing actions to `leaveGame()` in `App.tsx` resetting `isRoomFull`, `roomFullReason`, `serverGameMode`, `playerCount`, and `mySymbol` so exiting players cleanly land on a fully functional landing page screen and can rejoin or start a new game instantly.
+
+### Session: Multi-Tab Session Handshakes & Username-Bound Cosmetics [2026-05-19]
+- **Multi-Tab Multi-Session Handshake**: Replaced `activeSessions` with `sessionToUser` ConcurrentHashMap to allow mapping a WebSocket `sessionId -> username`. This prevents anonymous/authenticated players from sharing states across tabs/browsers. When a player opens multiple tabs, they each get distinct session-to-username mappings. Only when all sessions for a username are closed does the player get removed from the active `players` list in the `GameRoom`.
+- **Decoupled Symbols from Entrance Order**: Standardized symbol assignment so that symbols are assigned based on the active player who places the first move (gets "X") and second move (gets "O"), rather than entrance order. The symbol assignment is stored inside `playerSymbols` (username -> symbol) instead of hardcoding to players' linked set index.
+- **Username-Bound Visual Effects**: Fully transitioned `symbolEffects` in the frontend from symbol-based mapping (`'X'`/`'O'`) to username-based mapping. The backend sends a room-level username-to-effect map `message.symbolEffects` compiled dynamically using eager JPA database fetches (`JOIN FETCH e.user`) of equipped user cosmetics. The frontend resolves rendering cosmetics by querying the `history` of placed moves: `move.player ? symbolEffects[move.player] : undefined`.
+- **Winning Line Effects by Winner Username**: Upgraded the winning line strike-through animation so that it dynamically loads the winning player's cosmetic effect key using `symbolEffects[winner]` instead of `symbolEffects[winningSymbol]`.
+- **Clean Lobby & Score Refresh**: Propagated live scores `message.scores` into standard lobby updates (`ROOM_STATUS` / `JOIN`), so scores and player cards update in real-time. Added proper turn constraints (`isMyTurn`) on `makeMove` on the client side.
 
