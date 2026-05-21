@@ -104,3 +104,147 @@
   animation: slash-swipe-4 0.25s cubic-bezier(0.16, 1, 0.3, 1) 0.22s forwards, 
              energy-vibe 1.8s infinite ease-in-out 0.47s;
 }
+
+/* =====================================================
+   Heart Flutter
+   ===================================================== */
+@keyframes heart-float-1 {
+  0%   { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+  15%  { opacity: 1; }
+  50%  { transform: translateY(-10px) translateX(4px) scale(1.1); opacity: 0.8; }
+  85%  { opacity: 0.3; }
+  100% { transform: translateY(-18px) translateX(-3px) scale(0.6); opacity: 0; }
+}
+@keyframes heart-float-2 {
+  0%   { transform: translateY(0) translateX(0) scale(0.8); opacity: 0; }
+  15%  { opacity: 0.9; }
+  50%  { transform: translateY(-12px) translateX(-5px) scale(1); opacity: 0.7; }
+  85%  { opacity: 0.2; }
+  100% { transform: translateY(-20px) translateX(3px) scale(0.5); opacity: 0; }
+}
+@keyframes heart-float-3 {
+  0%   { transform: translateY(0) translateX(0) scale(1.2); opacity: 0; }
+  20%  { opacity: 0.85; }
+  55%  { transform: translateY(-8px) translateX(6px) scale(1); opacity: 0.6; }
+  80%  { opacity: 0.25; }
+  100% { transform: translateY(-16px) translateX(-4px) scale(0.4); opacity: 0; }
+}
+@keyframes heart-float-4 {
+  0%   { transform: translateY(0) translateX(0) scale(0.9); opacity: 0; }
+  10%  { opacity: 1; }
+  45%  { transform: translateY(-14px) translateX(2px) scale(1.15); opacity: 0.75; }
+  85%  { opacity: 0.15; }
+  100% { transform: translateY(-22px) translateX(-2px) scale(0.55); opacity: 0; }
+}
+@keyframes heart-float-5 {
+  0%   { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+  18%  { opacity: 0.9; }
+  50%  { transform: translateY(-9px) translateX(-6px) scale(0.95); opacity: 0.65; }
+  82%  { opacity: 0.2; }
+  100% { transform: translateY(-17px) translateX(5px) scale(0.5); opacity: 0; }
+}
+
+@keyframes heart-aura-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.2; }
+  50%       { transform: scale(1.25); opacity: 0.4; }
+}
+
+.animate-heart-float-1 { animation: heart-float-1 2.2s infinite ease-in-out; }
+.animate-heart-float-2 { animation: heart-float-2 2.8s infinite ease-in-out 0.6s; }
+.animate-heart-float-3 { animation: heart-float-3 2.5s infinite ease-in-out 1.1s; }
+.animate-heart-float-4 { animation: heart-float-4 3.0s infinite ease-in-out 0.3s; }
+.animate-heart-float-5 { animation: heart-float-5 2.6s infinite ease-in-out 1.5s; }
+.animate-heart-aura    { animation: heart-aura-pulse 3s infinite ease-in-out; }
+
+/* =====================================================
+   Nature Leaf
+   ===================================================== */
+@keyframes leaf-drift-1 {
+  0%   { transform: translate(0, -4px) rotate(0deg) scale(1); opacity: 0; }
+  15%  { opacity: 0.9; }
+  50%  { transform: translate(7px, 7px) rotate(85deg) scale(0.9); opacity: 0.7; }
+  85%  { opacity: 0.35; }
+  100% { transform: translate(13px, 16px) rotate(180deg) scale(0.5); opacity: 0; }
+}
+@keyframes leaf-drift-2 {
+  0%   { transform: translate(0, -2px) rotate(20deg) scale(0.85); opacity: 0; }
+  18%  { opacity: 0.85; }
+  50%  { transform: translate(-8px, 9px) rotate(100deg) scale(0.95); opacity: 0.65; }
+  82%  { opacity: 0.3; }
+  100% { transform: translate(-15px, 18px) rotate(200deg) scale(0.45); opacity: 0; }
+}
+@keyframes leaf-drift-3 {
+  0%   { transform: translate(0, -6px) rotate(-10deg) scale(1.1); opacity: 0; }
+  12%  { opacity: 0.95; }
+  55%  { transform: translate(10px, 6px) rotate(70deg) scale(0.85); opacity: 0.6; }
+  80%  { opacity: 0.25; }
+  100% { transform: translate(16px, 14px) rotate(160deg) scale(0.4); opacity: 0; }
+}
+@keyframes leaf-drift-4 {
+  0%   { transform: translate(0, 0) rotate(15deg) scale(0.9); opacity: 0; }
+  20%  { opacity: 0.8; }
+  50%  { transform: translate(-5px, 10px) rotate(105deg) scale(1); opacity: 0.55; }
+  85%  { opacity: 0.2; }
+  100% { transform: translate(-12px, 20px) rotate(210deg) scale(0.5); opacity: 0; }
+}
+@keyframes leaf-drift-5 {
+  0%   { transform: translate(0, -3px) rotate(-20deg) scale(0.95); opacity: 0; }
+  15%  { opacity: 0.75; }
+  50%  { transform: translate(9px, 8px) rotate(80deg) scale(0.88); opacity: 0.5; }
+  82%  { opacity: 0.2; }
+  100% { transform: translate(14px, 17px) rotate(175deg) scale(0.42); opacity: 0; }
+}
+
+@keyframes nature-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.18; }
+  50%       { transform: scale(1.18); opacity: 0.32; }
+}
+
+.animate-leaf-drift-1   { animation: leaf-drift-1 3.2s infinite linear; }
+.animate-leaf-drift-2   { animation: leaf-drift-2 4.0s infinite linear 0.7s; }
+.animate-leaf-drift-3   { animation: leaf-drift-3 3.6s infinite linear 1.4s; }
+.animate-leaf-drift-4   { animation: leaf-drift-4 4.4s infinite linear 0.4s; }
+.animate-leaf-drift-5   { animation: leaf-drift-5 3.8s infinite linear 1.9s; }
+.animate-nature-breathe { animation: nature-breathe 4s infinite ease-in-out; }
+
+/* =====================================================
+   Vibrant Fire
+   ===================================================== */
+@keyframes sunshine-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes sunshine-spin-reverse {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
+@keyframes sunshine-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.28; }
+  50%       { transform: scale(1.35); opacity: 0.55; }
+}
+@keyframes fire-flicker {
+  0%, 100% { transform: scaleY(1) rotate(45deg); opacity: 0.8; }
+  25%       { transform: scaleY(1.2) rotate(47deg); opacity: 0.6; }
+  50%       { transform: scaleY(0.9) rotate(43deg); opacity: 1; }
+  75%       { transform: scaleY(1.15) rotate(46deg); opacity: 0.7; }
+}
+@keyframes fire-dance {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
+  33%       { transform: translateY(-3px) scale(1.1); opacity: 0.9; }
+  66%       { transform: translateY(-1px) scale(0.95); opacity: 0.6; }
+}
+@keyframes fire-vibrant-glow {
+  0%, 100% { opacity: 0.3; transform: scale(1); filter: brightness(1); }
+  50%       { opacity: 0.6; transform: scale(1.1); filter: brightness(1.3); }
+}
+
+.animate-sunshine-spin         { animation: sunshine-spin 4s linear infinite; }
+.animate-sunshine-spin-reverse { animation: sunshine-spin-reverse 6s linear infinite; }
+.animate-sunshine-pulse        { animation: sunshine-pulse 2.5s ease-in-out infinite; }
+.animate-fire-flicker-1        { animation: fire-flicker 0.6s ease-in-out infinite; }
+.animate-fire-flicker-2        { animation: fire-flicker 0.8s ease-in-out infinite 0.15s; }
+.animate-fire-flicker-3        { animation: fire-flicker 0.7s ease-in-out infinite 0.3s; }
+.animate-fire-flicker-4        { animation: fire-flicker 0.9s ease-in-out infinite 0.05s; }
+.animate-fire-dance            { animation: fire-dance 1.4s ease-in-out infinite; }
+.animate-fire-vibrant-glow     { animation: fire-vibrant-glow 2s ease-in-out infinite; }
+
