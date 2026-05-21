@@ -3,3 +3,5 @@ databaseChangeLog:
       file: db/changelog/changes/01-init-schema.yml
   - include:
       file: db/changelog/changes/02-achievement-schema.yml
+  - include:
+      file: db/changelog/changes/03-cascade-delete-users.yml
