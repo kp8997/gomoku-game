@@ -202,29 +202,42 @@ const MainGame: React.FC<MainGameProps> = ({
                     if (!winningEffect) return defaultLine;
 
                     switch (winningEffect) {
-                      case 'FIRE_PHOENIX':
-                        return (
-                          <g>
-                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#b91c1c" strokeWidth="16" strokeLinecap="round" style={{ filter: 'blur(4px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.6 }} transition={{ duration: 0.8 }} />
-                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ea580c" strokeWidth="8" strokeLinecap="round" className="animate-pulse" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.8 }} style={{ filter: 'drop-shadow(0 0 10px #f97316)' }} />
-                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fde047" strokeWidth="2" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.8 }} />
-                          </g>
-                        );
-                      case 'DRAGON_LIGHTNING':
-                        return (
-                          <g className="animate-lightning-flash">
-                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#0891b2" strokeWidth="12" strokeLinecap="square" style={{ filter: 'blur(6px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.5 }} transition={{ duration: 0.3 }} />
-                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#22d3ee" strokeWidth="4" strokeLinecap="square" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.3 }} style={{ filter: 'drop-shadow(0 0 12px #22d3ee)' }} />
-                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth="1" strokeLinecap="square" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.3 }} />
-                          </g>
-                        );
-                      case 'CHERRY_BLOSSOM':
-                        return (
-                          <g>
-                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fbcfe8" strokeWidth="16" strokeLinecap="round" style={{ filter: 'blur(3px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.4 }} transition={{ duration: 1.2 }} />
-                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#f472b6" strokeWidth="8" strokeLinecap="round" strokeDasharray="15, 8" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 1.2 }} style={{ filter: 'drop-shadow(0 0 8px #f472b6)' }} />
-                          </g>
-                        );
+                       case 'FIRE_PHOENIX': {
+                         const isX = winningSymbol === 'X';
+                         const baseColor = isX ? '#1e3a8a' : '#831843'; // dark blue / dark pink
+                         const mainColor = isX ? '#3b82f6' : '#ec4899'; // blue / pink
+                         const highlightColor = isX ? '#93c5fd' : '#fbcfe8'; // light blue / light pink
+                         return (
+                           <g>
+                             <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={baseColor} strokeWidth="16" strokeLinecap="round" style={{ filter: 'blur(4px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.6 }} transition={{ duration: 0.8 }} />
+                             <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={mainColor} strokeWidth="8" strokeLinecap="round" className="animate-pulse" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.8 }} style={{ filter: `drop-shadow(0 0 10px ${mainColor})` }} />
+                             <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={highlightColor} strokeWidth="2" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.8 }} />
+                           </g>
+                         );
+                       }
+                       case 'DRAGON_LIGHTNING': {
+                         const isX = winningSymbol === 'X';
+                         const baseColor = isX ? '#0891b2' : '#7e22ce'; // cyan / purple
+                         const mainColor = isX ? '#22d3ee' : '#a855f7'; // light cyan / light purple
+                         return (
+                           <g className="animate-lightning-flash">
+                             <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={baseColor} strokeWidth="12" strokeLinecap="square" style={{ filter: 'blur(6px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.5 }} transition={{ duration: 0.3 }} />
+                             <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={mainColor} strokeWidth="4" strokeLinecap="square" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.3 }} style={{ filter: `drop-shadow(0 0 12px ${mainColor})` }} />
+                             <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth="1" strokeLinecap="square" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.3 }} />
+                           </g>
+                         );
+                       }
+                       case 'CHERRY_BLOSSOM': {
+                         const isX = winningSymbol === 'X';
+                         const baseColor = isX ? '#fbcfe8' : '#f87171'; // soft pink / rose-crimson
+                         const mainColor = isX ? '#f472b6' : '#dc2626'; // vibrant pink / crimson red
+                         return (
+                           <g>
+                             <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={baseColor} strokeWidth="16" strokeLinecap="round" style={{ filter: 'blur(3px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.4 }} transition={{ duration: 1.2 }} />
+                             <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={mainColor} strokeWidth="8" strokeLinecap="round" strokeDasharray="15, 8" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 1.2 }} style={{ filter: `drop-shadow(0 0 8px ${mainColor})` }} />
+                           </g>
+                         );
+                       }
                       case 'DARK_SLASH':
                         const isX = winningSymbol === 'X';
                         const darkBase = isX ? '#312e81' : '#7f1d1d';
