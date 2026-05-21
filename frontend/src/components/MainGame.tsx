@@ -182,7 +182,9 @@ const MainGame: React.FC<MainGameProps> = ({
                     const x2 = `${((end.col + 0.5) / numCols) * 100}%`;
                     const y2 = `${((end.row + 0.5) / numRows) * 100}%`;
 
-                    const winningEffect = winner ? symbolEffects?.[winner] : undefined;
+                    const matchingMove = history.find(m => m.row === start.row && m.col === start.col);
+                    const winningPlayer = matchingMove?.player || winner;
+                    const winningEffect = winningPlayer ? symbolEffects?.[winningPlayer] : undefined;
 
                     const defaultLine = (
                       <motion.line
@@ -234,6 +236,50 @@ const MainGame: React.FC<MainGameProps> = ({
                             <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth="2" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.6 }} transition={{ duration: 0.6, ease: "easeOut" }} />
                           </g>
                         );
+                      case 'HEART_FLUTTER': {
+                        const isX = winningSymbol === 'X';
+                        const heartColor = isX ? '#22c55e' : '#eab308';
+                        const heartGlow = isX ? '#4ade80' : '#facc15';
+                        return (
+                          <g>
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={heartGlow} strokeWidth="18" strokeLinecap="round" style={{ filter: 'blur(5px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.4 }} transition={{ duration: 1.0 }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={heartColor} strokeWidth="8" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 1.0 }} style={{ filter: `drop-shadow(0 0 8px ${heartColor})` }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth="3" strokeLinecap="round" strokeDasharray="6, 12" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.9, strokeDashoffset: [0, -24] }} transition={{ pathLength: { duration: 1.0 }, strokeDashoffset: { repeat: Infinity, duration: 1.5, ease: "linear" } }} />
+                          </g>
+                        );
+                      }
+                      case 'NATURE_LEAF': {
+                        const isX = winningSymbol === 'X';
+                        const leafColor = isX ? '#059669' : '#d97706';
+                        const leafGlow = isX ? '#86efac' : '#fde68a';
+                        return (
+                          <g>
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={leafGlow} strokeWidth="20" strokeLinecap="round" style={{ filter: 'blur(6px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: [0.3, 0.5, 0.3] }} transition={{ pathLength: { duration: 1.2 }, opacity: { repeat: Infinity, duration: 3, ease: "easeInOut" } }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={leafColor} strokeWidth="8" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 1.2 }} style={{ filter: `drop-shadow(0 0 10px ${leafColor})` }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={isX ? '#22c55e' : '#f59e0b'} strokeWidth="3" strokeLinecap="round" strokeDasharray="16, 12" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.8 }} transition={{ duration: 1.2 }} />
+                          </g>
+                        );
+                      }
+                      case 'VIBRANT_FIRE': {
+                        const isX = winningSymbol === 'X';
+                        return (
+                          <g>
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#dc2626" strokeWidth="22" strokeLinecap="round" style={{ filter: 'blur(6px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: [0.4, 0.7, 0.4] }} transition={{ pathLength: { duration: 0.6 }, opacity: { repeat: Infinity, duration: 1.2, ease: "easeInOut" } }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#f97316" strokeWidth="12" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.6 }} style={{ filter: 'drop-shadow(0 0 12px #f97316)' }} />
+                            {isX ? (
+                              <>
+                                <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#facc15" strokeWidth="4" strokeLinecap="round" strokeDasharray="30, 20" initial={{ pathLength: 0 }} animate={{ pathLength: 1, strokeDashoffset: [0, -50] }} transition={{ pathLength: { duration: 0.6 }, strokeDashoffset: { repeat: Infinity, duration: 1.0, ease: "linear" } }} />
+                                <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeDasharray="15, 25" initial={{ pathLength: 0 }} animate={{ pathLength: 1, strokeDashoffset: [0, 40] }} transition={{ pathLength: { duration: 0.6 }, strokeDashoffset: { repeat: Infinity, duration: 0.8, ease: "linear" } }} />
+                              </>
+                            ) : (
+                              <>
+                                <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#facc15" strokeWidth="5" strokeLinecap="round" initial={{ pathLength: 0 }} animate={{ pathLength: 1, scaleY: [1, 1.3, 1], opacity: [0.8, 1, 0.8] }} transition={{ pathLength: { duration: 0.6 }, scaleY: { repeat: Infinity, duration: 1.5 }, opacity: { repeat: Infinity, duration: 1.5 } }} style={{ transformOrigin: 'center' }} />
+                                <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth="2" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.6 }} />
+                              </>
+                            )}
+                          </g>
+                        );
+                      }
                       default:
                         return defaultLine;
                     }
