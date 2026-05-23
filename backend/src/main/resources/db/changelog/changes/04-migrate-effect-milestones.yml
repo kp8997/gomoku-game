@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - changeSet:
+      id: 04-migrate-effect-milestones
+      author: ai-assistant
+      changes:
+        - sql:
+            sql: >
+              DELETE FROM user_achievements WHERE achievement_key IN ('WINS_200', 'WINS_250', 'WINS_300', 'WINS_400', 'WINS_500', 'WINS_750', 'WINS_1000');

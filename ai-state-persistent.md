@@ -4,6 +4,7 @@
 ## 0. AI Feature Plan Protocol
 
 > **MANDATORY**: Before coding any new feature, create a detailed plan document first.
+> **MANDATORY (PRODUCTION DATA CONSTRAINT)**: Any database schema changes, seeded data changes, or enum mapping changes MUST be accompanied by a Liquibase migration script (or explicit data transformation logic) to ensure the changes apply seamlessly to existing production data without orphans or conflicts. Every session must check and enforce this.
 
 ### Naming Convention
 - **Format**: `{NN}-ai-{feature-name}-feature-plan.md`
