@@ -12,6 +12,15 @@ const CosmicNebulaEffect = React.lazy(() => import('../effects/CosmicNebulaEffec
 const AuroraBorealisEffect = React.lazy(() => import('../effects/AuroraBorealisEffect'));
 const DarkSlashEffect = React.lazy(() => import('../effects/DarkSlashEffect'));
 
+const EtherealFrostEffect = React.lazy(() => import('../effects/EtherealFrostEffect'));
+const AbyssalVoidEffect = React.lazy(() => import('../effects/AbyssalVoidEffect'));
+const GoldenSovereignEffect = React.lazy(() => import('../effects/GoldenSovereignEffect'));
+const QuantumGlitchEffect = React.lazy(() => import('../effects/QuantumGlitchEffect'));
+const BloodMoonEffect = React.lazy(() => import('../effects/BloodMoonEffect'));
+const RadiantSeraphEffect = React.lazy(() => import('../effects/RadiantSeraphEffect'));
+const PrismaticDiamondEffect = React.lazy(() => import('../effects/PrismaticDiamondEffect'));
+const GalacticSupernovaEffect = React.lazy(() => import('../effects/GalacticSupernovaEffect'));
+
 interface Props {
   symbol: string;
   effectKey?: EffectType | string;
@@ -55,6 +64,30 @@ export const SymbolRenderer: React.FC<Props> = ({ symbol, effectKey }) => {
       break;
     case 'DARK_SLASH':
       EffectComponent = DarkSlashEffect;
+      break;
+    case 'ETHEREAL_FROST':
+      EffectComponent = EtherealFrostEffect;
+      break;
+    case 'ABYSSAL_VOID':
+      EffectComponent = AbyssalVoidEffect;
+      break;
+    case 'GOLDEN_SOVEREIGN':
+      EffectComponent = GoldenSovereignEffect;
+      break;
+    case 'QUANTUM_GLITCH':
+      EffectComponent = QuantumGlitchEffect;
+      break;
+    case 'BLOOD_MOON':
+      EffectComponent = BloodMoonEffect;
+      break;
+    case 'RADIANT_SERAPH':
+      EffectComponent = RadiantSeraphEffect;
+      break;
+    case 'PRISMATIC_DIAMOND':
+      EffectComponent = PrismaticDiamondEffect;
+      break;
+    case 'GALACTIC_SUPERNOVA':
+      EffectComponent = GalacticSupernovaEffect;
       break;
     default:
       return <span className={symbol === 'X' ? 'text-blue-500' : 'text-pink-500'}>{symbol}</span>;

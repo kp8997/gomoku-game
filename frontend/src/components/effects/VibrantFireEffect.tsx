@@ -7,91 +7,62 @@ interface Props {
 
 const VibrantFireEffect: React.FC<Props> = ({ symbol }) => {
   const isX = symbol === 'X';
-  // Both X and O use orange/red fire, differentiated by their sunshine layer
-  const colorClass = isX
-    ? 'text-orange-500 dark:text-orange-300 drop-shadow-[0_0_8px_#f97316]'
-    : 'text-red-500 dark:text-red-400 drop-shadow-[0_0_8px_#ef4444]';
-  const flameColor = isX
-    ? 'bg-gradient-to-t from-orange-600 to-yellow-400'
-    : 'bg-gradient-to-t from-red-700 to-orange-500';
+
+  // Night/Dark contrast aura
+  const darkAuraClass = 'bg-neutral-950 dark:bg-black';
+  const coreGlow = isX ? 'bg-orange-600/80' : 'bg-red-700/80';
+  
+  // Intense white-hot symbol text with blazing drop-shadow
+  const textShadowGlow = isX 
+    ? 'drop-shadow-[0_0_12px_rgba(234,88,12,1)] text-yellow-100'
+    : 'drop-shadow-[0_0_12px_rgba(220,38,38,1)] text-orange-100';
+
+  // SVG fire paths for realistic flames
+  const flameSVG = (
+    <svg viewBox="0 0 100 100" className="w-full h-full preserve-3d" preserveAspectRatio="none">
+      <path 
+        d="M50 100 C30 80, 20 60, 40 40 C45 35, 60 45, 50 20 C45 35, 60 50, 70 70 C75 80, 60 90, 50 100 Z" 
+        fill="currentColor" 
+      />
+    </svg>
+  );
 
   return (
     <div className="relative flex items-center justify-center w-full h-full">
 
-      {/* ── SUNSHINE LAYER ──────────────────────────────── */}
-      {isX ? (
-        // X: 2 spinning elongated rays (different speeds + directions)
-        <>
-          <div
-            className="absolute inset-0 flex items-center justify-center pointer-events-none animate-sunshine-spin"
-            style={{ transformOrigin: 'center center' }}
-          >
-            <div
-              className="absolute"
-              style={{
-                width: '200%',
-                height: '3px',
-                borderRadius: '2px',
-                background: 'linear-gradient(to right, transparent, rgba(250,204,21,0.65), transparent)',
-              }}
-            />
-          </div>
-          <div
-            className="absolute inset-0 flex items-center justify-center pointer-events-none animate-sunshine-spin-reverse"
-            style={{ transformOrigin: 'center center' }}
-          >
-            <div
-              className="absolute"
-              style={{
-                width: '175%',
-                height: '2px',
-                borderRadius: '2px',
-                background: 'linear-gradient(to right, transparent, rgba(251,191,36,0.5), transparent)',
-              }}
-            />
-          </div>
-        </>
-      ) : (
-        // O: pulsing radial sunshine glow
-        <div
-          className="absolute inset-0 rounded-full animate-sunshine-pulse"
-          style={{
-            background: 'radial-gradient(circle, rgba(251,191,36,0.45) 0%, rgba(245,158,11,0.2) 50%, transparent 70%)',
-          }}
-        />
-      )}
+      {/* ── BACKGROUND NIGHT AURA ──────────────────────── */}
+      <div className={`absolute inset-0 rounded-full blur-[10px] animate-fire-vibrant-glow ${darkAuraClass}`} />
+      
+      {/* ── CORE INTENSE GLOW ──────────────────────────── */}
+      <div className={`absolute inset-[15%] rounded-full blur-[6px] animate-fire-dance mix-blend-screen ${coreGlow}`} />
 
-      {/* ── VIBRANT CORE GLOW ───────────────────────────── */}
-      <div
-        className={`absolute inset-0 rounded-full blur-[8px] animate-fire-vibrant-glow ${isX ? 'bg-orange-500' : 'bg-red-600'}`}
-      />
+      {/* ── REALISTIC FLAME LAYERS ─────────────────────── */}
+      <div className="absolute inset-[-10%] overflow-visible pointer-events-none mix-blend-screen">
+        {/* Flame 1 */}
+        <div className={`absolute w-[40%] h-[70%] bottom-0 left-[20%] text-orange-500 animate-fire-flicker-1`} style={{ transformOrigin: 'bottom center' }}>
+          {flameSVG}
+        </div>
+        {/* Flame 2 */}
+        <div className={`absolute w-[35%] h-[60%] bottom-[10%] right-[20%] text-red-500 animate-fire-flicker-2`} style={{ transformOrigin: 'bottom center' }}>
+          {flameSVG}
+        </div>
+        {/* Flame 3 (Center bright) */}
+        <div className={`absolute w-[50%] h-[80%] bottom-[-5%] left-[25%] text-yellow-400 animate-fire-flicker-3`} style={{ transformOrigin: 'bottom center' }}>
+          {flameSVG}
+        </div>
+      </div>
 
-      {/* ── 4 FLAME PARTICLES ───────────────────────────── */}
-      <div className="absolute inset-0 overflow-visible pointer-events-none">
-        {/* Top flame */}
-        <div
-          className={`absolute w-2 h-3.5 rounded-t-full ${flameColor} animate-fire-flicker-1`}
-          style={{ top: '-10%', left: '38%', transformOrigin: 'bottom center' }}
-        />
-        {/* Right flame */}
-        <div
-          className={`absolute w-3 h-2.5 rounded-r-full ${flameColor} animate-fire-flicker-2`}
-          style={{ top: '28%', right: '-12%', transformOrigin: 'left center', transform: 'rotate(90deg)' }}
-        />
-        {/* Bottom-left flame */}
-        <div
-          className={`absolute w-2.5 h-3 rounded-t-full ${flameColor} animate-fire-flicker-3`}
-          style={{ bottom: '-8%', left: '10%', transformOrigin: 'bottom center' }}
-        />
-        {/* Bottom-right flame */}
-        <div
-          className={`absolute w-2 h-2.5 rounded-t-full ${flameColor} animate-fire-flicker-4`}
-          style={{ bottom: '-6%', right: '12%', transformOrigin: 'bottom center' }}
-        />
+      {/* ── EMBER SPARKS ───────────────────────────────── */}
+      <div className="absolute inset-[-20%] overflow-visible pointer-events-none">
+        <div className="absolute bottom-[20%] left-[30%] w-1 h-1 bg-yellow-300 rounded-full animate-ember-1" />
+        <div className="absolute bottom-[30%] left-[60%] w-1.5 h-1.5 bg-orange-400 rounded-full animate-ember-2" />
+        <div className="absolute bottom-[10%] left-[45%] w-1 h-1 bg-yellow-200 rounded-full animate-ember-3" />
+        <div className="absolute bottom-[25%] left-[70%] w-1 h-1 bg-orange-300 rounded-full animate-ember-4" />
+        <div className="absolute bottom-[15%] left-[20%] w-1.5 h-1.5 bg-red-400 rounded-full animate-ember-5" />
       </div>
 
       {/* ── CORE SYMBOL ─────────────────────────────────── */}
-      <span className={`relative z-10 font-bold animate-fire-dance ${colorClass}`}>
+      <span className={`relative z-10 font-bold text-2xl animate-fire-dance ${textShadowGlow}`}>
         {symbol}
       </span>
     </div>

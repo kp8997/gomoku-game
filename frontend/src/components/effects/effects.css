@@ -349,3 +349,229 @@
 .animate-shimmer-4     { animation: shimmer-dust 2.7s infinite ease-in-out 0.2s; }
 .animate-shimmer-5     { animation: shimmer-dust 2.4s infinite ease-in-out 1.2s; }
 
+/* =====================================================
+   Ethereal Frost (150)
+   ===================================================== */
+@keyframes frost-vapor {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.1); }
+}
+@keyframes frost-shatter {
+  0% { transform: scale(0) rotate(0deg); opacity: 0; }
+  20% { transform: scale(1) rotate(45deg); opacity: 1; }
+  80% { transform: scale(0.8) rotate(90deg); opacity: 0.8; }
+  100% { transform: scale(0) rotate(135deg) translate(10px, 10px); opacity: 0; }
+}
+.animate-frost-vapor { animation: frost-vapor 3s infinite ease-in-out; }
+.animate-frost-shatter-1 { animation: frost-shatter 2s infinite linear; }
+.animate-frost-shatter-2 { animation: frost-shatter 2.5s infinite linear 0.5s; }
+.animate-frost-shatter-3 { animation: frost-shatter 1.8s infinite linear 1s; }
+.animate-frost-shatter-4 { animation: frost-shatter 2.2s infinite linear 0.2s; }
+
+/* =====================================================
+   Abyssal Void (200)
+   ===================================================== */
+@keyframes void-pulse {
+  0%, 100% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+@keyframes void-spin {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(0.95); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+@keyframes void-suck {
+  0% { transform: translate(0, 0) scale(1); opacity: 0; }
+  20% { opacity: 1; }
+  80% { transform: translate(15px, 15px) scale(0.5); opacity: 0.8; }
+  100% { transform: translate(20px, 20px) scale(0); opacity: 0; }
+}
+.animate-void-pulse { animation: void-pulse 4s infinite ease-in-out; }
+.animate-void-spin { animation: void-spin 3s infinite linear; }
+.animate-void-suck-1 { animation: void-suck 1.5s infinite ease-in; }
+.animate-void-suck-2 { animation: void-suck 1.8s infinite ease-in 0.3s; transform-origin: top right; }
+.animate-void-suck-3 { animation: void-suck 1.6s infinite ease-in 0.6s; transform-origin: bottom left; }
+.animate-void-suck-4 { animation: void-suck 2s infinite ease-in 0.1s; transform-origin: bottom right; }
+
+/* =====================================================
+   Golden Sovereign (250)
+   ===================================================== */
+@keyframes gold-rays-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes gold-dust {
+  0% { transform: translateY(0) scale(0.5); opacity: 0; }
+  50% { opacity: 1; transform: translateY(-10px) scale(1); }
+  100% { transform: translateY(-20px) scale(0); opacity: 0; }
+}
+@keyframes gold-pulse {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50% { transform: scale(1.05); filter: brightness(1.2); }
+}
+.animate-gold-rays-spin { animation: gold-rays-spin 10s infinite linear; }
+.animate-gold-dust-1 { animation: gold-dust 2s infinite ease-in-out; }
+.animate-gold-dust-2 { animation: gold-dust 2.5s infinite ease-in-out 0.5s; }
+.animate-gold-dust-3 { animation: gold-dust 1.8s infinite ease-in-out 1s; }
+.animate-gold-dust-4 { animation: gold-dust 2.2s infinite ease-in-out 0.2s; }
+.animate-gold-pulse { animation: gold-pulse 3s infinite ease-in-out; }
+
+/* =====================================================
+   Quantum Glitch (300)
+   ===================================================== */
+@keyframes glitch-trail-1 {
+  0%, 100% { transform: translate(0, 0); opacity: 0; }
+  10%, 30% { transform: translate(-2px, 2px); opacity: 0.5; }
+  20% { transform: translate(3px, -1px); opacity: 0.8; }
+}
+@keyframes glitch-trail-2 {
+  0%, 100% { transform: translate(0, 0); opacity: 0; }
+  15%, 35% { transform: translate(2px, -2px); opacity: 0.5; }
+  25% { transform: translate(-3px, 1px); opacity: 0.8; }
+}
+@keyframes glitch-block {
+  0%, 100% { opacity: 0; }
+  5%, 15% { opacity: 1; transform: scaleX(1.5); }
+}
+@keyframes glitch-core {
+  0%, 100% { transform: skew(0deg); }
+  2% { transform: skew(5deg); }
+  4% { transform: skew(-5deg); }
+  6% { transform: skew(0deg); }
+}
+.animate-glitch-trail-1 { animation: glitch-trail-1 3s infinite steps(2); }
+.animate-glitch-trail-2 { animation: glitch-trail-2 2.5s infinite steps(2) 0.1s; }
+.animate-glitch-block-1 { animation: glitch-block 4s infinite steps(1) 0.5s; }
+.animate-glitch-block-2 { animation: glitch-block 3.5s infinite steps(1) 1.2s; }
+.animate-glitch-block-3 { animation: glitch-block 5s infinite steps(1) 2.1s; }
+.animate-glitch-core { animation: glitch-core 4s infinite linear; }
+
+/* =====================================================
+   Blood Moon (400)
+   ===================================================== */
+@keyframes blood-moon-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 1; box-shadow: 0 0 25px rgba(153,27,27,1); }
+}
+@keyframes blood-mist {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.2; }
+  50% { transform: scale(1.2) rotate(15deg); opacity: 0.4; }
+}
+@keyframes blood-bat {
+  0% { transform: translate(0, 0) scale(0.5); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translate(15px, -20px) scale(1); opacity: 0; }
+}
+.animate-blood-moon-pulse { animation: blood-moon-pulse 4s infinite ease-in-out; }
+.animate-blood-mist { animation: blood-mist 6s infinite ease-in-out; }
+.animate-blood-bat-1 { animation: blood-bat 2.5s infinite linear; }
+.animate-blood-bat-2 { animation: blood-bat 3s infinite linear 0.8s; }
+.animate-blood-bat-3 { animation: blood-bat 2.2s infinite linear 1.5s; }
+
+/* =====================================================
+   Radiant Seraph (500)
+   ===================================================== */
+@keyframes seraph-aura {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.15); opacity: 0.9; }
+}
+@keyframes seraph-glow {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.2); opacity: 0.5; }
+}
+@keyframes seraph-wing-left {
+  0%, 100% { transform: rotate(-15deg) scaleY(1); opacity: 0.5; }
+  50% { transform: rotate(-5deg) scaleY(1.1); opacity: 0.8; }
+}
+@keyframes seraph-wing-right {
+  0%, 100% { transform: rotate(15deg) scaleY(1); opacity: 0.5; }
+  50% { transform: rotate(5deg) scaleY(1.1); opacity: 0.8; }
+}
+@keyframes seraph-feather {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  20% { opacity: 0.8; }
+  80% { opacity: 0.8; }
+  100% { transform: translateY(15px) rotate(45deg); opacity: 0; }
+}
+.animate-seraph-aura { animation: seraph-aura 3s infinite ease-in-out; }
+.animate-seraph-glow { animation: seraph-glow 4s infinite ease-in-out 0.5s; }
+.animate-seraph-wing-left { animation: seraph-wing-left 4s infinite ease-in-out; transform-origin: bottom right; }
+.animate-seraph-wing-right { animation: seraph-wing-right 4s infinite ease-in-out; transform-origin: bottom left; }
+.animate-seraph-feather-1 { animation: seraph-feather 3s infinite ease-in-out; }
+.animate-seraph-feather-2 { animation: seraph-feather 4s infinite ease-in-out 1s; }
+.animate-seraph-feather-3 { animation: seraph-feather 3.5s infinite ease-in-out 0.5s; }
+.animate-seraph-core { animation: seraph-glow 3s infinite ease-in-out; }
+
+/* =====================================================
+   Prismatic Diamond (750)
+   ===================================================== */
+@keyframes prismatic-refract {
+  0% { filter: hue-rotate(0deg); transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { filter: hue-rotate(360deg); transform: scale(1); }
+}
+@keyframes prismatic-facet {
+  0%, 100% { opacity: 0.3; transform: scale(1) rotate(0deg); }
+  50% { opacity: 0.7; transform: scale(1.1) rotate(5deg); }
+}
+@keyframes prismatic-flare-spin {
+  0% { transform: rotate(0deg) scale(0.8); opacity: 0.5; }
+  50% { transform: rotate(180deg) scale(1.2); opacity: 1; }
+  100% { transform: rotate(360deg) scale(0.8); opacity: 0.5; }
+}
+.animate-prismatic-refract { animation: prismatic-refract 6s infinite linear; }
+.animate-prismatic-facet-1 { animation: prismatic-facet 4s infinite ease-in-out; }
+.animate-prismatic-facet-2 { animation: prismatic-facet 5s infinite ease-in-out 1s; }
+.animate-prismatic-flare-spin { animation: prismatic-flare-spin 8s infinite linear; }
+.animate-prismatic-core { animation: prismatic-refract 4s infinite linear reverse; }
+
+/* =====================================================
+   Galactic Supernova (1000)
+   ===================================================== */
+@keyframes supernova-shake {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(1px, 1px); }
+  50% { transform: translate(-1px, -1px); }
+  75% { transform: translate(1px, -1px); }
+}
+@keyframes supernova-ring {
+  0% { transform: scale(0); opacity: 1; }
+  100% { transform: scale(3); opacity: 0; }
+}
+@keyframes supernova-core-pulse {
+  0%, 100% { transform: scale(0.8); opacity: 0.7; }
+  50% { transform: scale(1.2); opacity: 1; }
+}
+@keyframes supernova-star {
+  0% { transform: translate(0, 0) scaleX(0); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translate(30px, -30px) scaleX(1); opacity: 0; }
+}
+.animate-supernova-shake { animation: supernova-shake 0.2s infinite; }
+.animate-supernova-ring-1 { animation: supernova-ring 2s infinite cubic-bezier(0.1, 0.8, 0.3, 1); }
+.animate-supernova-ring-2 { animation: supernova-ring 2s infinite cubic-bezier(0.1, 0.8, 0.3, 1) 0.6s; }
+.animate-supernova-ring-3 { animation: supernova-ring 2s infinite cubic-bezier(0.1, 0.8, 0.3, 1) 1.2s; }
+.animate-supernova-core-pulse { animation: supernova-core-pulse 1s infinite ease-in-out; }
+.animate-supernova-star-1 { animation: supernova-star 1s infinite linear; transform: rotate(-45deg); }
+.animate-supernova-star-2 { animation: supernova-star 1.2s infinite linear 0.4s; transform: rotate(-45deg); }
+.animate-supernova-star-3 { animation: supernova-star 0.8s infinite linear 0.8s; transform: rotate(-45deg); }
+.animate-supernova-symbol { animation: supernova-core-pulse 1s infinite ease-in-out reverse; }
+
+/* =====================================================
+   Aurora Borealis Beams (110) Updates
+   ===================================================== */
+@keyframes aurora-beam-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes aurora-beam-spin-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+@keyframes aurora-symbol {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.05); opacity: 1; filter: brightness(1.2); }
+}
+.animate-aurora-beam-spin { animation: aurora-beam-spin 8s infinite linear; }
+.animate-aurora-beam-spin-reverse { animation: aurora-beam-spin-reverse 12s infinite linear; }
+.animate-aurora-symbol { animation: aurora-symbol 3s infinite ease-in-out; }

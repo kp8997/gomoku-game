@@ -328,6 +328,83 @@ const MainGame: React.FC<MainGameProps> = ({
                           </g>
                         );
                       }
+                      case 'ETHEREAL_FROST': {
+                        const isX = winningSymbol === 'X';
+                        const frostColor = isX ? '#22d3ee' : '#60a5fa'; // cyan / blue
+                        return (
+                          <g>
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={frostColor} strokeWidth="20" strokeLinecap="round" style={{ filter: 'blur(6px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.5 }} transition={{ duration: 0.5 }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth="6" strokeLinecap="square" strokeDasharray="10 5 2 5" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.5 }} style={{ filter: `drop-shadow(0 0 10px ${frostColor})` }} />
+                          </g>
+                        );
+                      }
+                      case 'ABYSSAL_VOID': {
+                        const isX = winningSymbol === 'X';
+                        const voidColor = isX ? '#7e22ce' : '#6d28d9'; // purple / violet
+                        return (
+                          <g>
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#000000" strokeWidth="30" strokeLinecap="round" style={{ filter: 'blur(10px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.8 }} transition={{ duration: 0.8 }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={voidColor} strokeWidth="12" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.8 }} style={{ filter: `drop-shadow(0 0 15px ${voidColor})` }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeDasharray="5, 15" initial={{ pathLength: 0 }} animate={{ pathLength: 1, strokeDashoffset: [0, 30] }} transition={{ pathLength: { duration: 0.8 }, strokeDashoffset: { repeat: Infinity, duration: 2, ease: "linear" } }} />
+                          </g>
+                        );
+                      }
+                      case 'GOLDEN_SOVEREIGN': {
+                        return (
+                          <g>
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fef08a" strokeWidth="30" strokeLinecap="round" style={{ filter: 'blur(12px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: [0.4, 0.8, 0.4] }} transition={{ pathLength: { duration: 0.8 }, opacity: { repeat: Infinity, duration: 2, ease: "easeInOut" } }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#eab308" strokeWidth="10" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.8 }} style={{ filter: `drop-shadow(0 0 10px #facc15)` }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth="4" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.8 }} />
+                          </g>
+                        );
+                      }
+                      case 'QUANTUM_GLITCH': {
+                        const isX = winningSymbol === 'X';
+                        const color1 = isX ? '#22d3ee' : '#e879f9'; // cyan / fuchsia
+                        const color2 = '#f43f5e'; // rose
+                        return (
+                          <g>
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color2} strokeWidth="8" strokeLinecap="square" style={{ transform: 'translate(4px, 4px)', mixBlendMode: 'screen' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: [0.8, 0.4, 0.9, 0.2, 0.8] }} transition={{ pathLength: { duration: 0.3 }, opacity: { repeat: Infinity, duration: 0.5, ease: "linear" } }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color1} strokeWidth="8" strokeLinecap="square" style={{ transform: 'translate(-4px, -4px)', mixBlendMode: 'screen' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: [0.4, 0.9, 0.2, 0.8, 0.4] }} transition={{ pathLength: { duration: 0.3 }, opacity: { repeat: Infinity, duration: 0.5, ease: "linear" } }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth="4" strokeLinecap="square" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.3 }} />
+                          </g>
+                        );
+                      }
+                      case 'BLOOD_MOON': {
+                        return (
+                          <g>
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#7f1d1d" strokeWidth="25" strokeLinecap="round" style={{ filter: 'blur(8px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.9 }} transition={{ duration: 1 }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#dc2626" strokeWidth="8" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 1 }} style={{ filter: `drop-shadow(0 0 15px #ef4444)` }} />
+                          </g>
+                        );
+                      }
+                      case 'RADIANT_SERAPH': {
+                        return (
+                          <g>
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth="40" strokeLinecap="round" style={{ filter: 'blur(15px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: [0.5, 1, 0.5] }} transition={{ pathLength: { duration: 0.6 }, opacity: { repeat: Infinity, duration: 2, ease: "easeInOut" } }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#fef08a" strokeWidth="12" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.6 }} style={{ filter: `drop-shadow(0 0 20px #fde047)` }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth="6" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.6 }} />
+                          </g>
+                        );
+                      }
+                      case 'PRISMATIC_DIAMOND': {
+                        return (
+                          <g>
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#22d3ee" strokeWidth="16" strokeLinecap="round" style={{ filter: 'blur(4px)', transform: 'translate(-2px, -2px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.8 }} transition={{ duration: 0.7 }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#e879f9" strokeWidth="16" strokeLinecap="round" style={{ filter: 'blur(4px)', transform: 'translate(2px, 2px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.8 }} transition={{ duration: 0.7 }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth="8" strokeLinecap="square" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.7 }} style={{ filter: `drop-shadow(0 0 10px #ffffff)` }} />
+                          </g>
+                        );
+                      }
+                      case 'GALACTIC_SUPERNOVA': {
+                        return (
+                          <g>
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#d946ef" strokeWidth="50" strokeLinecap="round" style={{ filter: 'blur(20px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: [0.4, 0.8, 0.4] }} transition={{ pathLength: { duration: 0.4 }, opacity: { repeat: Infinity, duration: 1, ease: "easeInOut" } }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#22d3ee" strokeWidth="20" strokeLinecap="round" style={{ filter: 'blur(8px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.4 }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth="8" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.4 }} style={{ filter: `drop-shadow(0 0 15px #ffffff)` }} />
+                          </g>
+                        );
+                      }
                       default:
                         return defaultLine;
                     }

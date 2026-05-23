@@ -10,7 +10,15 @@ public enum SymbolEffect {
     OCEAN_SPLASH("WINS_80", 80, "Requires 80 Wins"),
     COSMIC_NEBULA("WINS_90", 90, "Requires 90 Wins"),
     DARK_SLASH("WINS_100", 100, "Requires 100 Wins"),
-    AURORA_BOREALIS("WINS_110", 110, "Requires 110 Wins");
+    AURORA_BOREALIS("WINS_110", 110, "Requires 110 Wins"),
+    ETHEREAL_FROST("WINS_150", 150, "Requires 150 Wins"),
+    ABYSSAL_VOID("WINS_200", 200, "Requires 200 Wins"),
+    GOLDEN_SOVEREIGN("WINS_250", 250, "Requires 250 Wins"),
+    QUANTUM_GLITCH("WINS_300", 300, "Requires 300 Wins"),
+    BLOOD_MOON("WINS_400", 400, "Requires 400 Wins"),
+    RADIANT_SERAPH("WINS_500", 500, "Requires 500 Wins"),
+    PRISMATIC_DIAMOND("WINS_750", 750, "Requires 750 Wins"),
+    GALACTIC_SUPERNOVA("WINS_1000", 1000, "Requires 1000 Wins");
 
     private final String requiredAchievementKey;
     private final int requiredWins;
