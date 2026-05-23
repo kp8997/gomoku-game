@@ -696,3 +696,39 @@ WINS:     10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 150, 200, 250, 300, 400,
 | 8 | `frontend/src/components/MainGame.tsx` | Add winning line `case` block (3-layer SVG motion.line) |
 
 
+### Session: Docker Deployment Fix & WebSocket TaskScheduler [2026-05-24]
+- **Obsolete Docker Compose Version**: Removed `version: '3.8'` from `docker-compose.yml`. Modern Docker Compose (v2+) ignores the version field and emits a deprecation warning. Compose spec no longer requires it.
+- **Backend Crash Loop — Missing TaskScheduler**: The backend container entered a restart loop on startup. Root cause: `WebSocketConfig.java` configured STOMP heartbeats via `setHeartbeatValue(new long[]{10000, 10000})` but did not provide a `TaskScheduler`. Spring's `SimpleBrokerMessageHandler.startInternal()` throws `IllegalArgumentException: Heartbeat values configured but no TaskScheduler provided` in this case. Fixed by instantiating a `ThreadPoolTaskScheduler` (pool size 1, thread prefix `wss-heartbeat-thread-`) and chaining `.setTaskScheduler(te)` on the simple broker.
+- **Frontend Docker Build TS6133**: `HeartFlutterEffect.tsx` declared `const isX = symbol === 'X'` but never used it. TypeScript strict mode (`tsc -b`) rejected this during the Docker `npm run build` stage. Removed the unused variable.
+- **Verification**: All three containers (`gomoku-postgres`, `gomoku-backend`, `gomoku-frontend`) confirmed running healthy. Backend reachable at `localhost:8888` (verified via curl → HTTP 400 on `/api/auth/login` without credentials). Frontend serving at `localhost:9999`.
+
+## 22. WebSocket TaskScheduler Requirement
+
+> **CRITICAL RULE**: When configuring STOMP heartbeats via `setHeartbeatValue()` on a simple broker, a `TaskScheduler` **must** be provided via `.setTaskScheduler()`. Without it, Spring Boot will crash on startup.
+
+### Current Configuration (`WebSocketConfig.java`)
+```java
+@Override
+public void configureMessageBroker(MessageBrokerRegistry config) {
+    ThreadPoolTaskScheduler te = new ThreadPoolTaskScheduler();
+    te.setPoolSize(1);
+    te.setThreadNamePrefix("wss-heartbeat-thread-");
+    te.initialize();
+
+    config.enableSimpleBroker("/topic")
+          .setHeartbeatValue(new long[]{10000, 10000})
+          .setTaskScheduler(te);
+    config.setApplicationDestinationPrefixes("/app");
+}
+```
+
+### Parameter Reference
+| Parameter | Value | Purpose |
+|:---|:---|:---|
+| `poolSize` | `1` | Single thread sufficient for heartbeat scheduling |
+| `threadNamePrefix` | `wss-heartbeat-thread-` | Identifiable in thread dumps |
+| `heartbeat[0]` (server→client) | `10000ms` | Server sends heartbeat every 10s |
+| `heartbeat[1]` (client→server) | `10000ms` | Server expects client heartbeat every 10s |
+| `sendTimeLimit` | `20000ms` | Max time to send a single message |
+| `sendBufferSizeLimit` | `512KB` | Max queued outbound bytes per session |
+
