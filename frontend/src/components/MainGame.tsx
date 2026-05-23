@@ -262,13 +262,13 @@ const MainGame: React.FC<MainGameProps> = ({
                       }
                       case 'NATURE_LEAF': {
                         const isX = winningSymbol === 'X';
-                        const leafColor = isX ? '#059669' : '#d97706';
-                        const leafGlow = isX ? '#86efac' : '#fde68a';
+                        const leafColor = isX ? '#0d9488' : '#be123c';
+                        const leafGlow = isX ? '#2dd4bf' : '#fb7185';
                         return (
                           <g>
                             <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={leafGlow} strokeWidth="20" strokeLinecap="round" style={{ filter: 'blur(6px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: [0.3, 0.5, 0.3] }} transition={{ pathLength: { duration: 1.2 }, opacity: { repeat: Infinity, duration: 3, ease: "easeInOut" } }} />
                             <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={leafColor} strokeWidth="8" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 1.2 }} style={{ filter: `drop-shadow(0 0 10px ${leafColor})` }} />
-                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={isX ? '#22c55e' : '#f59e0b'} strokeWidth="3" strokeLinecap="round" strokeDasharray="16, 12" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.8 }} transition={{ duration: 1.2 }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={isX ? '#a7f3d0' : '#fecdd3'} strokeWidth="3" strokeLinecap="round" strokeDasharray="16, 12" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.8 }} transition={{ duration: 1.2 }} />
                           </g>
                         );
                       }
@@ -289,6 +289,42 @@ const MainGame: React.FC<MainGameProps> = ({
                                 <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth="2" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.6 }} />
                               </>
                             )}
+                          </g>
+                        );
+                      }
+                      case 'OCEAN_SPLASH': {
+                        const isX = winningSymbol === 'X';
+                        const waveColor = isX ? '#4f46e5' : '#0891b2';
+                        const waveGlow = isX ? '#6366f1' : '#22d3ee';
+                        return (
+                          <g>
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={waveGlow} strokeWidth="20" strokeLinecap="round" style={{ filter: 'blur(5px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.45 }} transition={{ duration: 0.8 }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={waveColor} strokeWidth="8" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.8 }} style={{ filter: `drop-shadow(0 0 10px ${waveColor})` }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="12, 18" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.9, strokeDashoffset: [0, -30] }} transition={{ pathLength: { duration: 0.8 }, strokeDashoffset: { repeat: Infinity, duration: 1.2, ease: "linear" } }} />
+                          </g>
+                        );
+                      }
+                      case 'COSMIC_NEBULA': {
+                        const isX = winningSymbol === 'X';
+                        const spaceColor = isX ? '#d946ef' : '#eab308';
+                        const spaceGlow = isX ? '#f472b6' : '#fef08a';
+                        return (
+                          <g>
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={spaceGlow} strokeWidth="22" strokeLinecap="round" style={{ filter: 'blur(8px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: [0.3, 0.6, 0.3] }} transition={{ pathLength: { duration: 1.0 }, opacity: { repeat: Infinity, duration: 2.0, ease: "easeInOut" } }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={spaceColor} strokeWidth="7" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 1.0 }} style={{ filter: `drop-shadow(0 0 12px ${spaceColor})` }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="4, 16" initial={{ pathLength: 0 }} animate={{ pathLength: 1, strokeDashoffset: [0, 20] }} transition={{ pathLength: { duration: 1.0 }, strokeDashoffset: { repeat: Infinity, duration: 1.5, ease: "linear" } }} />
+                          </g>
+                        );
+                      }
+                      case 'AURORA_BOREALIS': {
+                        const isX = winningSymbol === 'X';
+                        const auroraColor = isX ? '#10b981' : '#d946ef';
+                        const auroraGlow = isX ? '#6ee7b7' : '#f472b6';
+                        return (
+                          <g>
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={auroraGlow} strokeWidth="24" strokeLinecap="round" style={{ filter: 'blur(8px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: [0.3, 0.65, 0.3] }} transition={{ pathLength: { duration: 1.2 }, opacity: { repeat: Infinity, duration: 2.5, ease: "easeInOut" } }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={auroraColor} strokeWidth="7" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 1.2 }} style={{ filter: `drop-shadow(0 0 12px ${auroraColor})` }} />
+                            <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth="3" strokeLinecap="round" strokeDasharray="2, 10" initial={{ pathLength: 0 }} animate={{ pathLength: 1, strokeDashoffset: [0, -20] }} transition={{ pathLength: { duration: 1.2 }, strokeDashoffset: { repeat: Infinity, duration: 1.0, ease: "linear" } }} />
                           </g>
                         );
                       }

@@ -73,7 +73,7 @@ export interface UserStatsDTO {
   winRate: number;
 }
 
-export type EffectType = 'FIRE_PHOENIX' | 'DRAGON_LIGHTNING' | 'HEART_FLUTTER' | 'CHERRY_BLOSSOM' | 'NATURE_LEAF' | 'VIBRANT_FIRE' | 'DARK_SLASH' | null;
+export type EffectType = 'FIRE_PHOENIX' | 'DRAGON_LIGHTNING' | 'HEART_FLUTTER' | 'CHERRY_BLOSSOM' | 'NATURE_LEAF' | 'VIBRANT_FIRE' | 'OCEAN_SPLASH' | 'COSMIC_NEBULA' | 'DARK_SLASH' | 'AURORA_BOREALIS' | null;
 
 export interface AchievementDTO {
   key: string;

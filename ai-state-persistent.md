@@ -60,6 +60,9 @@ Every plan **must** include these sections in this exact order:
 | 02 | PostgreSQL Migration | ✅ Implemented | `ai-feature-plan/02-ai-postgresql-migration-feature-plan.md` |
 | 03 | Match History & Liquibase Migration | ✅ Implemented | `ai-feature-plan/03-ai-match-history-feature-plan.md` |
 | 04 | UI Overhaul: History Page, Chat Bubble, Settings, Auth Landing | ✅ Implemented | `ai-feature-plan/04-ai-ui-overhaul-feature-plan.md` |
+| 05 | Achievement System & Symbol Effects | ✅ Implemented | `ai-feature-plan/05-ai-achievement-system-feature-plan.md` |
+| 06 | New Cosmetic Effects (Heart Flutter, Nature Leaf, Vibrant Fire) | ✅ Implemented | `ai-feature-plan/06-ai-new-cosmetic-effects-feature-plan.md` |
+| 07 | Cascade Delete Users | ✅ Implemented | `ai-feature-plan/07-ai-cascade-delete-users-feature-plan.md` |
 
 
 ## 1. Project Architecture
@@ -79,41 +82,51 @@ Every plan **must** include these sections in this exact order:
 ```
 backend/src/main/java/com/gomoku/game/
 ├── GomokuApplication.java      # Spring Boot entry point
-├── WebSocketConfig.java        # STOMP broker config (/topic, /app)
+├── WebSocketConfig.java        # STOMP broker config (/topic, /app), heartbeats (10s/10s), buffer (512KB)
 ├── GameMessage.java            # Message schema + inner classes (Move, ChatMessage, enums)
-├── GameController.java         # Game logic, room management, timer, win detection, confrontation recording
+├── GameController.java         # Game logic, room management, timer, win detection, confrontation recording, disconnect pause
 ├── model/
 │   ├── User.java               # JPA entity (manual builder, no Lombok)
-│   └── ConfrontationRecord.java # JPA entity (canonical pair)
+│   ├── ConfrontationRecord.java # JPA entity (canonical pair)
+│   ├── SymbolEffect.java       # Enum: 10 effects (FIRE_PHOENIX→AURORA_BOREALIS) with win requirements
+│   ├── UserAchievement.java    # JPA entity (user_id, achievement_key, unlocked_at)
+│   └── UserEquippedEffect.java # JPA entity (user_id, effect_key)
 ├── repository/
 │   ├── UserRepository.java
-│   └── ConfrontationRepository.java
+│   ├── ConfrontationRepository.java
+│   ├── UserAchievementRepository.java
+│   └── UserEquippedEffectRepository.java
 ├── dto/
 │   ├── SignupRequest.java
 │   ├── LoginRequest.java
 │   ├── AuthResponse.java
 │   ├── ProfileUpdateRequest.java
 │   ├── UserProfileResponse.java
-│   └── ConfrontationDTO.java
+│   ├── ConfrontationDTO.java
+│   ├── AchievementDTO.java
+│   ├── AchievementResponse.java # Includes EffectDTO inner class
+│   └── UserStatsDTO.java
 ├── service/
 │   ├── AuthService.java        # Signup validation, login, token gen
 │   ├── UserService.java        # Profile CRUD
-│   └── ConfrontationService.java # H2H record/query
+│   ├── ConfrontationService.java # H2H record/query + user stats
+│   └── AchievementService.java # Badge sync, effect unlock checks, equip/unequip
 ├── security/
 │   ├── SecurityConfig.java     # HTTP security filter chain
 │   ├── JwtTokenProvider.java   # JWT creation & validation
 │   └── JwtAuthenticationFilter.java # OncePerRequestFilter
 └── controller/
     ├── AuthController.java     # POST /api/auth/signup, /api/auth/login
-    └── UserController.java     # GET/PUT /api/user/profile
+    ├── UserController.java     # GET/PUT /api/user/profile, GET /api/user/stats
+    └── AchievementController.java # GET /api/achievements, POST equip/unequip
 
 frontend/src/
-├── App.tsx                     # Root: state management, WebSocket, routing, auth integration, chat unread state
+├── App.tsx                     # Root: state management, WebSocket (refs for stale closure), routing, auth, chat
 ├── index.css                   # Design system: tokens, dark mode, glassmorphism
 ├── main.tsx                    # Entry point: BrowserRouter + Routes (/, /history, /settings) + AuthProvider
-├── types.ts                    # TypeScript interfaces (Move, ChatMessage, GameMessage, auth types, UserStatsDTO)
+├── types.ts                    # TypeScript interfaces (Move, ChatMessage, GameMessage, auth types, EffectType, AchievementDTO)
 ├── api/
-│   └── authApi.ts              # fetch wrappers for auth, profile, stats endpoints
+│   └── authApi.ts              # fetch wrappers for auth, profile, stats, achievements, effects
 ├── context/
 │   └── AuthContext.tsx          # React Context for auth state (user, token, login/logout)
 ├── pages/
@@ -123,15 +136,33 @@ frontend/src/
     ├── Header.tsx              # Scores, timer, drawer toggle, theme, exit, auth identity (sticky)
     ├── InformationScreen.tsx   # Pre-game: name, mode select, join/copy, login prompt (anon only)
     ├── AuthInformationScreen.tsx # Pre-game lobby dashboard for authenticated users with quick stats
-    ├── MainGame.tsx            # Board grid, winning line SVG, winner popup, ChatBubble
+    ├── MainGame.tsx            # Board grid, winning line SVG (10 effect cases), winner popup, ChatBubble
     ├── GameDrawer.tsx          # Side panel: Move History only (chat removed)
     ├── ChatBubble.tsx          # Floating bottom-right chat bubble with notification badge
     ├── ChatPanel.tsx           # Real-time chat (used inline inside ChatBubble)
     ├── HistorySection.tsx      # Move history list
-    ├── TurnTimer.tsx           # Circular SVG countdown timer
+    ├── TurnTimer.tsx           # Circular SVG countdown timer (ref-based, pause on disconnect)
     ├── TimeoutWarning.tsx      # Global timeout warning overlay
     ├── AuthModal.tsx           # Login/Signup modal (tabbed, glassmorphism)
-    └── UserDropdown.tsx        # User menu dropdown (navigate to /history, /settings)
+    ├── UserDropdown.tsx        # User menu dropdown (navigate to /history, /settings)
+    ├── ProfileModal.tsx        # Profile editor modal
+    ├── achievements/
+    │   ├── AchievementPanel.tsx # Collapsible sections: Effects, Win Rate, Matches, Wins
+    │   ├── BadgeCard.tsx       # Individual badge display card
+    │   ├── EffectCard.tsx      # Effect preview card with equip/lock states
+    │   └── SymbolRenderer.tsx  # Lazy-loaded effect component switch (10 effects)
+    └── effects/
+        ├── effects.css         # All keyframe animations for effects
+        ├── FirePhoenixEffect.tsx
+        ├── DragonLightningEffect.tsx
+        ├── HeartFlutterEffect.tsx
+        ├── CherryBlossomEffect.tsx
+        ├── NatureLeafEffect.tsx
+        ├── VibrantFireEffect.tsx
+        ├── OceanSplashEffect.tsx
+        ├── CosmicNebulaEffect.tsx
+        ├── DarkSlashEffect.tsx
+        └── AuroraBorealisEffect.tsx
 ```
 
 ## 2. WebSocket Schema (GameMessage.java)
@@ -555,5 +586,113 @@ network: gomoku-network (bridge)
 - **WebSocket Cosmetic Syncing**: Ensured player equipped effects are loaded eagerly (`findByUser_UsernameIn`) in the backend and broadcasted during every `JOIN`, `MOVE`, and `START` room event. The client-side state is updated on every Stomp payload, ensuring opponent visual cell-placements and winning strike-through lines reflect cosmetic upgrades in real-time.
 - **Milestones Database Seeding**: Updated `WIN_MILESTONES` array in `AchievementService.java` to explicitly track the `30` win achievement, and updated the admin database initialization in `seed.sql` to include `'WINS_30'` in the conflict-safe set.
 - **Avatar Storage & Uploads**: Verified that user profile avatars are uploaded as base64 encoded strings (constrained to 500KB) and persisted directly as `TEXT` within the PostgreSQL `users` table via `UserService.java`.
+
+### Session: Timer Bug Fixes, Connection Keep-Alive & STOMP Heartbeats [2026-05-23]
+- **Stale Closure Bug Fix**: Resolved a critical bug where `App.tsx` STOMP `onMessage` callback captured `username`, `mySymbol`, and `gameMode` from initial render values (always `''`, `null`, default). Introduced `usernameRef`, `mySymbolRef`, and `gameModeRef` synced via `useEffect` so the STOMP handler reads current values from refs instead of stale closure variables.
+- **Orange Timer State Fix**: Direct consequence of the stale closure fix. `TurnTimer` correctly shows orange (`#f59e0b`) when `isMyTurn === false` now that `mySymbol` is accurately set on the first MOVE. Also reset `progress` to `1` when `startTime === 0` to prevent a stale progress arc from a previous round.
+- **STOMP Heartbeats (Keep-Alive)**: Added bidirectional 10s heartbeats in `WebSocketConfig.java` via `setHeartbeatValue(new long[]{10000, 10000})`. Configured `setSendTimeLimit(20s)` and `setSendBufferSizeLimit(512KB)`. Frontend enables `client.heartbeat.outgoing = client.heartbeat.incoming = 10000`.
+- **Auto-Reconnect on Disconnect**: Moved `SockJS` + `Stomp.over` creation **inside** `connectToBackend()` so reconnection creates a fresh socket. Added reconnect-on-any-disconnect with 3s delay.
+- **Timer Pause on Player Disconnect**: Added `pausedAt` field to `GameRoom`. On disconnect, `stopTurnTimer` sets `pausedAt = System.currentTimeMillis()`. On reconnect when `canPlay == true`, backend calculates paused duration, shifts `turnStartTime` forward, and resumes `startTurnTimer` with accurately calculated remaining time. Frontend freezes timer via `isGameOver` prop when `playerCount < 2`.
+- **First-Move Timer Grace**: Backend `handleMove` checks `nextPlayerHasMoved` (whether the next player has already made at least one move) before calling `startTurnTimer`. If it's a player's opening move, `turnStartTime(0)` is explicitly set and no scheduled timeout fires — giving unlimited time for the opening move.
+
+### Session: Cosmetic Effects Expansion & Visual Polish [2026-05-23/24]
+- **Heart Flutter Yellow Unification**: Changed the Heart Flutter effect to render yellow (`#eab308` / `#facc15`) for **both** X and O symbols instead of green/yellow split. Updated both `HeartFlutterEffect.tsx` (cell effect) and `MainGame.tsx` (winning line).
+- **Dragon Lightning Enhancement**: Overhauled `DragonLightningEffect.tsx` with aggressive SVG lightning bolt arc paths, radial gradient aura using `mix-blend-screen`, and per-arc staggered animations with glowing drop-shadows. Added `animate-arc-1` through `animate-arc-4` and `animate-lightning-aura`/`animate-lightning-flash` CSS keyframes.
+- **Nature Leaf Teal/Crimson Overhaul**: Replaced the emerald-green/amber palette (which overlapped with Heart Flutter's yellow) with a completely differentiated high-contrast dual palette — **Cool Teal** (`#0d9488`) for X and **Autumn Crimson** (`#be123c`) for O. Increased leaf particle count from 5 to 7, enlarged leaf sizes (up to 16px), and added individual glowing drop-shadows to leaf particles.
+- **New Effect: Ocean Splash (80 Wins)**: Water-themed effect with pulsating `water-ripple` blurred background aura and floating organic teardrop-shaped water droplet particles (`border-radius: 50% 50% 50% 50% / 15% 15% 85% 85%`). X uses Deep Sapphire/Indigo (`#4f46e5`), O uses Bright Cyan/Turquoise (`#22d3ee`).
+- **New Effect: Cosmic Nebula (90 Wins)**: Space-themed effect with rotating `nebula-pulse` hue-shifting aura and 4-pointed SVG vector star particles that twinkle with scale/rotate animations. X uses Deep Fuchsia (`#d946ef`), O uses Radiant Gold (`#eab308`).
+- **New Effect: Aurora Borealis (110 Wins)**: Northern lights effect with `aurora-shift` hue-rotating gradient aura (`bg-gradient-to-tr`) and circular shimmer stardust particles. X uses Emerald/Cyan (`#10b981` + `#6ee7b7`), O uses Violet/Pink (`#d946ef` + `#f472b6`).
+- **Backend Enum Expansion**: `SymbolEffect.java` now contains 10 effects: `FIRE_PHOENIX(20)`, `DRAGON_LIGHTNING(30)`, `HEART_FLUTTER(40)`, `CHERRY_BLOSSOM(50)`, `NATURE_LEAF(60)`, `VIBRANT_FIRE(70)`, `OCEAN_SPLASH(80)`, `COSMIC_NEBULA(90)`, `DARK_SLASH(100)`, `AURORA_BOREALIS(110)`.
+- **WIN_MILESTONES**: Extended to `{10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 150, 200, 250, 300, 400, 500, 750, 1000}`.
+- **seed.sql**: Admin seeding now includes `WINS_40` through `WINS_110`.
+- **Dynamic Effects Count**: `AchievementPanel.tsx` total effects count changed from hardcoded `4` to `data.effects.length`.
+- **Effect Component Architecture**: Each effect is a standalone `{EffectName}Effect.tsx` React component in `frontend/src/components/effects/`. All effects lazy-loaded via `React.lazy()` in `SymbolRenderer.tsx`. CSS animations defined in `effects.css` with namespaced keyframes.
+- **Winning Line Architecture**: Each effect has a dedicated `case` block in `MainGame.tsx` rendering 3-layer SVG `<motion.line>` elements: blurred glow layer → core colored stroke → animated detail (dashes/dots).
+
+## 16. SymbolEffect Enum Reference (Source of Truth)
+
+| Enum Key | Achievement Key | Wins Required | Label |
+|:---|:---|:---|:---|
+| `FIRE_PHOENIX` | `WINS_20` | 20 | Requires 20 Wins |
+| `DRAGON_LIGHTNING` | `WINS_30` | 30 | Requires 30 Wins |
+| `HEART_FLUTTER` | `WINS_40` | 40 | Requires 40 Wins |
+| `CHERRY_BLOSSOM` | `WINS_50` | 50 | Requires 50 Wins |
+| `NATURE_LEAF` | `WINS_60` | 60 | Requires 60 Wins |
+| `VIBRANT_FIRE` | `WINS_70` | 70 | Requires 70 Wins |
+| `OCEAN_SPLASH` | `WINS_80` | 80 | Requires 80 Wins |
+| `COSMIC_NEBULA` | `WINS_90` | 90 | Requires 90 Wins |
+| `DARK_SLASH` | `WINS_100` | 100 | Requires 100 Wins |
+| `AURORA_BOREALIS` | `WINS_110` | 110 | Requires 110 Wins |
+
+## 17. Cosmetic Effect Color Palette Reference
+
+| Effect | X Symbol Color | O Symbol Color | Particle Type |
+|:---|:---|:---|:---|
+| Fire Phoenix | Orange/Red | Orange/Red | Rising ember particles |
+| Dragon Lightning | Cyan `#22d3ee` | Purple `#c084fc` | SVG lightning bolt arcs |
+| Heart Flutter | Yellow `#eab308` | Yellow `#eab308` | Flying heart clip-path shapes |
+| Cherry Blossom | Rose-300 `#fda4af` | Red-500 `#ef4444` | CSS petal shapes |
+| Nature Leaf | Teal `#0d9488` | Crimson `#be123c` | Leaf shapes with glow (7 particles) |
+| Vibrant Fire | Fire core + yellow dash | Fire core + white flame | Rotating sunshine + fire flicker |
+| Ocean Splash | Indigo `#4f46e5` | Cyan `#0891b2` | Teardrop water droplets |
+| Cosmic Nebula | Fuchsia `#d946ef` | Gold `#eab308` | 4-pointed SVG twinkling stars |
+| Dark Slash | Indigo `#4f46e5` | Red `#dc2626` | Sharp line slash |
+| Aurora Borealis | Emerald `#10b981` | Fuchsia `#d946ef` | Shimmer stardust + aurora shift |
+
+## 18. Effect Component File Inventory
+
+| Component File | CSS Keyframes | Animation Classes |
+|:---|:---|:---|
+| `FirePhoenixEffect.tsx` | `flicker`, `ember-rise` | `animate-flicker`, `animate-ember-{1-3}` |
+| `DragonLightningEffect.tsx` | `lightning-aura`, `lightning-flash`, `arc-{1-4}` | `animate-lightning-aura`, `animate-lightning-flash`, `animate-arc-{1-4}` |
+| `HeartFlutterEffect.tsx` | `heart-float-{1-5}`, `heart-aura-pulse` | `animate-heart-float-{1-5}`, `animate-heart-aura` |
+| `CherryBlossomEffect.tsx` | `petal-{1-5}`, `bloom-pulse` | `animate-petal-{1-5}`, `animate-bloom-pulse` |
+| `NatureLeafEffect.tsx` | `leaf-drift-{1-5}`, `nature-breathe` | `animate-leaf-drift-{1-5}`, `animate-nature-breathe` |
+| `VibrantFireEffect.tsx` | `sunshine-spin`, `sunshine-pulse`, `fire-flicker`, `fire-dance`, `fire-vibrant-glow` | `animate-sunshine-{spin,pulse}`, `animate-fire-{flicker,dance,vibrant-glow}` |
+| `OceanSplashEffect.tsx` | `water-ripple`, `droplet-float-{1-5}` | `animate-water-ripple`, `animate-droplet-{1-5}` |
+| `CosmicNebulaEffect.tsx` | `nebula-pulse`, `star-twinkle-{1-5}` | `animate-nebula-pulse`, `animate-star-twinkle-{1-5}` |
+| `DarkSlashEffect.tsx` | (inline Framer Motion) | (inline) |
+| `AuroraBorealisEffect.tsx` | `aurora-shift`, `shimmer-dust` | `animate-aurora-shift`, `animate-shimmer-{1-5}` |
+
+## 19. WebSocket Keep-Alive Configuration
+
+| Parameter | Backend (`WebSocketConfig.java`) | Frontend (`App.tsx`) |
+|:---|:---|:---|
+| Heartbeat Outgoing | 10,000ms | 10,000ms |
+| Heartbeat Incoming | 10,000ms | 10,000ms |
+| Send Time Limit | 20,000ms | — |
+| Send Buffer Size | 512KB | — |
+| Reconnect Delay | — | 3,000ms |
+| Fresh Socket on Reconnect | — | ✅ (`SockJS` + `Stomp.over` created inside `connectToBackend()`) |
+
+## 20. Achievement Milestones Reference
+
+| Category | Milestones Array |
+|:---|:---|
+| `WIN_RATE_THRESHOLDS` | `{50, 55, 60, 65, 75, 80, 85, 90, 95}` |
+| `MATCH_MILESTONES` | `{10, 20, 50, 100, 150, 200, 250, 300, 400, 500, 750, 1000}` |
+| `WIN_MILESTONES` | `{10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 150, 200, 250, 300, 400, 500, 750, 1000}` |
+
+### seed.sql Admin Seeding Keys
+```
+WIN_RATE: 50, 55, 60, 65, 75, 80, 85, 90, 95
+MATCHES:  10, 20, 50, 100, 150, 200, 250, 300, 400, 500, 750, 1000
+WINS:     10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 150, 200, 250, 300, 400, 500, 750, 1000
+```
+
+## 21. Effect Registration Checklist
+
+> **MANDATORY**: When adding a new cosmetic effect, ALL 8 steps must be completed:
+
+| # | File | Action |
+|:---|:---|:---|
+| 1 | `backend/.../model/SymbolEffect.java` | Add enum constant with `WINS_N` key, required wins, and label |
+| 2 | `backend/.../service/AchievementService.java` | Add `N` to `WIN_MILESTONES` array |
+| 3 | `seed.sql` | Add `'WINS_N'` to admin seeding `v_keys` array |
+| 4 | `frontend/src/types.ts` | Add key string to `EffectType` union type |
+| 5 | `frontend/src/components/effects/effects.css` | Add `@keyframes` and `.animate-*` utility classes |
+| 6 | `frontend/src/components/effects/{Name}Effect.tsx` | Create React component with `symbol` prop |
+| 7 | `frontend/src/components/achievements/SymbolRenderer.tsx` | Add `React.lazy()` import + `case` in switch |
+| 8 | `frontend/src/components/MainGame.tsx` | Add winning line `case` block (3-layer SVG motion.line) |
 
 

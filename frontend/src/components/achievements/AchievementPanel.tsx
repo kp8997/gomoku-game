@@ -124,7 +124,7 @@ export const AchievementPanel: React.FC<AchievementPanelProps> = ({ hasMoves, on
 
       {/* Section: Effects */}
       <div className="bg-surface rounded-xl shadow-md border border-achievement-border transition-all">
-        <SectionHeader title="Symbol Effects" section="EFFECTS" count={unlockedEffects} total={4} />
+        <SectionHeader title="Symbol Effects" section="EFFECTS" count={unlockedEffects} total={data.effects.length} />
         {expandedSection === 'EFFECTS' && (
           <div className="p-5 grid grid-cols-2 gap-4">
             {/* Default None */}

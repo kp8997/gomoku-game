@@ -6,7 +6,7 @@ interface Props {
 }
 
 const HeartFlutterEffect: React.FC<Props> = ({ symbol }) => {
-  const isX = symbol === 'X';
+
   // X and O are now both yellow (per user spec)
   const colorClass = 'text-yellow-500 dark:text-yellow-400 drop-shadow-[0_0_6px_#eab308]';
   const auraColor = 'bg-yellow-400';

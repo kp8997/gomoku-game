@@ -7,7 +7,10 @@ public enum SymbolEffect {
     CHERRY_BLOSSOM("WINS_50", 50, "Requires 50 Wins"),
     NATURE_LEAF("WINS_60", 60, "Requires 60 Wins"),
     VIBRANT_FIRE("WINS_70", 70, "Requires 70 Wins"),
-    DARK_SLASH("WINS_100", 100, "Requires 100 Wins");
+    OCEAN_SPLASH("WINS_80", 80, "Requires 80 Wins"),
+    COSMIC_NEBULA("WINS_90", 90, "Requires 90 Wins"),
+    DARK_SLASH("WINS_100", 100, "Requires 100 Wins"),
+    AURORA_BOREALIS("WINS_110", 110, "Requires 110 Wins");
 
     private final String requiredAchievementKey;
     private final int requiredWins;

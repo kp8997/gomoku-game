@@ -7,6 +7,9 @@ const HeartFlutterEffect = React.lazy(() => import('../effects/HeartFlutterEffec
 const CherryBlossomEffect = React.lazy(() => import('../effects/CherryBlossomEffect'));
 const NatureLeafEffect = React.lazy(() => import('../effects/NatureLeafEffect'));
 const VibrantFireEffect = React.lazy(() => import('../effects/VibrantFireEffect'));
+const OceanSplashEffect = React.lazy(() => import('../effects/OceanSplashEffect'));
+const CosmicNebulaEffect = React.lazy(() => import('../effects/CosmicNebulaEffect'));
+const AuroraBorealisEffect = React.lazy(() => import('../effects/AuroraBorealisEffect'));
 const DarkSlashEffect = React.lazy(() => import('../effects/DarkSlashEffect'));
 
 interface Props {
@@ -40,6 +43,15 @@ export const SymbolRenderer: React.FC<Props> = ({ symbol, effectKey }) => {
       break;
     case 'VIBRANT_FIRE':
       EffectComponent = VibrantFireEffect;
+      break;
+    case 'OCEAN_SPLASH':
+      EffectComponent = OceanSplashEffect;
+      break;
+    case 'COSMIC_NEBULA':
+      EffectComponent = CosmicNebulaEffect;
+      break;
+    case 'AURORA_BOREALIS':
+      EffectComponent = AuroraBorealisEffect;
       break;
     case 'DARK_SLASH':
       EffectComponent = DarkSlashEffect;
