@@ -7,12 +7,10 @@ interface Props {
 
 const HeartFlutterEffect: React.FC<Props> = ({ symbol }) => {
   const isX = symbol === 'X';
-  // X = green, O = yellow (per user spec)
-  const colorClass = isX
-    ? 'text-green-500 dark:text-green-400 drop-shadow-[0_0_6px_#22c55e]'
-    : 'text-yellow-500 dark:text-yellow-400 drop-shadow-[0_0_6px_#eab308]';
-  const auraColor = isX ? 'bg-green-400' : 'bg-yellow-400';
-  const heartColor = isX ? '#4ade80' : '#facc15'; // green-400 / yellow-400
+  // X and O are now both yellow (per user spec)
+  const colorClass = 'text-yellow-500 dark:text-yellow-400 drop-shadow-[0_0_6px_#eab308]';
+  const auraColor = 'bg-yellow-400';
+  const heartColor = '#facc15'; // yellow-400
 
   // Heart SVG path scaled to a small clip
   const heartStyle = {

@@ -217,13 +217,13 @@ const MainGame: React.FC<MainGameProps> = ({
                        }
                        case 'DRAGON_LIGHTNING': {
                          const isX = winningSymbol === 'X';
-                         const baseColor = isX ? '#0891b2' : '#7e22ce'; // cyan / purple
-                         const mainColor = isX ? '#22d3ee' : '#a855f7'; // light cyan / light purple
+                         const baseColor = isX ? '#06b6d4' : '#9333ea'; // cyan / purple
+                         const mainColor = isX ? '#67e8f9' : '#d8b4fe'; // light cyan / light purple
                          return (
                            <g className="animate-lightning-flash">
-                             <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={baseColor} strokeWidth="12" strokeLinecap="square" style={{ filter: 'blur(6px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.5 }} transition={{ duration: 0.3 }} />
-                             <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={mainColor} strokeWidth="4" strokeLinecap="square" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.3 }} style={{ filter: `drop-shadow(0 0 12px ${mainColor})` }} />
-                             <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth="1" strokeLinecap="square" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.3 }} />
+                             <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={baseColor} strokeWidth="24" strokeLinecap="round" style={{ filter: 'blur(8px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.8 }} transition={{ duration: 0.25 }} />
+                             <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={mainColor} strokeWidth="8" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.25 }} style={{ filter: `drop-shadow(0 0 16px ${mainColor})` }} />
+                             <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth="3" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }} transition={{ duration: 0.25 }} style={{ filter: `drop-shadow(0 0 8px #ffffff)` }} />
                            </g>
                          );
                        }
@@ -250,9 +250,8 @@ const MainGame: React.FC<MainGameProps> = ({
                           </g>
                         );
                       case 'HEART_FLUTTER': {
-                        const isX = winningSymbol === 'X';
-                        const heartColor = isX ? '#22c55e' : '#eab308';
-                        const heartGlow = isX ? '#4ade80' : '#facc15';
+                        const heartColor = '#eab308';
+                        const heartGlow = '#facc15';
                         return (
                           <g>
                             <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke={heartGlow} strokeWidth="18" strokeLinecap="round" style={{ filter: 'blur(5px)' }} initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.4 }} transition={{ duration: 1.0 }} />

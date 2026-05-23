@@ -101,6 +101,16 @@ const App: React.FC = () => {
 
   const stompClient = useRef<Stomp.Client | null>(null);
 
+  // Refs to avoid stale closures in the STOMP subscription callback
+  const usernameRef = useRef(username);
+  const mySymbolRef = useRef(mySymbol);
+  const gameModeRef = useRef(gameMode);
+
+  // Keep refs in sync with state
+  useEffect(() => { usernameRef.current = username; }, [username]);
+  useEffect(() => { mySymbolRef.current = mySymbol; }, [mySymbol]);
+  useEffect(() => { gameModeRef.current = gameMode; }, [gameMode]);
+
   // Theme sync + localStorage
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDarkMode);
@@ -130,7 +140,7 @@ const App: React.FC = () => {
 
 
 
-  // WebSocket setup
+  // WebSocket setup with auto-reconnect and heartbeat
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const room = urlParams.get('room') || Math.random().toString(36).substring(7);
@@ -140,13 +150,20 @@ const App: React.FC = () => {
     }
 
     const backendUrl = import.meta.env.VITE_WS_URL || 'http://localhost:8888/ws-gomoku';
-    const socket = new SockJS(backendUrl);
-    const client = Stomp.over(socket);
-    client.debug = () => { };
-
     let isActive = true;
+    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
 
     const connectToBackend = () => {
+      if (!isActive) return;
+
+      const socket = new SockJS(backendUrl);
+      const client = Stomp.over(socket);
+      client.debug = () => { };
+
+      // Enable STOMP heartbeats: outgoing every 10s, expect incoming every 10s
+      client.heartbeat.outgoing = 10000;
+      client.heartbeat.incoming = 10000;
+
       client.connect({},
         () => {
           if (!isActive) {
@@ -161,8 +178,10 @@ const App: React.FC = () => {
         },
         (error) => {
           if (!isActive) return;
-          console.warn("Backend unavailable or connection failed:", error);
-          setTimeout(connectToBackend, 5000);
+          console.warn("Connection lost or failed:", error);
+          stompClient.current = null;
+          // Auto-reconnect after 3 seconds
+          reconnectTimeout = setTimeout(connectToBackend, 3000);
         }
       );
     };
@@ -171,9 +190,11 @@ const App: React.FC = () => {
 
     return () => {
       isActive = false;
-      if (client.connected) {
-        client.disconnect(() => { });
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+      if (stompClient.current?.connected) {
+        stompClient.current.disconnect(() => { });
       }
+      stompClient.current = null;
     };
   }, []);
 
@@ -200,7 +221,7 @@ const App: React.FC = () => {
           content: message.content || '',
           timestamp: message.timestamp || Date.now()
         }]);
-        if (message.sender !== username) {
+        if (message.sender !== usernameRef.current) {
           playNotificationSound();
           if (!isChatOpenRef.current) {
             setUnreadCount(prev => prev + 1);
@@ -228,7 +249,7 @@ const App: React.FC = () => {
         }
         if (message.turnStartTime !== undefined) setTurnStartTime(message.turnStartTime);
         if (message.turnDuration !== undefined) setTurnDuration(message.turnDuration);
-        if (message.sender === username && message.playerSymbol) setMySymbol(message.playerSymbol);
+        if (message.sender === usernameRef.current && message.playerSymbol) setMySymbol(message.playerSymbol);
         if (message.playerCount !== undefined) setPlayerCount(message.playerCount);
         if (message.symbolEffects) setSymbolEffects(message.symbolEffects);
         setIsJoined(true);
@@ -236,8 +257,10 @@ const App: React.FC = () => {
       case 'MOVE':
         if (message.symbolEffects) setSymbolEffects(message.symbolEffects);
         if (message.row !== undefined && message.col !== undefined) {
-          if (!mySymbol && message.sender) {
-            setMySymbol(message.sender === username ? (message.content || null) : (message.content === 'X' ? 'O' : 'X'));
+          if (!mySymbolRef.current && message.sender) {
+            const assignedSymbol = message.sender === usernameRef.current ? (message.content || null) : (message.content === 'X' ? 'O' : 'X');
+            setMySymbol(assignedSymbol);
+            mySymbolRef.current = assignedSymbol;
           }
           setHistory(prevHistory => {
             const isDuplicate = prevHistory.some(m => m.row === message.row && m.col === message.col);
@@ -268,7 +291,7 @@ const App: React.FC = () => {
         if (message.scores) setScores(message.scores);
         if (message.winningLine) setWinningLine(message.winningLine);
         if (message.winner) {
-          const isWinner = gameMode === 'SINGLE' || message.winner === username;
+          const isWinner = gameModeRef.current === 'SINGLE' || message.winner === usernameRef.current;
           setStats(prev => ({
             wins: isWinner ? prev.wins + 1 : prev.wins,
             losses: isWinner ? prev.losses : prev.losses + 1
@@ -374,7 +397,7 @@ const App: React.FC = () => {
         username={username}
         turnStartTime={turnStartTime}
         turnDuration={turnDuration}
-        isGameOver={!!winner}
+        isGameOver={!!winner || (gameMode === 'MULTIPLE' && playerCount < 2)}
         gameMode={gameMode}
         currentTurnSymbol={turnSymbol}
         playerCount={playerCount}

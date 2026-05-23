@@ -71,6 +71,16 @@ public class GameController {
         }
         room.addSession(sessionId, message.getSender());
 
+        boolean canPlay = (room.getMode() == GameMessage.GameMode.SINGLE) ? room.getActiveSessionCount() >= 1 : room.getActiveSessionCount() >= 2;
+        if (canPlay && room.getTurnStartTime() > 0 && room.getPausedAt() > 0) {
+            long pausedDuration = System.currentTimeMillis() - room.getPausedAt();
+            room.setTurnStartTime(room.getTurnStartTime() + pausedDuration);
+            room.setPausedAt(0);
+            long elapsed = System.currentTimeMillis() - room.getTurnStartTime();
+            long remaining = Math.max(0, TURN_DURATION_SECONDS * 1000L - elapsed);
+            startTurnTimer(gameId, remaining);
+        }
+
         message.setType(GameMessage.MessageType.JOIN);
         message.setHistory(room.getHistory());
         message.setChatHistory(room.getChatHistory());
@@ -203,6 +213,36 @@ public class GameController {
             List<GameMessage.Move> winningLine = room.getWinningLine(message.getRow(), message.getCol());
             if (winningLine != null) {
                 stopTurnTimer(gameId);
+                room.setTurnStartTime(0);
+                room.setPausedAt(0);
+            } else {
+                boolean nextPlayerHasMoved = false;
+                String nextPlayerSymbol = symbol.equals("X") ? "O" : "X";
+                for (GameMessage.Move m : room.getHistory()) {
+                    if (m.getSymbol().equals(nextPlayerSymbol)) {
+                        nextPlayerHasMoved = true;
+                        break;
+                    }
+                }
+                if (nextPlayerHasMoved) {
+                    room.setTurnStartTime(System.currentTimeMillis());
+                    room.setPausedAt(0);
+                    startTurnTimer(gameId, TURN_DURATION_SECONDS * 1000L);
+                } else {
+                    stopTurnTimer(gameId);
+                    room.setTurnStartTime(0);
+                    room.setPausedAt(0);
+                }
+            }
+
+            message.setType(GameMessage.MessageType.MOVE);
+            message.setContent(symbol);
+            message.setTurnStartTime(room.getTurnStartTime());
+            message.setTurnDuration(TURN_DURATION_SECONDS);
+            message.setSymbolEffects(getRoomSymbolEffects(room));
+            messagingTemplate.convertAndSend("/topic/game/" + gameId, message);
+
+            if (winningLine != null) {
                 String winnerKey = (room.getMode() == GameMessage.GameMode.SINGLE) ? ("Player " + symbol) : message.getSender();
                 room.incrementScore(winnerKey);
                 GameMessage winMessage = new GameMessage();
@@ -215,8 +255,6 @@ public class GameController {
                 messagingTemplate.convertAndSend("/topic/game/" + gameId, winMessage);
                 recordConfrontation(room, winnerKey);
                 room.reset();
-            } else {
-                startTurnTimer(gameId);
             }
         }
     }
@@ -238,23 +276,27 @@ public class GameController {
         }
     }
 
-    private void startTurnTimer(String gameId) {
+    private void startTurnTimer(String gameId, long delayMs) {
         stopTurnTimer(gameId);
         GameRoom room = games.get(gameId);
         if (room == null) return;
 
+        room.setPausedAt(0);
         ScheduledFuture<?> future = scheduler.schedule(() -> {
             handleTimeout(gameId);
-        }, TURN_DURATION_SECONDS, TimeUnit.SECONDS);
+        }, delayMs, TimeUnit.MILLISECONDS);
         
         gameTimers.put(gameId, future);
-        room.setTurnStartTime(System.currentTimeMillis());
     }
 
     private void stopTurnTimer(String gameId) {
         ScheduledFuture<?> future = gameTimers.remove(gameId);
         if (future != null) {
             future.cancel(false);
+            GameRoom room = games.get(gameId);
+            if (room != null && room.getTurnStartTime() > 0 && room.getPausedAt() == 0) {
+                room.setPausedAt(System.currentTimeMillis());
+            }
         }
     }
 
@@ -342,6 +384,7 @@ public class GameController {
         private String lastPlayer = null;
         private GameMessage.GameMode mode = GameMessage.GameMode.SINGLE;
         private long turnStartTime = 0;
+        private long pausedAt = 0;
 
         public GameRoom(String id) {
             this.id = id;
@@ -441,6 +484,14 @@ public class GameController {
             return turnStartTime;
         }
 
+        public void setPausedAt(long time) {
+            this.pausedAt = time;
+        }
+
+        public long getPausedAt() {
+            return pausedAt;
+        }
+
         public void assignPlayerSymbol(String username, String symbol) {
             playerSymbols.put(username, symbol);
         }
@@ -486,6 +537,7 @@ public class GameController {
             playerSymbols.clear();
             lastPlayer = null;
             turnStartTime = 0;
+            pausedAt = 0;
         }
 
         public void addChatMessage(String sender, String content) {

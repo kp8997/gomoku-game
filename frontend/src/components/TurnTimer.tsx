@@ -18,8 +18,12 @@ const TurnTimer: React.FC<TurnTimerProps> = ({
   const [progress, setProgress] = useState(1);
 
   useEffect(() => {
+    // Timer should run for BOTH players — only pause when game is over or no turn started yet
     if (isPaused || startTime === 0) {
-      if (startTime === 0) setTimeLeft(duration);
+      if (startTime === 0) {
+        setTimeLeft(duration);
+        setProgress(1);
+      }
       return;
     }
 
@@ -56,7 +60,8 @@ const TurnTimer: React.FC<TurnTimerProps> = ({
     color = currentTurnSymbol === 'X' ? '#3b82f6' : '#db2677'; // Blue vs Pink
     label = `Player ${currentTurnSymbol}`;
   } else {
-    color = isMyTurn ? '#3b82f6' : '#f59e0b'; // Blue vs Yellow¬
+    // MULTIPLE mode with 2 players: show Your Turn (blue) or Opponent (orange)
+    color = isMyTurn ? '#3b82f6' : '#f59e0b'; // Blue vs Orange
     label = isMyTurn ? 'Your Turn' : 'Opponent';
   }
 
