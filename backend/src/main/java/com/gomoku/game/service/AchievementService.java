@@ -36,7 +36,7 @@ public class AchievementService {
 
     private static final int[] WIN_RATE_THRESHOLDS = {50, 55, 60, 65, 75, 80, 85, 90, 95};
     private static final int[] MATCH_MILESTONES = {10, 20, 50, 100, 150, 200, 250, 300, 400, 500, 750, 1000};
-    private static final int[] WIN_MILESTONES = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 150, 200, 250, 300, 400, 500, 750, 1000};
+    private static final int[] WIN_MILESTONES = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190};
 
     @Transactional
     public AchievementResponse getAchievements(Long userId) {
