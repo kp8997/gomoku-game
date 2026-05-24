@@ -71,12 +71,17 @@ public class ConfrontationService {
         int totalWins = 0, totalLosses = 0;
 
         for (ConfrontationRecord record : records) {
-            if (record.getUserA().getId().equals(userId)) {
-                totalWins += record.getUserAWins();
-                totalLosses += record.getUserBWins();
+            if (record == null) continue;
+
+            int winsA = record.getUserAWins() != null ? record.getUserAWins() : 0;
+            int winsB = record.getUserBWins() != null ? record.getUserBWins() : 0;
+
+            if (record.getUserA() != null && record.getUserA().getId().equals(userId)) {
+                totalWins += winsA;
+                totalLosses += winsB;
             } else if (record.getUserB() != null && record.getUserB().getId().equals(userId)) {
-                totalWins += record.getUserBWins();
-                totalLosses += record.getUserAWins();
+                totalWins += winsB;
+                totalLosses += winsA;
             }
         }
 
@@ -91,28 +96,29 @@ public class ConfrontationService {
     public List<ConfrontationDTO> getConfrontationsForUser(Long userId) {
         List<ConfrontationRecord> records = confrontationRepository.findAllByUserId(userId);
 
-        return records.stream().map(record -> {
-            int wins, losses;
-            String opponentUsername, opponentFullName, opponentAvatar;
+        return records.stream()
+                .filter(java.util.Objects::nonNull)
+                .map(record -> {
+            int wins = 0, losses = 0;
+            String opponentUsername = "anonymous", opponentFullName = "Anonymous Players", opponentAvatar = null;
 
-            if (record.getUserA().getId().equals(userId)) {
-                wins = record.getUserAWins();
-                losses = record.getUserBWins();
+            int winsA = record.getUserAWins() != null ? record.getUserAWins() : 0;
+            int winsB = record.getUserBWins() != null ? record.getUserBWins() : 0;
+
+            if (record.getUserA() != null && record.getUserA().getId().equals(userId)) {
+                wins = winsA;
+                losses = winsB;
                 if (record.getUserB() != null) {
                     opponentUsername = record.getUserB().getUsername();
                     opponentFullName = record.getUserB().getFullName();
                     opponentAvatar = record.getUserB().getAvatar();
-                } else {
-                    opponentUsername = "anonymous";
-                    opponentFullName = "Anonymous Players";
-                    opponentAvatar = null;
                 }
-            } else {
-                opponentUsername = record.getUserA().getUsername();
-                opponentFullName = record.getUserA().getFullName();
-                opponentAvatar = record.getUserA().getAvatar();
-                wins = record.getUserBWins();
-                losses = record.getUserAWins();
+            } else if (record.getUserB() != null && record.getUserB().getId().equals(userId)) {
+                opponentUsername = record.getUserA() != null ? record.getUserA().getUsername() : "anonymous";
+                opponentFullName = record.getUserA() != null ? record.getUserA().getFullName() : "Anonymous Players";
+                opponentAvatar = record.getUserA() != null ? record.getUserA().getAvatar() : null;
+                wins = winsB;
+                losses = winsA;
             }
 
             return ConfrontationDTO.builder()
