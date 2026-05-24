@@ -115,7 +115,7 @@ public class AchievementService {
             SymbolEffect effect = SymbolEffect.valueOf(effectKey);
             return unlockedKeys.contains(effect.getRequiredAchievementKey()) || 
                    unlockedKeys.stream().anyMatch(k -> k.startsWith("WINS_") && Integer.parseInt(k.split("_")[1]) >= effect.getRequiredWins());
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
             return false;
         }
     }
@@ -152,7 +152,7 @@ public class AchievementService {
         return unlockedAchievements.stream()
                 .filter(a -> a.getAchievementKey().equals(key))
                 .findFirst()
-                .map(a -> a.getUnlockedAt().toString())
+                .map(a -> a.getUnlockedAt() != null ? a.getUnlockedAt().toString() : null)
                 .orElse(null);
     }
 }
