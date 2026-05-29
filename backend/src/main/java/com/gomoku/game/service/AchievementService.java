@@ -80,6 +80,7 @@ public class AchievementService {
                 });
         
         effect.setEffectKey(effectKey);
+        effect.setSymbolSkin(null);
         equippedEffectRepository.save(effect);
     }
 
@@ -121,6 +122,7 @@ public class AchievementService {
                 });
         
         equipped.setSymbolSkin(skinKey);
+        equipped.setEffectKey("NONE");
         equippedEffectRepository.save(equipped);
     }
 

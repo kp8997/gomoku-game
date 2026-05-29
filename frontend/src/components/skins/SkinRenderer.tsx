@@ -14,7 +14,6 @@ const LotusSkin = lazy(() => import('./LotusSkin'));
 const MoonBunnySkin = lazy(() => import('./MoonBunnySkin'));
 const LuckyCatSkin = lazy(() => import('./LuckyCatSkin'));
 const KingGeorgeSkin = lazy(() => import('./KingGeorgeSkin'));
-const PinkLoopySkin = lazy(() => import('./PinkLoopySkin'));
 
 interface SkinRendererProps {
   skinKey: string;
@@ -32,10 +31,9 @@ const SKIN_MAP: Record<string, React.LazyExoticComponent<React.FC<SkinProps>>> =
   MOON_BUNNY: MoonBunnySkin,
   LUCKY_CAT: LuckyCatSkin,
   KING_GEORGE: KingGeorgeSkin,
-  PINK_LOOPY: PinkLoopySkin,
 };
 
-const SkinRenderer: React.FC<SkinRendererProps> = ({ skinKey, symbol, size = 24 }) => {
+const SkinRenderer: React.FC<SkinRendererProps> = ({ skinKey, symbol, size = 36 }) => {
   const normalizedKey = skinKey ? skinKey.toUpperCase() : '';
   const SkinComponent = SKIN_MAP[normalizedKey];
   

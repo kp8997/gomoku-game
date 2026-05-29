@@ -31,7 +31,7 @@ interface Props {
 export const SymbolRenderer: React.FC<Props> = ({ symbol, effectKey, skinKey }) => {
   // Determine the glyph: skin SVG or plain text
   const glyph = skinKey
-    ? <SkinRenderer skinKey={skinKey} symbol={symbol as 'X' | 'O'} size={22} />
+    ? <SkinRenderer skinKey={skinKey} symbol={symbol as 'X' | 'O'} size={36} />
     : <span className={symbol === 'X' ? 'text-blue-500' : 'text-pink-500'}>{symbol}</span>;
 
   // If no effect is equipped, just render the glyph (skin or plain text)
@@ -102,7 +102,7 @@ export const SymbolRenderer: React.FC<Props> = ({ symbol, effectKey, skinKey }) 
 
   return (
     <Suspense fallback={glyph}>
-      <EffectComponent symbol={symbol}>{glyph}</EffectComponent>
+      <EffectComponent symbol={symbol}>{skinKey ? glyph : undefined}</EffectComponent>
     </Suspense>
   );
 };

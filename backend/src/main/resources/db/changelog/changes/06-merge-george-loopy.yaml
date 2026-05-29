@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: 06-merge-george-loopy
+      author: ai-agent
+      changes:
+        - update:
+            tableName: user_equipped_effects
+            columns:
+              - column:
+                  name: symbol_skin
+                  value: 'KING_GEORGE'
+            where: "symbol_skin = 'PINK_LOOPY'"

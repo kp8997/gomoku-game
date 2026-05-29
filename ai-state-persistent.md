@@ -64,6 +64,7 @@ Every plan **must** include these sections in this exact order:
 | 05 | Achievement System & Symbol Effects | ✅ Implemented | `ai-feature-plan/05-ai-achievement-system-feature-plan.md` |
 | 06 | New Cosmetic Effects (Heart Flutter, Nature Leaf, Vibrant Fire) | ✅ Implemented | `ai-feature-plan/06-ai-new-cosmetic-effects-feature-plan.md` |
 | 07 | Cascade Delete Users | ✅ Implemented | `ai-feature-plan/07-ai-cascade-delete-users-feature-plan.md` |
+| 08 | Skin Updates & Equip Exclusivity | 🔲 Not Started | `ai-feature-plan/08-ai-skin-updates-feature-plan.md` |
 
 
 ## 1. Project Architecture
@@ -855,5 +856,43 @@ WINS:     10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160,
 3. **Database Migrations**: Any schema, enum, or seed data change MUST be represented as a Liquibase YAML changelog.
 4. **Heartbeats**: Required for WebSocket stability. Backend must provide a `TaskScheduler` (10s/10s keep-alive).
 5. **Client-Side Effect Isolation**: Cosmetic toggles (e.g., `effectsEnabled`) only apply to the user's *own* client view.
+
+
+## 29. Win Milestone Symbol Skins System [2026-05-30]
+
+### A. Database Evolution (Liquibase changelog-master integration)
+- **File**: `backend/src/main/resources/db/changelog/changes/05-symbol-skins.yaml`
+- **Field**: Adds `symbol_skin` column (`VARCHAR(50)`) to `user_equipped_effects` table to save equipped skins.
+
+### B. Enum Specification (SymbolSkin.java)
+- Mapping constants representing the 10 available skins:
+  * `CAT_PAW` (20 wins), `KITTY_FACE` (30 wins), `BUBBLE_TEA` (40 wins), `STAR_CHARM` (50 wins), `HEART_BOW` (60 wins), `LOTUS` (70 wins), `MOON_BUNNY` (80 wins), `LUCKY_CAT` (90 wins), `KING_GEORGE` (100 wins), `PINK_LOOPY` (110 wins).
+
+### C. Backend API Endpoint Architecture
+- `PUT /api/user/achievements/equip-skin`: Validates whether the skin is unlocked based on wins/milestones, saves to db.
+- `PUT /api/user/achievements/unequip-skin`: Clears the equipped skin from the database (sets column to `null`).
+
+### D. WebSocket Integration Points
+- **`GameMessage.java`**: Extended with a map `symbolSkins` (`Map<String, String>`).
+- **`GameController.java`**: On `JOIN`, `MOVE`, and `START` WS events, eager queries (`JOIN FETCH e.user`) compile active room users' equipped skins and broadcast them to the game topic `/topic/game/{roomId}`.
+
+### E. Frontend Layout & Lazy Loading Switch
+- standalone SVG React components under `frontend/src/components/skins/` (e.g., `PinkLoopySkin.tsx`, `KingGeorgeSkin.tsx`).
+- **`SkinRenderer.tsx`**: Uses `React.lazy()` and `Suspense` to load matching SVGs case-insensitively, falling back to a text character.
+- **`SkinCard.tsx`**: Renders dynamic preview cards (displaying X and O palette variants side-by-side) inside a responsive 2-to-3 column grid in the Achievements Panel.
+
+
+## 30. Skins & Effects Composition Synthesis [2026-05-30]
+
+### A. Core Architecture Decision
+- **Composition Integration**: Modified `SymbolRenderer.tsx` to pass the SVG `glyph` (which houses the custom `SkinRenderer` SVG) as nested React `children` to the active `EffectComponent`.
+- **Restructured Effects**:
+  - Upgraded all 18 customized effects (`frontend/src/components/effects/*.tsx`) to accept `children?: React.ReactNode` in their props.
+  - Replaced the hardcoded `{symbol}` within their core styled animating wraps with `{children || symbol}`, which hosts the custom SVG skin inside the particle glow animations, falling back to text if no skin is equipped.
+- **Text-Gradient Overrides**: Added conditional CSS mask checks in `PrismaticDiamondEffect.tsx` to bypass `text-transparent bg-clip-text` masks if a custom child is present, guaranteeing that custom premium SVG color palettes display in full high fidelity.
+- **Case-Insensitive Resolution**:
+  - Implemented case-insensitive lookups on the board cell loop inside `MainGame.tsx` and `SkinRenderer.tsx` so that usernames with uppercase display settings match lowercase database keys perfectly.
+  - Passed down `mySymbol` from the websocket connection to `MainGame`. In case of a guest-to-member mismatch or socket delay, cell resolution automatically falls back to rendering the player's own active skin if the board stone matches their local symbol.
+
 
 

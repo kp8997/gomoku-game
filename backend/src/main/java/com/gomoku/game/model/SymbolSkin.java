@@ -9,8 +9,7 @@ public enum SymbolSkin {
     LOTUS(70, "Lotus", "Unlock at 70 Wins"),
     MOON_BUNNY(80, "Moon Bunny", "Unlock at 80 Wins"),
     LUCKY_CAT(90, "Lucky Cat", "Unlock at 90 Wins"),
-    KING_GEORGE(100, "King George", "Unlock at 100 Wins"),
-    PINK_LOOPY(110, "Pink Loopy", "Unlock at 110 Wins");
+    KING_GEORGE(100, "George & Loopy", "Unlock at 100 Wins");
 
     private final int requiredWins;
     private final String displayName;
