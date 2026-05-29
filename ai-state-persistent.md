@@ -831,3 +831,27 @@ WIN_RATE: 50, 55, 60, 65, 75, 80, 85, 90, 95
 MATCHES:  10, 20, 50, 100, 150, 200, 250, 300, 400, 500, 750, 1000
 WINS:     10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190
 ```
+
+
+## 28. Schema & Logic Manifest
+
+### Core Schema (PostgreSQL)
+1. **`users`**: `id` (PK), `username` (UNIQUE), `password` (BCrypt), `full_name`, `avatar`, `created_at`, `updated_at`.
+2. **`confrontation_records`**: `id` (PK), `user_a_id` (FK), `user_b_id` (FK, nullable for anon), `user_a_wins`, `user_b_wins`. Tracks head-to-head records.
+3. **`user_achievements`**: `id` (PK), `user_id` (FK), `achievement_key` (VARCHAR), `unlocked_at`. Conflict-safe inserts.
+4. **`user_equipped_effects`**: `id` (PK), `user_id` (FK, UNIQUE), `effect_key`. One active effect per user.
+*Note: All FKs referencing `users(id)` use `ON DELETE CASCADE`.*
+
+### Variable Mappings & Network Flow
+- **REST API (`/api/**`)**: Standard HTTP with JWT Bearer tokens. Handled by `JwtAuthenticationFilter`.
+- **WebSocket (`/ws-gomoku/**`)**: STOMP over SockJS. Clients subscribe to `/topic/game/{boardId}`.
+- **`authenticatedFetch`**: Custom wrapper that injects JWT and auto-handles `401`/`403` by clearing `localStorage`.
+- **`SymbolEffects` State**: Client state mapped as `{ [username: string]: EffectType }`. 
+  - *Override logic*: If `effectsEnabled` (local setting) is false, the current player's effect evaluates to `undefined` on render.
+
+### Architectural Rules & Constraints
+1. **STOMP State Access**: Any state accessed inside STOMP `onMessage` handlers MUST use `React.useRef` to avoid stale closures.
+2. **Preflight CORS**: `OPTIONS` requests must always be `permitAll()` in the Spring Security filter chain.
+3. **Database Migrations**: Any schema, enum, or seed data change MUST be represented as a Liquibase YAML changelog.
+4. **Heartbeats**: Required for WebSocket stability. Backend must provide a `TaskScheduler` (10s/10s keep-alive).
+5. **Client-Side Effect Isolation**: Cosmetic toggles (e.g., `effectsEnabled`) only apply to the user's *own* client view.
