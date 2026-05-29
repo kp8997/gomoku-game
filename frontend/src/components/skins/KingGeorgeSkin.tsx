@@ -7,11 +7,12 @@ interface SkinProps {
 
 const KingGeorgeSkin: React.FC<SkinProps> = ({ symbol, size = 36 }) => {
   if (symbol === 'X') {
-    // King George (Brown)
-    const color = '#8B4513';
-    const crownColor = '#fbbf24';
-    const nose = '#5C4033';
-    const cheek = '#D2B48C';
+    // King George (Yellow)
+    const color = '#facc15'; // Bright yellow
+    const crownColor = '#f59e0b'; // Slightly darker/amber for contrast
+    const nose = '#78350f'; // Dark amber/brown
+    const cheek = '#fde047'; // Lighter yellow
+
     
     return (
       <svg width={size} height={size} viewBox="0 0 24 24" 
