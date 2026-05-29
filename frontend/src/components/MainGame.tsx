@@ -26,12 +26,13 @@ interface MainGameProps {
   symbolEffects?: Record<string, string>;
   hasMoves?: boolean;
   onEffectChange?: (key: string | null) => void;
+  effectsEnabled?: boolean;
 }
 
 const MainGame: React.FC<MainGameProps> = ({
   board, history, winner, gameId, showDrawer, setShowDrawer, isMyTurn, makeMove, resetGame,
   chatMessages, onSendMessage, username, winningLine, unreadCount, onChatOpen, onChatClose, symbolEffects,
-  hasMoves, onEffectChange
+  hasMoves, onEffectChange, effectsEnabled = true
 }) => {
   const [showWinnerPopup, setShowWinnerPopup] = React.useState(false);
 
@@ -149,7 +150,11 @@ const MainGame: React.FC<MainGameProps> = ({
 
                         {cell && (() => {
                           const move = history.find(m => m.row === r && m.col === c);
-                          const effectKey = move?.player ? symbolEffects?.[move.player] : undefined;
+                          // Suppress this user's own effect when effectsEnabled is false
+                          const isOwnCell = move?.player === username;
+                          const effectKey = (isOwnCell && !effectsEnabled)
+                            ? undefined
+                            : (move?.player ? symbolEffects?.[move.player] : undefined);
                           return (
                             <motion.div
                               initial={{ scale: 0, rotate: -45 }}

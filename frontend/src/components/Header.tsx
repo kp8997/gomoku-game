@@ -27,12 +27,15 @@ interface HeaderProps {
   userFullName: string | null;
   backPath?: string;
   backLabel?: string;
+  effectsEnabled?: boolean;
+  onToggleEffects?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
   isJoined, scores = {}, showDrawer = false, setShowDrawer, isLightMode, setIsLightMode, isMyTurn = false, leaveGame, username = '',
   turnStartTime = 0, turnDuration = 60, isGameOver = false, gameMode = 'MULTIPLE', currentTurnSymbol = 'X', playerCount = 0,
-  onOpenAuth: _onOpenAuth, isAuthenticated, userAvatar, userFullName, backPath, backLabel
+  onOpenAuth: _onOpenAuth, isAuthenticated, userAvatar, userFullName, backPath, backLabel,
+  effectsEnabled = true, onToggleEffects
 }) => {
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
@@ -201,6 +204,10 @@ const Header: React.FC<HeaderProps> = ({
                 <UserDropdown
                   isOpen={isDropdownOpen}
                   onClose={() => setIsDropdownOpen(false)}
+                  isLightMode={isLightMode}
+                  onToggleTheme={() => setIsLightMode(!isLightMode)}
+                  effectsEnabled={effectsEnabled}
+                  onToggleEffects={onToggleEffects || (() => {})}
                 />
               </div>
             )}
@@ -220,17 +227,20 @@ const Header: React.FC<HeaderProps> = ({
             <span className="text-[10px] sm:text-xs font-black uppercase hidden sm:inline">Exit</span>
           </button>
         )}
-        <button
-          className="!bg-none !border-none !shadow-none !backdrop-blur-none p-1.5 sm:p-2 flex items-center justify-center hover:bg-[var(--hover-bg)] transition-all duration-300 rounded-full group cursor-pointer"
-          onClick={() => setIsLightMode(!isLightMode)}
-          title={isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-        >
-          {isLightMode ? (
-            <Moon size={20} className="text-[var(--text-color)] group-hover:text-blue-600 transition-all" />
-          ) : (
-            <Sun size={20} className="text-yellow-400 group-hover:text-yellow-300 drop-shadow-[0_0_8px_rgba(250,204,21,0.4)] transition-all" />
-          )}
-        </button>
+        {/* Theme toggle: only shown for non-authenticated users (authenticated users use profile dropdown) */}
+        {!isAuthenticated && (
+          <button
+            className="!bg-none !border-none !shadow-none !backdrop-blur-none p-1.5 sm:p-2 flex items-center justify-center hover:bg-[var(--hover-bg)] transition-all duration-300 rounded-full group cursor-pointer"
+            onClick={() => setIsLightMode(!isLightMode)}
+            title={isLightMode ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+          >
+            {isLightMode ? (
+              <Moon size={20} className="text-[var(--text-color)] group-hover:text-blue-600 transition-all" />
+            ) : (
+              <Sun size={20} className="text-yellow-400 group-hover:text-yellow-300 drop-shadow-[0_0_8px_rgba(250,204,21,0.4)] transition-all" />
+            )}
+          </button>
+        )}
       </div>
     </header>
   );

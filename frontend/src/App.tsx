@@ -76,6 +76,7 @@ const App: React.FC = () => {
   const [showDrawer, setShowDrawer] = useState<boolean>(false);
   const [scores, setScores] = useState<Record<string, number>>({});
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => localStorage.getItem('gomoku_theme') !== 'light');
+  const [effectsEnabled, setEffectsEnabled] = useState<boolean>(true);
   const [copied, setCopied] = useState<boolean>(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [winningLine, setWinningLine] = useState<Move[]>([]);
@@ -405,6 +406,8 @@ const App: React.FC = () => {
         isAuthenticated={isAuthenticated}
         userAvatar={user?.avatar || null}
         userFullName={user?.fullName || null}
+        effectsEnabled={effectsEnabled}
+        onToggleEffects={() => setEffectsEnabled(prev => !prev)}
       />
 
       <div className="flex-1 flex flex-col relative overflow-hidden">
@@ -462,6 +465,7 @@ const App: React.FC = () => {
             symbolEffects={symbolEffects}
             hasMoves={history.length > 0}
             onEffectChange={handleEffectChange}
+            effectsEnabled={effectsEnabled}
           />
         )}
       </div>
