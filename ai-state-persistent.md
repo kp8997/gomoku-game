@@ -856,3 +856,4 @@ WINS:     10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160,
 4. **Heartbeats**: Required for WebSocket stability. Backend must provide a `TaskScheduler` (10s/10s keep-alive).
 5. **Client-Side Effect Isolation**: Cosmetic toggles (e.g., `effectsEnabled`) only apply to the user's *own* client view.
 
+
