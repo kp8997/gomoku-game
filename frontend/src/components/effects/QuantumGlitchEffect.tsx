@@ -3,9 +3,10 @@ import './effects.css';
 
 interface Props {
   symbol: string;
+  children?: React.ReactNode;
 }
 
-const QuantumGlitchEffect: React.FC<Props> = ({ symbol }) => {
+const QuantumGlitchEffect: React.FC<Props> = ({ symbol, children }) => {
   const isX = symbol === 'X';
 
   const colorClass = isX 
@@ -16,10 +17,10 @@ const QuantumGlitchEffect: React.FC<Props> = ({ symbol }) => {
     <div className="relative flex items-center justify-center w-full h-full">
       {/* Glitch trails */}
       <span className={`absolute z-0 font-bold text-2xl ${colorClass} opacity-50 animate-glitch-trail-1`} style={{ mixBlendMode: 'screen' }}>
-        {symbol}
+        {children || symbol}
       </span>
       <span className={`absolute z-0 font-bold text-2xl text-rose-500 opacity-50 animate-glitch-trail-2`} style={{ mixBlendMode: 'screen' }}>
-        {symbol}
+        {children || symbol}
       </span>
 
       {/* Digital blocks */}
@@ -30,7 +31,7 @@ const QuantumGlitchEffect: React.FC<Props> = ({ symbol }) => {
       </div>
 
       <span className={`relative z-10 font-bold text-2xl animate-glitch-core ${colorClass}`}>
-        {symbol}
+        {children || symbol}
       </span>
     </div>
   );

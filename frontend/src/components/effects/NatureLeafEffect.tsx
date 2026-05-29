@@ -3,9 +3,10 @@ import './effects.css';
 
 interface Props {
   symbol: string;
+  children?: React.ReactNode;
 }
 
-const NatureLeafEffect: React.FC<Props> = ({ symbol }) => {
+const NatureLeafEffect: React.FC<Props> = ({ symbol, children }) => {
   const isX = symbol === 'X';
   
   // X = Cool Vibrant Teal, O = Autumn Crimson/Rose (High Contrast)
@@ -71,7 +72,7 @@ const NatureLeafEffect: React.FC<Props> = ({ symbol }) => {
 
       {/* Core symbol */}
       <span className={`relative z-10 font-black ${colorClass} scale-105 transition-all duration-300 hover:scale-115`}>
-        {symbol}
+        {children || symbol}
       </span>
     </div>
   );

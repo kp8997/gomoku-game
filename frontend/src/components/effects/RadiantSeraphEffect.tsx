@@ -3,9 +3,10 @@ import './effects.css';
 
 interface Props {
   symbol: string;
+  children?: React.ReactNode;
 }
 
-const RadiantSeraphEffect: React.FC<Props> = ({ symbol }) => {
+const RadiantSeraphEffect: React.FC<Props> = ({ symbol, children }) => {
   const isX = symbol === 'X';
 
   // Distinct, high-contrast holy colors
@@ -42,7 +43,7 @@ const RadiantSeraphEffect: React.FC<Props> = ({ symbol }) => {
       </div>
 
       <span className={`relative z-10 font-bold text-2xl ${colorClass} animate-seraph-core`}>
-        {symbol}
+        {children || symbol}
       </span>
     </div>
   );

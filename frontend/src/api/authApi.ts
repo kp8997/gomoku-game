@@ -93,4 +93,20 @@ export const authApi = {
     }, token);
     if (!response.ok) throw new Error('Failed to unequip effect');
   },
+
+  equipSkin: async (token: string, skinKey: string): Promise<void> => {
+    const response = await authenticatedFetch(`${API_BASE}/api/user/achievements/equip-skin`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ skinKey }),
+    }, token);
+    if (!response.ok) throw new Error('Failed to equip skin');
+  },
+
+  unequipSkin: async (token: string): Promise<void> => {
+    const response = await authenticatedFetch(`${API_BASE}/api/user/achievements/unequip-skin`, {
+      method: 'PUT',
+    }, token);
+    if (!response.ok) throw new Error('Failed to unequip skin');
+  },
 };

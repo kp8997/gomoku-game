@@ -3,9 +3,10 @@ import './effects.css';
 
 interface Props {
   symbol: string;
+  children?: React.ReactNode;
 }
 
-const OceanSplashEffect: React.FC<Props> = ({ symbol }) => {
+const OceanSplashEffect: React.FC<Props> = ({ symbol, children }) => {
   const isX = symbol === 'X';
 
   // X = Deep Sapphire/Indigo, O = Bright Cyan/Turquoise
@@ -57,7 +58,7 @@ const OceanSplashEffect: React.FC<Props> = ({ symbol }) => {
 
       {/* Core Symbol */}
       <span className={`relative z-10 font-black ${colorClass} scale-105 transition-all duration-300 hover:scale-115`}>
-        {symbol}
+        {children || symbol}
       </span>
     </div>
   );

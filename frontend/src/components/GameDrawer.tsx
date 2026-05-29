@@ -9,6 +9,7 @@ interface GameDrawerProps {
   gameId: string;
   hasMoves?: boolean;
   onEffectChange?: (key: string | null) => void;
+  onSkinChange?: (key: string | null) => void;
 }
 
 const GameDrawer: React.FC<GameDrawerProps> = ({
@@ -16,6 +17,7 @@ const GameDrawer: React.FC<GameDrawerProps> = ({
   gameId,
   hasMoves,
   onEffectChange,
+  onSkinChange,
 }) => {
   const closeDrawer = () => setShowDrawer(false);
 
@@ -41,7 +43,7 @@ const GameDrawer: React.FC<GameDrawerProps> = ({
 
       {/* Drawer Content */}
       <div className="flex-1 overflow-hidden flex flex-col bg-background/50">
-        <AchievementPanel hasMoves={hasMoves} onEffectChange={onEffectChange} />
+        <AchievementPanel hasMoves={hasMoves} onEffectChange={onEffectChange} onSkinChange={onSkinChange} />
       </div>
 
       {/* Footer */}

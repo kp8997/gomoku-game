@@ -1,5 +1,6 @@
 import React, { Suspense } from 'react';
 import type { EffectType } from '../../types';
+import SkinRenderer from '../skins/SkinRenderer';
 
 const FirePhoenixEffect = React.lazy(() => import('../effects/FirePhoenixEffect'));
 const DragonLightningEffect = React.lazy(() => import('../effects/DragonLightningEffect'));
@@ -24,12 +25,18 @@ const GalacticSupernovaEffect = React.lazy(() => import('../effects/GalacticSupe
 interface Props {
   symbol: string;
   effectKey?: EffectType | string;
+  skinKey?: string;
 }
 
-export const SymbolRenderer: React.FC<Props> = ({ symbol, effectKey }) => {
-  // If no effect is equipped, just render the plain text
+export const SymbolRenderer: React.FC<Props> = ({ symbol, effectKey, skinKey }) => {
+  // Determine the glyph: skin SVG or plain text
+  const glyph = skinKey
+    ? <SkinRenderer skinKey={skinKey} symbol={symbol as 'X' | 'O'} size={22} />
+    : <span className={symbol === 'X' ? 'text-blue-500' : 'text-pink-500'}>{symbol}</span>;
+
+  // If no effect is equipped, just render the glyph (skin or plain text)
   if (!effectKey) {
-    return <span className={symbol === 'X' ? 'text-blue-500' : 'text-pink-500'}>{symbol}</span>;
+    return glyph;
   }
 
   // Determine which effect to render based on effectKey
@@ -90,12 +97,12 @@ export const SymbolRenderer: React.FC<Props> = ({ symbol, effectKey }) => {
       EffectComponent = GalacticSupernovaEffect;
       break;
     default:
-      return <span className={symbol === 'X' ? 'text-blue-500' : 'text-pink-500'}>{symbol}</span>;
+      return glyph;
   }
 
   return (
-    <Suspense fallback={<span className={symbol === 'X' ? 'text-blue-500' : 'text-pink-500'}>{symbol}</span>}>
-      <EffectComponent symbol={symbol} />
+    <Suspense fallback={glyph}>
+      <EffectComponent symbol={symbol}>{glyph}</EffectComponent>
     </Suspense>
   );
 };

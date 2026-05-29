@@ -3,9 +3,10 @@ import './effects.css';
 
 interface Props {
   symbol: string;
+  children?: React.ReactNode;
 }
 
-const AuroraBorealisEffect: React.FC<Props> = ({ symbol }) => {
+const AuroraBorealisEffect: React.FC<Props> = ({ symbol, children }) => {
   const isX = symbol === 'X';
 
   // Realistic highly saturated northern lights colors
@@ -54,7 +55,7 @@ const AuroraBorealisEffect: React.FC<Props> = ({ symbol }) => {
 
       {/* Core Symbol */}
       <span className={`relative z-10 font-bold text-2xl ${colorClass} animate-aurora-symbol`}>
-        {symbol}
+        {children || symbol}
       </span>
     </div>
   );

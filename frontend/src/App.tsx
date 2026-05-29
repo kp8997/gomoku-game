@@ -87,6 +87,7 @@ const App: React.FC = () => {
   const [playerCount, setPlayerCount] = useState<number>(0);
   const [turnSymbol, setTurnSymbol] = useState<'X' | 'O'>('X');
   const [symbolEffects, setSymbolEffects] = useState<Record<string, string>>({});
+  const [symbolSkins, setSymbolSkins] = useState<Record<string, string>>({});
 
   // Occupancy
   const [serverGameMode, setServerGameMode] = useState<'SINGLE' | 'MULTIPLE' | null>(null);
@@ -253,10 +254,12 @@ const App: React.FC = () => {
         if (message.sender === usernameRef.current && message.playerSymbol) setMySymbol(message.playerSymbol);
         if (message.playerCount !== undefined) setPlayerCount(message.playerCount);
         if (message.symbolEffects) setSymbolEffects(message.symbolEffects);
+        if (message.symbolSkins) setSymbolSkins(message.symbolSkins);
         setIsJoined(true);
         break;
       case 'MOVE':
         if (message.symbolEffects) setSymbolEffects(message.symbolEffects);
+        if (message.symbolSkins) setSymbolSkins(message.symbolSkins);
         if (message.row !== undefined && message.col !== undefined) {
           if (!mySymbolRef.current && message.sender) {
             const assignedSymbol = message.sender === usernameRef.current ? (message.content || null) : (message.content === 'X' ? 'O' : 'X');
@@ -310,6 +313,7 @@ const App: React.FC = () => {
         if (message.turnStartTime !== undefined) setTurnStartTime(message.turnStartTime);
         if (message.turnDuration !== undefined) setTurnDuration(message.turnDuration);
         if (message.symbolEffects) setSymbolEffects(message.symbolEffects);
+        if (message.symbolSkins) setSymbolSkins(message.symbolSkins);
         break;
     }
   };
@@ -372,6 +376,20 @@ const App: React.FC = () => {
       if (username) {
         if (effectKey) {
           next[username] = effectKey;
+        } else {
+          delete next[username];
+        }
+      }
+      return next;
+    });
+  };
+
+  const handleSkinChange = (skinKey: string | null) => {
+    setSymbolSkins(prev => {
+      const next = { ...prev };
+      if (username) {
+        if (skinKey) {
+          next[username] = skinKey;
         } else {
           delete next[username];
         }
@@ -463,9 +481,12 @@ const App: React.FC = () => {
             onChatOpen={handleChatOpen}
             onChatClose={handleChatClose}
             symbolEffects={symbolEffects}
+            symbolSkins={symbolSkins}
             hasMoves={history.length > 0}
             onEffectChange={handleEffectChange}
+            onSkinChange={handleSkinChange}
             effectsEnabled={effectsEnabled}
+            mySymbol={mySymbol}
           />
         )}
       </div>

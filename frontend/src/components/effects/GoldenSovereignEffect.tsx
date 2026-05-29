@@ -3,9 +3,10 @@ import './effects.css';
 
 interface Props {
   symbol: string;
+  children?: React.ReactNode;
 }
 
-const GoldenSovereignEffect: React.FC<Props> = ({ symbol }) => {
+const GoldenSovereignEffect: React.FC<Props> = ({ symbol, children }) => {
   return (
     <div className="relative flex items-center justify-center w-full h-full">
       {/* Majestic god rays */}
@@ -25,7 +26,7 @@ const GoldenSovereignEffect: React.FC<Props> = ({ symbol }) => {
       </div>
 
       <span className="relative z-10 font-bold text-2xl text-yellow-400 drop-shadow-[0_0_12px_#facc15] animate-gold-pulse">
-        {symbol}
+        {children || symbol}
       </span>
     </div>
   );

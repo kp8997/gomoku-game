@@ -7,6 +7,7 @@ import com.gomoku.game.model.User;
 import com.gomoku.game.model.UserAchievement;
 import com.gomoku.game.model.UserEquippedEffect;
 import com.gomoku.game.model.SymbolEffect;
+import com.gomoku.game.model.SymbolSkin;
 import com.gomoku.game.repository.UserAchievementRepository;
 import com.gomoku.game.repository.UserEquippedEffectRepository;
 import com.gomoku.game.repository.UserRepository;
@@ -50,11 +51,11 @@ public class AchievementService {
                 .map(UserAchievement::getAchievementKey)
                 .collect(Collectors.toSet());
 
-        String equippedEffect = equippedEffectRepository.findByUserId(userId)
-                .map(UserEquippedEffect::getEffectKey)
-                .orElse(null);
+        java.util.Optional<UserEquippedEffect> equippedOpt = equippedEffectRepository.findByUserId(userId);
+        String equippedEffect = equippedOpt.map(UserEquippedEffect::getEffectKey).orElse(null);
+        String equippedSkin = equippedOpt.map(UserEquippedEffect::getSymbolSkin).orElse(null);
 
-        return buildResponse(unlockedKeys, unlockedAchievements, equippedEffect);
+        return buildResponse(unlockedKeys, unlockedAchievements, equippedEffect, stats.getTotalWins(), equippedSkin);
     }
 
     @Transactional
@@ -86,6 +87,50 @@ public class AchievementService {
     public void unequipEffect(Long userId) {
         equippedEffectRepository.findByUserId(userId)
                 .ifPresent(equippedEffectRepository::delete);
+    }
+
+    @Transactional
+    public void equipSkin(Long userId, String skinKey) {
+        if (skinKey == null) {
+            unequipSkin(userId);
+            return;
+        }
+
+        // Verify the user has unlocked the skin
+        try {
+            SymbolSkin skin = SymbolSkin.valueOf(skinKey);
+            UserStatsDTO stats = confrontationService.getUserStats(userId);
+            List<UserAchievement> unlocked = achievementRepository.findByUserId(userId);
+            Set<String> unlockedKeys = unlocked.stream().map(UserAchievement::getAchievementKey).collect(Collectors.toSet());
+            
+            boolean isUnlocked = stats.getTotalWins() >= skin.getRequiredWins() || 
+                                 unlockedKeys.stream().anyMatch(k -> k.startsWith("WINS_") && Integer.parseInt(k.split("_")[1]) >= skin.getRequiredWins());
+                                 
+            if (!isUnlocked) {
+                throw new RuntimeException("Skin is not unlocked");
+            }
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Invalid skin key: " + skinKey);
+        }
+
+        UserEquippedEffect equipped = equippedEffectRepository.findByUserId(userId)
+                .orElseGet(() -> {
+                    User user = userRepository.findById(userId).orElseThrow();
+                    UserEquippedEffect newEquipped = new UserEquippedEffect(user, "NONE");
+                    return newEquipped;
+                });
+        
+        equipped.setSymbolSkin(skinKey);
+        equippedEffectRepository.save(equipped);
+    }
+
+    @Transactional
+    public void unequipSkin(Long userId) {
+        equippedEffectRepository.findByUserId(userId)
+                .ifPresent(equipped -> {
+                    equipped.setSymbolSkin(null);
+                    equippedEffectRepository.save(equipped);
+                });
     }
 
     private void syncBadges(Long userId, UserStatsDTO stats) {
@@ -120,11 +165,12 @@ public class AchievementService {
         }
     }
 
-    private AchievementResponse buildResponse(Set<String> unlockedKeys, List<UserAchievement> unlockedAchievements, String equippedEffect) {
+    private AchievementResponse buildResponse(Set<String> unlockedKeys, List<UserAchievement> unlockedAchievements, String equippedEffect, int totalWins, String equippedSkin) {
         List<AchievementDTO> winRateBadges = new ArrayList<>();
         List<AchievementDTO> matchBadges = new ArrayList<>();
         List<AchievementDTO> winBadges = new ArrayList<>();
         List<AchievementResponse.EffectDTO> effects = new ArrayList<>();
+        List<AchievementResponse.SkinDTO> skins = new ArrayList<>();
 
         for (int t : WIN_RATE_THRESHOLDS) {
             String key = "WIN_RATE_" + t;
@@ -145,7 +191,13 @@ public class AchievementService {
             effects.add(new AchievementResponse.EffectDTO(effect.name(), isEffectUnlocked(effect.name(), unlockedKeys), effect.getRequirementLabel()));
         }
 
-        return new AchievementResponse(winRateBadges, matchBadges, winBadges, effects, equippedEffect);
+        for (SymbolSkin skin : SymbolSkin.values()) {
+            boolean isUnlocked = totalWins >= skin.getRequiredWins() || 
+                                 unlockedKeys.stream().anyMatch(k -> k.startsWith("WINS_") && Integer.parseInt(k.split("_")[1]) >= skin.getRequiredWins());
+            skins.add(new AchievementResponse.SkinDTO(skin.name(), skin.getDisplayName(), isUnlocked, skin.getRequirementLabel()));
+        }
+
+        return new AchievementResponse(winRateBadges, matchBadges, winBadges, effects, equippedEffect, skins, equippedSkin);
     }
 
     private String getUnlockedAt(String key, List<UserAchievement> unlockedAchievements) {

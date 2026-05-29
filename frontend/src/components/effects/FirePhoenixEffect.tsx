@@ -3,9 +3,10 @@ import './effects.css';
 
 interface Props {
   symbol: string;
+  children?: React.ReactNode;
 }
 
-const FirePhoenixEffect: React.FC<Props> = ({ symbol }) => {
+const FirePhoenixEffect: React.FC<Props> = ({ symbol, children }) => {
   const isX = symbol === 'X';
   const colorClass = isX ? 'text-blue-400 dark:text-blue-300 drop-shadow-[0_0_6px_#3b82f6]' 
                          : 'text-pink-500 dark:text-pink-400 drop-shadow-[0_0_6px_#ec4899]';
@@ -27,7 +28,7 @@ const FirePhoenixEffect: React.FC<Props> = ({ symbol }) => {
       
       {/* Core Symbol */}
       <span className={`relative z-10 font-bold animate-flicker ${colorClass}`}>
-        {symbol}
+        {children || symbol}
       </span>
     </div>
   );

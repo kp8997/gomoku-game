@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 5-add-symbol-skin-column
+      author: gomoku
+      changes:
+        - addColumn:
+            tableName: user_equipped_effects
+            columns:
+              - column:
+                  name: symbol_skin
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: true

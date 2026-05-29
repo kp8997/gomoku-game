@@ -7,3 +7,5 @@ databaseChangeLog:
       file: db/changelog/changes/03-cascade-delete-users.yml
   - include:
       file: db/changelog/changes/04-migrate-effect-milestones.yml
+  - include:
+      file: db/changelog/changes/05-symbol-skins.yaml

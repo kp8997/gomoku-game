@@ -3,9 +3,10 @@ import './effects.css';
 
 interface Props {
   symbol: string;
+  children?: React.ReactNode;
 }
 
-const HeartFlutterEffect: React.FC<Props> = ({ symbol }) => {
+const HeartFlutterEffect: React.FC<Props> = ({ symbol, children }) => {
 
   // X and O are now both yellow (per user spec)
   const colorClass = 'text-yellow-500 dark:text-yellow-400 drop-shadow-[0_0_6px_#eab308]';
@@ -56,7 +57,7 @@ const HeartFlutterEffect: React.FC<Props> = ({ symbol }) => {
 
       {/* Core symbol */}
       <span className={`relative z-10 font-bold ${colorClass}`}>
-        {symbol}
+        {children || symbol}
       </span>
     </div>
   );

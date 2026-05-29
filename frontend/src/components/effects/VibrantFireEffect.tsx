@@ -3,9 +3,10 @@ import './effects.css';
 
 interface Props {
   symbol: string;
+  children?: React.ReactNode;
 }
 
-const VibrantFireEffect: React.FC<Props> = ({ symbol }) => {
+const VibrantFireEffect: React.FC<Props> = ({ symbol, children }) => {
   const isX = symbol === 'X';
 
   // Night/Dark contrast aura
@@ -63,7 +64,7 @@ const VibrantFireEffect: React.FC<Props> = ({ symbol }) => {
 
       {/* ── CORE SYMBOL ─────────────────────────────────── */}
       <span className={`relative z-10 font-bold text-2xl animate-fire-dance ${textShadowGlow}`}>
-        {symbol}
+        {children || symbol}
       </span>
     </div>
   );

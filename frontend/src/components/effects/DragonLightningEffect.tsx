@@ -3,9 +3,10 @@ import './effects.css';
 
 interface Props {
   symbol: string;
+  children?: React.ReactNode;
 }
 
-const DragonLightningEffect: React.FC<Props> = ({ symbol }) => {
+const DragonLightningEffect: React.FC<Props> = ({ symbol, children }) => {
   const isX = symbol === 'X';
   const colorClass = isX ? 'text-cyan-400 dark:text-cyan-300 drop-shadow-[0_0_12px_#06b6d4]' 
                          : 'text-purple-500 dark:text-purple-400 drop-shadow-[0_0_12px_#a855f7]';
@@ -27,7 +28,7 @@ const DragonLightningEffect: React.FC<Props> = ({ symbol }) => {
       
       {/* Core Symbol */}
       <span className={`relative z-10 font-black animate-lightning-flash ${colorClass} scale-110`}>
-        {symbol}
+        {children || symbol}
       </span>
     </div>
   );

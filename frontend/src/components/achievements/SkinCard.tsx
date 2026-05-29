@@ -1,0 +1,76 @@
+import React from 'react';
+import type { SymbolSkinType, SymbolSkinDTO } from '../../types';
+import SkinRenderer from '../skins/SkinRenderer';
+
+interface Props {
+  skin: SymbolSkinDTO;
+  isEquipped: boolean;
+  onEquip: (key: SymbolSkinType) => void;
+  hasMoves?: boolean;
+}
+
+export const SkinCard: React.FC<Props> = ({ skin, isEquipped, onEquip, hasMoves }) => {
+  const handleEquip = () => {
+    if (hasMoves) return;
+    if (skin.unlocked && !isEquipped) {
+      onEquip(skin.key);
+    }
+  };
+
+  const isLockedDuringGame = hasMoves && skin.unlocked && !isEquipped;
+
+  return (
+    <div 
+      onClick={handleEquip}
+      className={`group relative flex flex-col overflow-hidden rounded-xl border p-3 sm:p-4 transition-all duration-300
+        ${isEquipped ? 'border-blue-500 shadow-lg ring-2 ring-blue-500/50 bg-blue-500/5 dark:bg-blue-500/10' : 
+          isLockedDuringGame ? 'border-amber-500/30 bg-amber-500/5 dark:bg-amber-500/10 cursor-not-allowed opacity-90' : 
+          !skin.unlocked ? 'cursor-not-allowed opacity-80 border-content-muted/40' : 'cursor-pointer hover:border-blue-500/50 border-content-muted/40'}
+      `}
+    >
+      {/* Equipped Badge */}
+      {isEquipped && (
+        <div className="absolute top-0 right-0 bg-blue-500 text-white text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-bl-lg z-10 shadow-sm tracking-wider">
+          EQUIPPED
+        </div>
+      )}
+
+      {/* Lock Overlay */}
+      {!skin.unlocked && (
+        <div className="absolute inset-0 bg-background/50 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center">
+          <svg className="w-8 h-8 text-content-muted mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <span className="text-xs font-semibold text-content-muted px-2 text-center">{skin.requirementLabel}</span>
+        </div>
+      )}
+
+      {/* In-game Lock Overlay */}
+      {isLockedDuringGame && (
+        <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] z-20 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <svg className="w-6 h-6 text-amber-600 dark:text-amber-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 px-2 text-center">
+            Select before first move
+          </span>
+        </div>
+      )}
+
+      {/* Title */}
+      <h4 className={`font-bold text-sm text-center mb-3 ${isEquipped ? 'text-blue-600 dark:text-blue-400 drop-shadow-sm' : 'text-content'}`}>
+        {skin.displayName || 'Default (None)'}
+      </h4>
+
+      {/* SVG Previews */}
+      <div className="flex justify-around items-center gap-2 mb-2">
+        <div className="w-10 h-12 flex items-center justify-center bg-background rounded-md shadow-inner border border-content-muted/20">
+          {skin.key ? <SkinRenderer skinKey={skin.key} symbol="X" size={28} /> : <span className="text-blue-500 font-bold text-lg">X</span>}
+        </div>
+        <div className="w-10 h-12 flex items-center justify-center bg-background rounded-md shadow-inner border border-content-muted/20">
+          {skin.key ? <SkinRenderer skinKey={skin.key} symbol="O" size={28} /> : <span className="text-pink-500 font-bold text-lg">O</span>}
+        </div>
+      </div>
+    </div>
+  );
+};

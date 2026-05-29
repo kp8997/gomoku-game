@@ -3,9 +3,10 @@ import './effects.css';
 
 interface Props {
   symbol: string;
+  children?: React.ReactNode;
 }
 
-const BloodMoonEffect: React.FC<Props> = ({ symbol }) => {
+const BloodMoonEffect: React.FC<Props> = ({ symbol, children }) => {
   const isX = symbol === 'X';
 
   const colorClass = isX 
@@ -28,7 +29,7 @@ const BloodMoonEffect: React.FC<Props> = ({ symbol }) => {
       </div>
 
       <span className={`relative z-10 font-bold text-2xl ${colorClass}`}>
-        {symbol}
+        {children || symbol}
       </span>
     </div>
   );

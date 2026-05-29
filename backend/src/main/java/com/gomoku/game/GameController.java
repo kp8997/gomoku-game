@@ -91,6 +91,7 @@ public class GameController {
         message.setTurnDuration(TURN_DURATION_SECONDS);
         message.setPlayerSymbol(room.getPlayerSymbol(message.getSender()));
         message.setSymbolEffects(getRoomSymbolEffects(room));
+        message.setSymbolSkins(getRoomSymbolSkins(room));
         messagingTemplate.convertAndSend("/topic/game/" + gameId, message);
         
         broadcastStatus(gameId);
@@ -106,6 +107,20 @@ public class GameController {
             }
         }
         return effects;
+    }
+
+    private Map<String, String> getRoomSymbolSkins(GameRoom room) {
+        Map<String, String> skins = new HashMap<>();
+        List<String> playerList = new ArrayList<>(room.getPlayers());
+        if (!playerList.isEmpty()) {
+            List<com.gomoku.game.model.UserEquippedEffect> equipped = equippedEffectRepository.findByUser_UsernameIn(playerList);
+            for (com.gomoku.game.model.UserEquippedEffect e : equipped) {
+                if (e.getSymbolSkin() != null) {
+                    skins.put(e.getUser().getUsername(), e.getSymbolSkin());
+                }
+            }
+        }
+        return skins;
     }
 
     @MessageMapping("/game.status")
@@ -208,6 +223,7 @@ public class GameController {
             message.setTurnStartTime(System.currentTimeMillis());
             message.setTurnDuration(TURN_DURATION_SECONDS);
             message.setSymbolEffects(getRoomSymbolEffects(room));
+            message.setSymbolSkins(getRoomSymbolSkins(room));
             messagingTemplate.convertAndSend("/topic/game/" + gameId, message);
 
             List<GameMessage.Move> winningLine = room.getWinningLine(message.getRow(), message.getCol());
@@ -240,6 +256,7 @@ public class GameController {
             message.setTurnStartTime(room.getTurnStartTime());
             message.setTurnDuration(TURN_DURATION_SECONDS);
             message.setSymbolEffects(getRoomSymbolEffects(room));
+            message.setSymbolSkins(getRoomSymbolSkins(room));
             messagingTemplate.convertAndSend("/topic/game/" + gameId, message);
 
             if (winningLine != null) {
@@ -272,6 +289,7 @@ public class GameController {
             startMessage.setTurnStartTime(0); // Explicitly 0 at start
             startMessage.setTurnDuration(TURN_DURATION_SECONDS);
             startMessage.setSymbolEffects(getRoomSymbolEffects(room));
+            startMessage.setSymbolSkins(getRoomSymbolSkins(room));
             messagingTemplate.convertAndSend("/topic/game/" + gameId, startMessage);
         }
     }

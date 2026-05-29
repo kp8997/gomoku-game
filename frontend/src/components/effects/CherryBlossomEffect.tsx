@@ -3,9 +3,10 @@ import './effects.css';
 
 interface Props {
   symbol: string;
+  children?: React.ReactNode;
 }
 
-const CherryBlossomEffect: React.FC<Props> = ({ symbol }) => {
+const CherryBlossomEffect: React.FC<Props> = ({ symbol, children }) => {
   const isX = symbol === 'X';
   // X = soft pink/white, O = deeper crimson/rose
   const colorClass = isX ? 'text-rose-300 dark:text-rose-200 drop-shadow-[0_0_6px_#fda4af]' 
@@ -29,7 +30,7 @@ const CherryBlossomEffect: React.FC<Props> = ({ symbol }) => {
       
       {/* Core Symbol */}
       <span className={`relative z-10 font-bold ${colorClass}`}>
-        {symbol}
+        {children || symbol}
       </span>
     </div>
   );

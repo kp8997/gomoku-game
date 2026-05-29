@@ -30,6 +30,7 @@ export interface GameMessage {
   turnDuration?: number;
   playerSymbol?: string;
   symbolEffects?: Record<string, string>;
+  symbolSkins?: Record<string, string>;
 }
 
 // Auth
@@ -75,6 +76,8 @@ export interface UserStatsDTO {
 
 export type EffectType = 'FIRE_PHOENIX' | 'DRAGON_LIGHTNING' | 'HEART_FLUTTER' | 'CHERRY_BLOSSOM' | 'NATURE_LEAF' | 'VIBRANT_FIRE' | 'OCEAN_SPLASH' | 'COSMIC_NEBULA' | 'DARK_SLASH' | 'AURORA_BOREALIS' | 'ETHEREAL_FROST' | 'ABYSSAL_VOID' | 'GOLDEN_SOVEREIGN' | 'QUANTUM_GLITCH' | 'BLOOD_MOON' | 'RADIANT_SERAPH' | 'PRISMATIC_DIAMOND' | 'GALACTIC_SUPERNOVA' | null;
 
+export type SymbolSkinType = 'CAT_PAW' | 'KITTY_FACE' | 'BUBBLE_TEA' | 'STAR_CHARM' | 'HEART_BOW' | 'LOTUS' | 'MOON_BUNNY' | 'LUCKY_CAT' | 'KING_GEORGE' | 'PINK_LOOPY' | null;
+
 export interface AchievementDTO {
   key: string;
   category: 'WIN_RATE' | 'MATCHES' | 'WINS';
@@ -91,10 +94,20 @@ export interface EffectDTO {
   requirementLabel: string;
 }
 
+export interface SymbolSkinDTO {
+  key: SymbolSkinType;
+  displayName: string;
+  unlocked: boolean;
+  requirementLabel: string;
+}
+
 export interface AchievementResponse {
   winRateBadges: AchievementDTO[];
   matchBadges: AchievementDTO[];
   winBadges: AchievementDTO[];
   effects: EffectDTO[];
   equippedEffect: EffectType;
+  skins: SymbolSkinDTO[];
+  equippedSkin: SymbolSkinType;
 }
+

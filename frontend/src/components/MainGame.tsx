@@ -24,15 +24,18 @@ interface MainGameProps {
   onChatOpen: () => void;
   onChatClose: () => void;
   symbolEffects?: Record<string, string>;
+  symbolSkins?: Record<string, string>;
   hasMoves?: boolean;
   onEffectChange?: (key: string | null) => void;
+  onSkinChange?: (key: string | null) => void;
   effectsEnabled?: boolean;
+  mySymbol?: string | null;
 }
 
 const MainGame: React.FC<MainGameProps> = ({
   board, history, winner, gameId, showDrawer, setShowDrawer, isMyTurn, makeMove, resetGame,
   chatMessages, onSendMessage, username, winningLine, unreadCount, onChatOpen, onChatClose, symbolEffects,
-  hasMoves, onEffectChange, effectsEnabled = true
+  symbolSkins, hasMoves, onEffectChange, onSkinChange, effectsEnabled = true, mySymbol = null
 }) => {
   const [showWinnerPopup, setShowWinnerPopup] = React.useState(false);
 
@@ -76,6 +79,7 @@ const MainGame: React.FC<MainGameProps> = ({
                 gameId={gameId}
                 hasMoves={hasMoves}
                 onEffectChange={onEffectChange}
+                onSkinChange={onSkinChange}
               />
             </motion.div>
           )}
@@ -150,18 +154,33 @@ const MainGame: React.FC<MainGameProps> = ({
 
                         {cell && (() => {
                           const move = history.find(m => m.row === r && m.col === c);
-                          // Suppress this user's own effect when effectsEnabled is false
-                          const isOwnCell = move?.player === username;
+                          // Determine if it is our own cell using highly robust name-matching and symbol-matching fallback
+                          const isOwnCell = move?.player 
+                            ? move.player.toLowerCase() === username.toLowerCase()
+                            : (mySymbol ? cell.toUpperCase() === mySymbol.toUpperCase() : false);
+                          
+                          // Resolve player key case-insensitively or fall back to own username if own cell
+                          const playerKey = move?.player || (isOwnCell ? username : undefined);
+
+                          // Resolve effect key case-insensitively
                           const effectKey = (isOwnCell && !effectsEnabled)
                             ? undefined
-                            : (move?.player ? symbolEffects?.[move.player] : undefined);
+                            : (playerKey 
+                                ? (symbolEffects?.[playerKey] || symbolEffects?.[playerKey.toLowerCase()] || symbolEffects?.[playerKey.toUpperCase()]) 
+                                : undefined);
+
+                          // Resolve skin key case-insensitively
+                          const skinKey = playerKey 
+                            ? (symbolSkins?.[playerKey] || symbolSkins?.[playerKey.toLowerCase()] || symbolSkins?.[playerKey.toUpperCase()]) 
+                            : undefined;
+
                           return (
                             <motion.div
                               initial={{ scale: 0, rotate: -45 }}
                               animate={{ scale: 1, rotate: 0 }}
                               className="flex items-center justify-center text-xl sm:text-2xl font-black z-10 select-none w-full h-full"
                             >
-                              <SymbolRenderer symbol={cell} effectKey={effectKey} />
+                              <SymbolRenderer symbol={cell} effectKey={effectKey} skinKey={skinKey} />
                             </motion.div>
                           );
                         })()}

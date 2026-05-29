@@ -1,22 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { authApi } from '../../api/authApi';
-import type { AchievementResponse, EffectType } from '../../types';
+import type { AchievementResponse, EffectType, SymbolSkinType } from '../../types';
 import { BadgeCard } from './BadgeCard';
 import { EffectCard } from './EffectCard';
+import { SkinCard } from './SkinCard';
 
 interface AchievementPanelProps {
   hasMoves?: boolean;
   onEffectChange?: (key: EffectType) => void;
+  onSkinChange?: (key: string | null) => void;
 }
 
-export const AchievementPanel: React.FC<AchievementPanelProps> = ({ hasMoves, onEffectChange }) => {
+export const AchievementPanel: React.FC<AchievementPanelProps> = ({ hasMoves, onEffectChange, onSkinChange }) => {
   const { token, isAuthenticated } = useAuth();
   const [data, setData] = useState<AchievementResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [expandedSection, setExpandedSection] = useState<'EFFECTS' | 'WIN_RATE' | 'MATCHES' | 'WINS' | null>('EFFECTS');
+  const [expandedSection, setExpandedSection] = useState<'EFFECTS' | 'SKINS' | 'WIN_RATE' | 'MATCHES' | 'WINS' | null>('EFFECTS');
 
   const fetchData = async () => {
     if (!token) return;
@@ -59,6 +61,24 @@ export const AchievementPanel: React.FC<AchievementPanelProps> = ({ hasMoves, on
     }
   };
 
+  const handleSkinEquip = async (skinKey: SymbolSkinType) => {
+    if (hasMoves) return;
+    if (!token || !data) return;
+    try {
+      if (skinKey) {
+        await authApi.equipSkin(token, skinKey);
+      } else {
+        await authApi.unequipSkin(token);
+      }
+      setData({ ...data, equippedSkin: skinKey });
+      if (onSkinChange) {
+        onSkinChange(skinKey);
+      }
+    } catch (err) {
+      console.error('Failed to equip skin:', err);
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="p-6 text-center text-content-muted flex flex-col items-center justify-center h-full">
@@ -86,7 +106,7 @@ export const AchievementPanel: React.FC<AchievementPanelProps> = ({ hasMoves, on
     );
   }
 
-  const toggleSection = (section: 'EFFECTS' | 'WIN_RATE' | 'MATCHES' | 'WINS') => {
+  const toggleSection = (section: 'EFFECTS' | 'SKINS' | 'WIN_RATE' | 'MATCHES' | 'WINS') => {
     setExpandedSection(prev => prev === section ? null : section);
   };
 
@@ -118,6 +138,7 @@ export const AchievementPanel: React.FC<AchievementPanelProps> = ({ hasMoves, on
   const unlockedMatch = data.matchBadges.filter(b => b.unlocked).length;
   const unlockedWin = data.winBadges.filter(b => b.unlocked).length;
   const unlockedEffects = data.effects.filter(e => e.unlocked).length;
+  const unlockedSkins = data.skins ? data.skins.filter(s => s.unlocked).length : 0;
 
   return (
     <div className="flex flex-col gap-5 p-5 h-full overflow-y-auto custom-scrollbar pb-24 bg-background/30">
@@ -146,6 +167,33 @@ export const AchievementPanel: React.FC<AchievementPanelProps> = ({ hasMoves, on
           </div>
         )}
       </div>
+
+      {/* Section: Symbol Skins */}
+      {data.skins && data.skins.length > 0 && (
+        <div className="bg-surface rounded-xl shadow-md border border-achievement-border transition-all">
+          <SectionHeader title="Symbol Skins" section="SKINS" count={unlockedSkins} total={data.skins.length} />
+          {expandedSection === 'SKINS' && (
+            <div className="p-5 grid grid-cols-2 gap-4">
+              {/* Default None */}
+              <SkinCard
+                skin={{ key: null, displayName: 'Default (None)', unlocked: true, requirementLabel: '' }}
+                isEquipped={!data.equippedSkin}
+                onEquip={handleSkinEquip}
+                hasMoves={hasMoves}
+              />
+              {data.skins.map(skin => (
+                <SkinCard
+                  key={skin.key || 'default'}
+                  skin={skin}
+                  isEquipped={data.equippedSkin === skin.key}
+                  onEquip={handleSkinEquip}
+                  hasMoves={hasMoves}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Section: Win Rate */}
       <div className="bg-surface rounded-xl shadow-md border border-achievement-border transition-all">

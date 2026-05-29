@@ -3,9 +3,10 @@ import './effects.css';
 
 interface Props {
   symbol: string;
+  children?: React.ReactNode;
 }
 
-const GalacticSupernovaEffect: React.FC<Props> = ({ symbol }) => {
+const GalacticSupernovaEffect: React.FC<Props> = ({ symbol, children }) => {
   const isX = symbol === 'X';
 
   // X = Cyan/Blue Supernova, O = Fuchsia/Orange Supernova
@@ -40,7 +41,7 @@ const GalacticSupernovaEffect: React.FC<Props> = ({ symbol }) => {
       </div>
 
       <span className={`relative z-10 font-bold text-2xl ${colorClass} animate-supernova-symbol`}>
-        {symbol}
+        {children || symbol}
       </span>
     </div>
   );

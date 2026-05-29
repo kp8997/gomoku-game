@@ -3,9 +3,10 @@ import './effects.css';
 
 interface Props {
   symbol: string;
+  children?: React.ReactNode;
 }
 
-const PrismaticDiamondEffect: React.FC<Props> = ({ symbol }) => {
+const PrismaticDiamondEffect: React.FC<Props> = ({ symbol, children }) => {
   const isX = symbol === 'X';
 
   // X = Blue/Cyan/Emerald Prismatic, O = Pink/Purple/Orange Prismatic
@@ -36,8 +37,8 @@ const PrismaticDiamondEffect: React.FC<Props> = ({ symbol }) => {
         <div className={`absolute w-[1.5px] h-[120%] bg-gradient-to-b from-transparent via-white to-transparent shadow-[0_0_6px_${isX ? '#3b82f6' : '#f97316'}]`} />
       </div>
 
-      <span className={`relative z-10 font-bold text-2xl text-transparent bg-clip-text bg-gradient-to-br ${textGradient} drop-shadow-[0_0_6px_rgba(255,255,255,0.7)] animate-prismatic-core`}>
-        {symbol}
+      <span className={children ? `relative z-10 animate-prismatic-core flex items-center justify-center` : `relative z-10 font-bold text-2xl text-transparent bg-clip-text bg-gradient-to-br ${textGradient} drop-shadow-[0_0_6px_rgba(255,255,255,0.7)] animate-prismatic-core`}>
+        {children || symbol}
       </span>
     </div>
   );

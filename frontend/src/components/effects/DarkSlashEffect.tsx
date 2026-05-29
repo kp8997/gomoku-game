@@ -3,9 +3,10 @@ import './effects.css';
 
 interface Props {
   symbol: string;
+  children?: React.ReactNode;
 }
 
-const DarkSlashEffect: React.FC<Props> = ({ symbol }) => {
+const DarkSlashEffect: React.FC<Props> = ({ symbol, children }) => {
   const isX = symbol === 'X';
   
   // Standard text color with a heavy, dark shadow
@@ -30,7 +31,7 @@ const DarkSlashEffect: React.FC<Props> = ({ symbol }) => {
       
       {/* Standard Text Symbol for Perfect Size Consistency */}
       <span className={`relative z-10 font-bold ${colorClass}`}>
-        {symbol}
+        {children || symbol}
       </span>
     </div>
   );
