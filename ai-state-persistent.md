@@ -733,3 +733,101 @@ public void configureMessageBroker(MessageBrokerRegistry config) {
 | `sendTimeLimit` | `20000ms` | Max time to send a single message |
 | `sendBufferSizeLimit` | `512KB` | Max queued outbound bytes per session |
 
+### Session: 403 Forbidden Fix & Security Hardening [2026-05-25]
+- **CORS Preflight Unblock**: Added `requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()` as the **first** rule in `SecurityConfig.java`'s `authorizeHttpRequests` chain. Without this, the browser's CORS preflight `OPTIONS` request (which carries no `Authorization` header) was rejected by Spring Security's `AuthorizationFilter` before reaching the `CorsFilter`, returning `403 Forbidden` to all cross-origin authenticated API calls.
+- **Authenticated Fetch Interceptor**: Introduced a centralized `authenticatedFetch(url, options, token)` wrapper in `authApi.ts` that intercepts `401`/`403` responses from any `/api/user/**` endpoint. On interception, it clears stale JWT tokens from `localStorage` (`gomoku_token`, `gomoku_user`) and redirects the user to the landing page `/` for re-authentication. All six authenticated API methods (`getProfile`, `updateProfile`, `getStats`, `getAchievements`, `equipEffect`, `unequipEffect`) were refactored to route through this wrapper instead of raw `fetch`.
+- **ConfrontationService Null-Safety**: Hardened `getUserStats()` and `getConfrontationsForUser()` in `ConfrontationService.java` with null guards on `record`, `getUserA()`, `getUserB()`, `getUserAWins()`, and `getUserBWins()`. Added `Objects::nonNull` stream filter and default fallback values for opponent display fields. This prevents `NullPointerException` from auto-unboxing nullable `Integer` fields in edge cases (e.g., orphaned confrontation rows).
+- **AchievementService Exception Broadening**: Changed `isEffectUnlocked()` catch block from `IllegalArgumentException` to `Exception` to handle `NumberFormatException` from malformed achievement keys (e.g., `"WINS_"` with no numeric suffix). Added null-safe `getUnlockedAt()` check to prevent NPE on achievements with null timestamps.
+- **Test File Cleanup**: Deleted scratch debugging files `Test.java`, `Test.class`, and `test_achievements.js` from workspace root.
+
+## 23. CORS & Preflight Security Rule
+
+> **CRITICAL RULE**: `OPTIONS` preflight requests must be the **first** `permitAll()` rule in `SecurityConfig.java`. Browsers send OPTIONS without auth headers; without this rule, all cross-origin authenticated requests will fail with 403.
+
+### Current Configuration (`SecurityConfig.java`)
+```java
+.authorizeHttpRequests(auth -> auth
+    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // MUST be first
+    .requestMatchers("/api/auth/**").permitAll()
+    .requestMatchers("/ws-gomoku/**").permitAll()
+    .requestMatchers("/topic/**").permitAll()
+    .requestMatchers("/api/user/**").authenticated()
+    .anyRequest().permitAll()
+)
+```
+
+## 24. Frontend Auth Interceptor Pattern
+
+> **RULE**: All authenticated API calls must route through `authenticatedFetch()` in `authApi.ts`. Direct `fetch()` with manual `Authorization` headers is prohibited for `/api/user/**` endpoints.
+
+### Interceptor Behavior
+| HTTP Status | Action |
+|:---|:---|
+| `401 Unauthorized` | Clear localStorage tokens → redirect to `/` → throw error |
+| `403 Forbidden` | Clear localStorage tokens → redirect to `/` → throw error |
+| `2xx Success` | Return response normally |
+
+### LocalStorage Keys Cleared
+- `gomoku_token`
+- `gomoku_user`
+
+## 25. Updated SymbolEffect Enum Reference (Source of Truth)
+
+| Enum Key | Achievement Key | Wins Required | Label |
+|:---|:---|:---|:---|
+| `FIRE_PHOENIX` | `WINS_20` | 20 | Requires 20 Wins |
+| `DRAGON_LIGHTNING` | `WINS_30` | 30 | Requires 30 Wins |
+| `HEART_FLUTTER` | `WINS_40` | 40 | Requires 40 Wins |
+| `CHERRY_BLOSSOM` | `WINS_50` | 50 | Requires 50 Wins |
+| `NATURE_LEAF` | `WINS_60` | 60 | Requires 60 Wins |
+| `VIBRANT_FIRE` | `WINS_70` | 70 | Requires 70 Wins |
+| `OCEAN_SPLASH` | `WINS_80` | 80 | Requires 80 Wins |
+| `COSMIC_NEBULA` | `WINS_90` | 90 | Requires 90 Wins |
+| `DARK_SLASH` | `WINS_100` | 100 | Requires 100 Wins |
+| `AURORA_BOREALIS` | `WINS_110` | 110 | Requires 110 Wins |
+| `ETHEREAL_FROST` | `WINS_120` | 120 | Requires 120 Wins |
+| `ABYSSAL_VOID` | `WINS_130` | 130 | Requires 130 Wins |
+| `GOLDEN_SOVEREIGN` | `WINS_140` | 140 | Requires 140 Wins |
+| `QUANTUM_GLITCH` | `WINS_150` | 150 | Requires 150 Wins |
+| `BLOOD_MOON` | `WINS_160` | 160 | Requires 160 Wins |
+| `RADIANT_SERAPH` | `WINS_170` | 170 | Requires 170 Wins |
+| `PRISMATIC_DIAMOND` | `WINS_180` | 180 | Requires 180 Wins |
+| `GALACTIC_SUPERNOVA` | `WINS_190` | 190 | Requires 190 Wins |
+
+## 26. Updated Effect Component File Inventory
+
+| Component File | Effect | Wins |
+|:---|:---|:---|
+| `FirePhoenixEffect.tsx` | Fire Phoenix | 20 |
+| `DragonLightningEffect.tsx` | Dragon Lightning | 30 |
+| `HeartFlutterEffect.tsx` | Heart Flutter | 40 |
+| `CherryBlossomEffect.tsx` | Cherry Blossom | 50 |
+| `NatureLeafEffect.tsx` | Nature Leaf | 60 |
+| `VibrantFireEffect.tsx` | Vibrant Fire | 70 |
+| `OceanSplashEffect.tsx` | Ocean Splash | 80 |
+| `CosmicNebulaEffect.tsx` | Cosmic Nebula | 90 |
+| `DarkSlashEffect.tsx` | Dark Slash | 100 |
+| `AuroraBorealisEffect.tsx` | Aurora Borealis | 110 |
+| `EtherealFrostEffect.tsx` | Ethereal Frost | 120 |
+| `AbyssalVoidEffect.tsx` | Abyssal Void | 130 |
+| `GoldenSovereignEffect.tsx` | Golden Sovereign | 140 |
+| `QuantumGlitchEffect.tsx` | Quantum Glitch | 150 |
+| `BloodMoonEffect.tsx` | Blood Moon | 160 |
+| `RadiantSeraphEffect.tsx` | Radiant Seraph | 170 |
+| `PrismaticDiamondEffect.tsx` | Prismatic Diamond | 180 |
+| `GalacticSupernovaEffect.tsx` | Galactic Supernova | 190 |
+
+## 27. Updated Achievement Milestones Reference
+
+| Category | Milestones Array |
+|:---|:---|
+| `WIN_RATE_THRESHOLDS` | `{50, 55, 60, 65, 75, 80, 85, 90, 95}` |
+| `MATCH_MILESTONES` | `{10, 20, 50, 100, 150, 200, 250, 300, 400, 500, 750, 1000}` |
+| `WIN_MILESTONES` | `{10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190}` |
+
+### seed.sql Admin Seeding Keys (Updated)
+```
+WIN_RATE: 50, 55, 60, 65, 75, 80, 85, 90, 95
+MATCHES:  10, 20, 50, 100, 150, 200, 250, 300, 400, 500, 750, 1000
+WINS:     10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190
+```

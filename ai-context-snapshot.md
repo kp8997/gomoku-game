@@ -1,28 +1,42 @@
-# Session Snapshot: Docker Deployment Fix & WebSocket TaskScheduler [2026-05-24]
+# Session Snapshot: Security Hardening & 403 Fix [2026-05-25]
 
 ## 1. Architectural Decisions & Changes
 
-### Docker Compose Modernization
-- **Removed Obsolete `version` Attribute**: Deleted `version: '3.8'` from `docker-compose.yml`. Modern Docker Compose ignores this field and emits a deprecation warning. The compose spec no longer requires a version declaration.
+### CORS Preflight Fix (SecurityConfig.java)
+- **Root Cause**: `GET /api/user/stats` returning `403 Forbidden` for authenticated users. The browser's CORS preflight `OPTIONS` request (which carries no `Authorization` header) was being rejected by Spring Security's `AuthorizationFilter` before reaching the `CorsFilter`.
+- **Fix**: Added `requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()` as the **first** rule in the `authorizeHttpRequests` chain, ensuring all preflight requests pass through to the CORS filter.
+- **Import**: Added `org.springframework.http.HttpMethod`.
 
-### WebSocket TaskScheduler Fix (Critical Startup Crash)
-- **Root Cause**: Backend container (`gomoku-backend`) was in a crash loop (`Restarting (1)` status). The Spring Boot application failed to start with:
-  ```
-  java.lang.IllegalArgumentException: Heartbeat values configured but no TaskScheduler provided
-  ```
-- **Problem Location**: `WebSocketConfig.java` — `configureMessageBroker()` called `setHeartbeatValue(new long[]{10000, 10000})` without providing a `TaskScheduler`, which Spring's `SimpleBrokerMessageHandler` requires when heartbeats are enabled.
-- **Fix**: Injected a `ThreadPoolTaskScheduler` (pool size 1, thread prefix `wss-heartbeat-thread-`) directly into the broker configuration via `.setTaskScheduler(te)`.
-- **Impact**: Backend now starts cleanly. All three containers (`gomoku-postgres`, `gomoku-backend`, `gomoku-frontend`) running healthy.
+### Authenticated Fetch Interceptor (authApi.ts)
+- **Problem**: When a JWT token expired, rotated, or became invalid (e.g. after a backend redeployment with a different secret), all `/api/user/**` endpoints returned `403`. The frontend would get stuck in error loops with stale tokens in `localStorage`.
+- **Solution**: Introduced a central `authenticatedFetch(url, options, token)` wrapper that:
+  1. Sets the `Authorization: Bearer <token>` header on every request.
+  2. Intercepts `401` and `403` responses.
+  3. Clears `gomoku_token` and `gomoku_user` from `localStorage`.
+  4. Redirects to `/` (landing page) unless already there.
+  5. Throws `'Session expired. Please log in again.'`.
+- **Impact**: All authenticated API methods (`getProfile`, `updateProfile`, `getStats`, `getAchievements`, `equipEffect`, `unequipEffect`) now route through `authenticatedFetch` instead of raw `fetch`.
 
-### TypeScript Build Fix
-- **Unused Variable**: Removed `const isX = symbol === 'X'` from `HeartFlutterEffect.tsx` (line 9) which caused `error TS6133` during `tsc -b && vite build` inside the Docker frontend build stage.
+### Null-Safety Hardening (ConfrontationService.java)
+- **`getUserStats()`**: Added null guards for `record`, `getUserAWins()`, `getUserBWins()`, and `getUserA()` to prevent `NullPointerException` from auto-unboxing nullable `Integer` fields.
+- **`getConfrontationsForUser()`**: Added `Objects::nonNull` stream filter and safe fallback defaults for opponent display when `userA` or `userB` is null.
+
+### AchievementService.java Bug Fix
+- **`isEffectUnlocked()`**: Changed `catch (IllegalArgumentException e)` to `catch (Exception e)` to handle `NumberFormatException` from malformed achievement keys like `"WINS_"` (no numeric suffix).
+- **`getUnlockedAt()`**: Added `a.getUnlockedAt() != null` null check before calling `.toString()` to prevent NPE on achievements with null timestamps.
+
+### Test File Cleanup
+- **Deleted**: `Test.java`, `Test.class`, `test_achievements.js` — scratch files used during debugging the achievement 403 issue. Removed from workspace root.
 
 ## 2. Established Constraints
 - **Ref-Based STOMP Callbacks**: All state accessed inside STOMP `onMessage` must use `useRef` to avoid stale closures.
 - **Heartbeat Keep-Alive**: Backend and frontend must both have heartbeats enabled (10s/10s). Backend **must** provide a `TaskScheduler` when heartbeats are configured.
 - **Timer Pause on Disconnect**: `pausedAt` must be set on disconnect and cleared on reconnect. `turnStartTime` must be shifted forward by the paused duration.
 - **First-Move Exemption**: No timer fires until a player has made at least one move in the match.
-- **Docker Rebuild Rule**: Any code change in `backend/` or `frontend/` requires `docker-compose up --build -d` to take effect in containers.
+- **Docker Rebuild Rule**: Any code change in `backend/` or `frontend/` requires `docker compose up --build -d` to take effect in containers.
+- **CORS Preflight Rule**: `OPTIONS` requests must always be `permitAll()` in the security filter chain. They carry no auth headers.
+- **JWT Expiry Handling**: Frontend must intercept 401/403 on authenticated endpoints and auto-clear stale tokens + redirect to login.
+- **PRODUCTION DATA CONSTRAINT**: Any database schema changes, seeded data changes, or enum mapping changes MUST be accompanied by a Liquibase migration script (or explicit data transformation logic).
 - **Effect Registration Checklist** (for adding new effects):
   1. `SymbolEffect.java` — add enum value with `WINS_N` key
   2. `AchievementService.java` — add `N` to `WIN_MILESTONES`
@@ -35,29 +49,35 @@
 
 ## 3. Files Modified This Session
 
-### Config
-| File | Change |
-|:---|:---|
-| `docker-compose.yml` | Removed obsolete `version: '3.8'` attribute |
-
 ### Backend
 | File | Change |
 |:---|:---|
-| `WebSocketConfig.java` | Added `ThreadPoolTaskScheduler` for STOMP heartbeat execution |
+| `SecurityConfig.java` | Added `HttpMethod.OPTIONS` permitAll rule for CORS preflight |
+| `ConfrontationService.java` | Null-safety guards on `getUserStats()` and `getConfrontationsForUser()` |
+| `AchievementService.java` | Broadened exception catch in `isEffectUnlocked()`, null-safe `getUnlockedAt()` |
 
 ### Frontend
 | File | Change |
 |:---|:---|
-| `HeartFlutterEffect.tsx` | Removed unused `isX` variable (TS6133 build error fix) |
+| `authApi.ts` | Introduced `authenticatedFetch` interceptor; all auth endpoints refactored to use it |
+
+### Deleted
+| File | Reason |
+|:---|:---|
+| `Test.java` | Debug scratch file |
+| `Test.class` | Compiled debug artifact |
+| `test_achievements.js` | Debug Node.js script |
 
 ## 4. Current System State
-- **Git**: Clean working tree, pushed to `origin/master` at commit `9db1138`.
-- **Docker**: All 3 containers running (`gomoku-postgres` healthy, `gomoku-backend` up, `gomoku-frontend` up).
+- **Git**: Clean working tree, pushed to `origin/master` at commit `05f61b7`.
+- **Docker**: All 3 containers running (`gomoku-postgres` healthy, `gomoku-backend` up 4d, `gomoku-frontend` up 4d).
 - **Ports**: Backend `:8888`, Frontend `:9999`, PostgreSQL `:5434`.
-- **Backend Health**: Verified via `curl -v http://localhost:8888/api/auth/login -X POST` → HTTP 400 (expected without credentials).
+- **Effects**: 18 total cosmetic effects (`FIRE_PHOENIX` at 20 wins through `GALACTIC_SUPERNOVA` at 190 wins).
+- **WIN_MILESTONES**: `{10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190}`.
 
 ## 5. Next Step Logic
-- **E2E Visual Verification**: Test all 10 effects in dual-tab mode at `http://localhost:9999`. Verify cell rendering, winning line animations, and achievement panel display.
+- **E2E Visual Verification**: Test all 18 effects in dual-tab mode at `http://localhost:9999`. Verify cell rendering, winning line animations, and achievement panel display.
 - **Effect Preview Grid**: Consider adding a dedicated preview/gallery page where users can see all effects animated side-by-side before equipping.
 - **Spectator Arena**: Establish observer routes allowing late joiners to spectate full arenas as passive spectators.
 - **Production Deployment**: Push Docker changes to Oracle Cloud via existing GitHub Actions CI/CD pipeline.
+- **Online Matchmaking**: Future feature to allow random public matchmaking.
