@@ -209,21 +209,39 @@ const MainGame: React.FC<MainGameProps> = ({
                     const matchingMove = history.find(m => m.row === start.row && m.col === start.col);
                     const winningPlayer = matchingMove?.player || winner;
                     const winningEffect = winningPlayer ? symbolEffects?.[winningPlayer] : undefined;
+                    const winningSkin = winningPlayer ? symbolSkins?.[winningPlayer] : undefined;
+                    const isX = winningSymbol === 'X';
+
+                    let baseColor = isX ? '#2563eb' : '#db2677';
+                    
+                    if (winningSkin && (!winningEffect || winningEffect === 'NONE')) {
+                       switch (winningSkin) {
+                         case 'CAT_PAW': baseColor = isX ? '#fca5a5' : '#c4b5fd'; break;
+                         case 'KITTY_FACE': baseColor = isX ? '#fdba74' : '#9ca3af'; break;
+                         case 'BUBBLE_TEA': baseColor = isX ? '#d4d4d8' : '#fcd34d'; break;
+                         case 'STAR_CHARM': baseColor = isX ? '#fde047' : '#f472b6'; break;
+                         case 'HEART_BOW': baseColor = isX ? '#ef4444' : '#ec4899'; break;
+                         case 'LOTUS': baseColor = isX ? '#fbcfe8' : '#86efac'; break;
+                         case 'MOON_BUNNY': baseColor = isX ? '#fef08a' : '#cbd5e1'; break;
+                         case 'LUCKY_CAT': baseColor = isX ? '#f87171' : '#fbbf24'; break;
+                         case 'KING_GEORGE': baseColor = isX ? '#facc15' : '#f472b6'; break;
+                       }
+                    }
 
                     const defaultLine = (
                       <motion.line
                         x1={x1} y1={y1} x2={x2} y2={y2}
-                        stroke={winningSymbol === 'X' ? '#2563eb' : '#db2677'}
+                        stroke={baseColor}
                         strokeWidth="8"
                         strokeLinecap="round"
                         initial={{ pathLength: 0, opacity: 0 }}
                         animate={{ pathLength: 1, opacity: 1 }}
                         transition={{ duration: 0.8, ease: "easeOut" }}
-                        style={{ filter: `drop-shadow(0 0 10px ${winningSymbol === 'X' ? '#2563eb' : '#db2677'})` }}
+                        style={{ filter: `drop-shadow(0 0 10px ${baseColor})` }}
                       />
                     );
 
-                    if (!winningEffect) return defaultLine;
+                    if (!winningEffect || winningEffect === 'NONE') return defaultLine;
 
                     switch (winningEffect) {
                        case 'FIRE_PHOENIX': {
