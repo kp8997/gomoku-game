@@ -163,7 +163,7 @@ const MainGame: React.FC<MainGameProps> = ({
                           const playerKey = move?.player || (isOwnCell ? username : undefined);
 
                           // Resolve effect key case-insensitively
-                          const effectKey = (isOwnCell && !effectsEnabled)
+                          const effectKey = !effectsEnabled
                             ? undefined
                             : (playerKey 
                                 ? (symbolEffects?.[playerKey] || symbolEffects?.[playerKey.toLowerCase()] || symbolEffects?.[playerKey.toUpperCase()]) 
@@ -208,7 +208,7 @@ const MainGame: React.FC<MainGameProps> = ({
 
                     const matchingMove = history.find(m => m.row === start.row && m.col === start.col);
                     const winningPlayer = matchingMove?.player || winner;
-                    const winningEffect = winningPlayer ? symbolEffects?.[winningPlayer] : undefined;
+                    const winningEffect = (winningPlayer && effectsEnabled) ? symbolEffects?.[winningPlayer] : undefined;
                     const winningSkin = winningPlayer ? symbolSkins?.[winningPlayer] : undefined;
                     const isX = winningSymbol === 'X';
 
