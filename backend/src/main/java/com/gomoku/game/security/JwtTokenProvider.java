@@ -19,9 +19,6 @@ public class JwtTokenProvider {
     @Value("${jwt.secret}")
     private String jwtSecret;
 
-    @Value("${jwt.expiration-ms}")
-    private long jwtExpirationInMs;
-
     private SecretKey getSigningKey() {
         byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
@@ -30,24 +27,20 @@ public class JwtTokenProvider {
     public String generateToken(Authentication authentication) {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
 
         return Jwts.builder()
                 .subject(userDetails.getUsername())
                 .issuedAt(now)
-                .expiration(expiryDate)
                 .signWith(getSigningKey())
                 .compact();
     }
 
     public String generateTokenFromUsername(String username) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
 
         return Jwts.builder()
                 .subject(username)
                 .issuedAt(now)
-                .expiration(expiryDate)
                 .signWith(getSigningKey())
                 .compact();
     }
@@ -75,3 +68,4 @@ public class JwtTokenProvider {
         return false;
     }
 }
+
