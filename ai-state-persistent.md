@@ -894,5 +894,12 @@ WINS:     10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160,
   - Implemented case-insensitive lookups on the board cell loop inside `MainGame.tsx` and `SkinRenderer.tsx` so that usernames with uppercase display settings match lowercase database keys perfectly.
   - Passed down `mySymbol` from the websocket connection to `MainGame`. In case of a guest-to-member mismatch or socket delay, cell resolution automatically falls back to rendering the player's own active skin if the board stone matches their local symbol.
 
+## 31. Infinite JWT Token Expiration [2026-06-09]
 
+### A. Core Architecture Decision
+- **Infinite Token Lifespan**: Removed the JWT expiration timeout constraint (previously 24 hours), allowing tokens to remain valid indefinitely as long as the server's signing secret remains unchanged.
+- **Configuration Cleanup**: Eliminated the `jwt.expiration-ms` property from `application.properties`.
+- **JWT Generation Updates**: Modified `JwtTokenProvider.java` to omit the `.expiration()` call when building tokens for both standard authentication and username-based fallback generation.
 
+### B. Architectural Rules & Constraints
+- **Session Validation**: JWTs are no longer invalidated by time. They only become invalid via signature mismatch (server secret change) or explicit client-side removal (`localStorage` clear).
