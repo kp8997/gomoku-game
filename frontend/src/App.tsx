@@ -12,6 +12,7 @@ import TimeoutWarning from './components/TimeoutWarning';
 import AuthModal from './components/AuthModal';
 import VoiceCallButtons, { type VoiceCallState } from './components/VoiceCallButtons';
 import IncomingCallPopup from './components/IncomingCallPopup';
+import MicPermissionGuide from './components/MicPermissionGuide';
 import { useWebRTC } from './hooks/useWebRTC';
 
 // Types
@@ -100,6 +101,9 @@ const App: React.FC = () => {
   // Auth modal
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
 
+  // Mic permission guide modal
+  const [showMicGuide, setShowMicGuide] = useState<boolean>(false);
+
   // Chat bubble state
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const isChatOpenRef = useRef<boolean>(false);
@@ -123,11 +127,15 @@ const App: React.FC = () => {
   const usernameRef = useRef(username);
   const mySymbolRef = useRef(mySymbol);
   const gameModeRef = useRef(gameMode);
+  const isJoinedRef = useRef(isJoined);
 
   // Keep refs in sync with state
-  useEffect(() => { usernameRef.current = username; }, [username]);
-  useEffect(() => { mySymbolRef.current = mySymbol; }, [mySymbol]);
-  useEffect(() => { gameModeRef.current = gameMode; }, [gameMode]);
+  useEffect(() => {
+    usernameRef.current = username;
+    mySymbolRef.current = mySymbol;
+    gameModeRef.current = gameMode;
+    isJoinedRef.current = isJoined;
+  }, [username, mySymbol, gameMode, isJoined]);
   useEffect(() => { voiceCallStateRef.current = voiceCallState; }, [voiceCallState]);
 
   // ── WebRTC hook ─────────────────────────────────────────────────────────────
@@ -204,6 +212,17 @@ const App: React.FC = () => {
             handleMessage(JSON.parse(payload.body));
           });
           client.send("/app/game.status", {}, JSON.stringify({ gameId: room }));
+          
+          // If the user was already joined (e.g. reconnection after Safari backgrounding dropped the socket),
+          // automatically re-join the room so the server knows they are back.
+          if (isJoinedRef.current && usernameRef.current) {
+            client.send("/app/game.join", {}, JSON.stringify({ 
+              sender: usernameRef.current, 
+              type: 'JOIN', 
+              mode: gameModeRef.current, 
+              gameId: room 
+            }));
+          }
         },
         (error) => {
           if (!isActive) return;
@@ -379,9 +398,13 @@ const App: React.FC = () => {
             startCall(message.gameId || '', usernameRef.current).then(() => {
               setVoiceCallState('IN_CALL');
               voiceCallStateRef.current = 'IN_CALL';
-            }).catch(() => {
+            }).catch((err) => {
+              console.warn('[Voice] startCall failed (likely mic denied):', err);
               setVoiceCallState('IDLE');
               voiceCallStateRef.current = 'IDLE';
+              if (err?.name === 'NotAllowedError' || err?.name === 'NotFoundError') {
+                setShowMicGuide(true);
+              }
             });
           } else {
             // Callee declined
@@ -401,9 +424,13 @@ const App: React.FC = () => {
             acceptCall(message.gameId || '', usernameRef.current, message.sdp).then(() => {
               setVoiceCallState('IN_CALL');
               voiceCallStateRef.current = 'IN_CALL';
-            }).catch(() => {
+            }).catch((err) => {
+              console.warn('[Voice] acceptCall in VOICE_OFFER failed:', err);
               setVoiceCallState('IDLE');
               voiceCallStateRef.current = 'IDLE';
+              if (err?.name === 'NotAllowedError' || err?.name === 'NotFoundError') {
+                setShowMicGuide(true);
+              }
             });
             pendingOfferSdpRef.current = null;
           }
@@ -534,19 +561,33 @@ const App: React.FC = () => {
   // ── Voice call handlers ─────────────────────────────────────────────────────
   /** Player A clicks the call button */
   const handleInitiateCall = useCallback(() => {
-    setVoiceCallState('CALLING');
-    voiceCallStateRef.current = 'CALLING';
-    stompClient.current?.send('/app/game.voiceSignal', {}, JSON.stringify({
-      type: 'VOICE_CALL_REQUEST',
-      gameId,
-      sender: username,
-    }));
-    // Auto-cancel after 30s if no response
-    if (callTimeoutRef.current) clearTimeout(callTimeoutRef.current);
-    callTimeoutRef.current = setTimeout(() => {
-      setVoiceCallState('IDLE');
-      voiceCallStateRef.current = 'IDLE';
-    }, 30000);
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      console.warn('[Voice] mediaDevices API not available (likely missing HTTPS)');
+      setShowMicGuide(true);
+      return;
+    }
+
+    // Pre-check mic permission before sending the call request
+    navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then((stream) => {
+      // Permission granted — stop the test stream immediately
+      stream.getTracks().forEach(t => t.stop());
+      setVoiceCallState('CALLING');
+      voiceCallStateRef.current = 'CALLING';
+      stompClient.current?.send('/app/game.voiceSignal', {}, JSON.stringify({
+        type: 'VOICE_CALL_REQUEST',
+        gameId,
+        sender: username,
+      }));
+      // Auto-cancel after 30s if no response
+      if (callTimeoutRef.current) clearTimeout(callTimeoutRef.current);
+      callTimeoutRef.current = setTimeout(() => {
+        setVoiceCallState('IDLE');
+        voiceCallStateRef.current = 'IDLE';
+      }, 30000);
+    }).catch((err) => {
+      console.warn('[Voice] Mic permission denied or unavailable:', err);
+      setShowMicGuide(true);
+    });
   }, [gameId, username]);
 
   /** Player B clicks Accept */
@@ -568,9 +609,13 @@ const App: React.FC = () => {
       acceptCall(gameId, username, offerSdp).then(() => {
         setVoiceCallState('IN_CALL');
         voiceCallStateRef.current = 'IN_CALL';
-      }).catch(() => {
+      }).catch((err) => {
+        console.warn('[Voice] acceptCall failed (likely mic denied):', err);
         setVoiceCallState('IDLE');
         voiceCallStateRef.current = 'IDLE';
+        if (err?.name === 'NotAllowedError' || err?.name === 'NotFoundError') {
+          setShowMicGuide(true);
+        }
       });
     } else {
       // Offer not yet arrived — wait for VOICE_OFFER case to handle it
@@ -750,6 +795,12 @@ const App: React.FC = () => {
           onDecline={handleDeclineCall}
         />
       )}
+
+      {/* Mic Permission Guide Modal */}
+      <MicPermissionGuide
+        isOpen={showMicGuide}
+        onClose={() => setShowMicGuide(false)}
+      />
     </div>
   );
 };

@@ -85,6 +85,11 @@ export function useWebRTC(sendSignal: SignalSender) {
   const startCall = useCallback(async (gameId: string, sender: string): Promise<void> => {
     teardown(); // clean up any previous connection first
     try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        const err = new Error('mediaDevices API not available');
+        err.name = 'NotAllowedError';
+        throw err;
+      }
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
       localStreamRef.current = stream;
       const pc = createPeerConnection(gameId, sender);
@@ -113,6 +118,11 @@ export function useWebRTC(sendSignal: SignalSender) {
   const acceptCall = useCallback(async (gameId: string, sender: string, offerSdp: string): Promise<void> => {
     teardown();
     try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        const err = new Error('mediaDevices API not available');
+        err.name = 'NotAllowedError';
+        throw err;
+      }
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
       localStreamRef.current = stream;
       const pc = createPeerConnection(gameId, sender);
