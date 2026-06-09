@@ -12,7 +12,8 @@ export interface ChatMessage {
 }
 
 export interface GameMessage {
-  type: 'CHAT' | 'JOIN' | 'MOVE' | 'LEAVE' | 'START' | 'WIN' | 'ROOM_STATUS' | 'ERROR';
+  type: 'CHAT' | 'JOIN' | 'MOVE' | 'LEAVE' | 'START' | 'WIN' | 'ROOM_STATUS' | 'ERROR'
+      | 'VOICE_CALL_REQUEST' | 'VOICE_CALL_RESPONSE' | 'VOICE_OFFER' | 'VOICE_ANSWER' | 'VOICE_ICE' | 'VOICE_HANG_UP';
   content?: string;
   sender?: string;
   row?: number;
@@ -31,7 +32,12 @@ export interface GameMessage {
   playerSymbol?: string;
   symbolEffects?: Record<string, string>;
   symbolSkins?: Record<string, string>;
+  // Voice signaling fields
+  sdp?: string;
+  iceCandidate?: string;
+  accepted?: boolean;
 }
+
 
 // Auth
 export interface SignupRequest {

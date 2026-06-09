@@ -366,6 +366,20 @@ public class GameController {
         messagingTemplate.convertAndSend("/topic/game/" + gameId, message);
     }
 
+    /**
+     * Voice signaling relay — broadcasts WebRTC SDP/ICE/hang-up messages to the room.
+     * The backend is purely a relay here; no media processing occurs server-side.
+     * Types: VOICE_CALL_REQUEST, VOICE_CALL_RESPONSE, VOICE_OFFER, VOICE_ANSWER, VOICE_ICE, VOICE_HANG_UP
+     */
+    @MessageMapping("/game.voiceSignal")
+    public void handleVoiceSignal(@Payload GameMessage message) {
+        String gameId = message.getGameId();
+        if (gameId != null) {
+            messagingTemplate.convertAndSend("/topic/game/" + gameId, message);
+        }
+    }
+
+
     private void recordConfrontation(GameRoom room, String winnerUsername) {
         if (room.getMode() != GameMessage.GameMode.MULTIPLE) return;
         

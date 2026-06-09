@@ -22,6 +22,10 @@ public class GameMessage {
     private String playerSymbol;
     private java.util.Map<String, String> symbolEffects;
     private java.util.Map<String, String> symbolSkins;
+    // Voice signaling fields (WebRTC)
+    private String sdp;
+    private String iceCandidate;
+    private Boolean accepted;
 
     public static class ChatMessage {
         private String sender;
@@ -63,7 +67,8 @@ public class GameMessage {
     }
 
     public enum MessageType {
-        CHAT, JOIN, MOVE, LEAVE, START, WIN, ROOM_STATUS, ERROR, TIMEOUT
+        CHAT, JOIN, MOVE, LEAVE, START, WIN, ROOM_STATUS, ERROR, TIMEOUT,
+        VOICE_CALL_REQUEST, VOICE_CALL_RESPONSE, VOICE_OFFER, VOICE_ANSWER, VOICE_ICE, VOICE_HANG_UP
     }
 
     public enum GameMode {
@@ -269,5 +274,30 @@ public class GameMessage {
 
     public void setSymbolSkins(java.util.Map<String, String> symbolSkins) {
         this.symbolSkins = symbolSkins;
+    }
+
+    // Voice signaling getters/setters
+    public String getSdp() {
+        return sdp;
+    }
+
+    public void setSdp(String sdp) {
+        this.sdp = sdp;
+    }
+
+    public String getIceCandidate() {
+        return iceCandidate;
+    }
+
+    public void setIceCandidate(String iceCandidate) {
+        this.iceCandidate = iceCandidate;
+    }
+
+    public Boolean getAccepted() {
+        return accepted;
+    }
+
+    public void setAccepted(Boolean accepted) {
+        this.accepted = accepted;
     }
 }

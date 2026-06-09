@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import SockJS from 'sockjs-client';
 import Stomp from 'stompjs';
 import './index.css';
@@ -10,6 +10,9 @@ import AuthInformationScreen from './components/AuthInformationScreen';
 import MainGame from './components/MainGame';
 import TimeoutWarning from './components/TimeoutWarning';
 import AuthModal from './components/AuthModal';
+import VoiceCallButtons, { type VoiceCallState } from './components/VoiceCallButtons';
+import IncomingCallPopup from './components/IncomingCallPopup';
+import { useWebRTC } from './hooks/useWebRTC';
 
 // Types
 import { type Move, type GameMessage, type ChatMessage } from './types';
@@ -101,7 +104,20 @@ const App: React.FC = () => {
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const isChatOpenRef = useRef<boolean>(false);
 
+  // ── Voice call state ────────────────────────────────────────────────────────
+  const [voiceCallState, setVoiceCallState] = useState<VoiceCallState>('IDLE');
+  const [isMuted, setIsMuted] = useState<boolean>(false);
+  // Caller's name when an incoming call arrives (shown in popup)
+  const [incomingCallerName, setIncomingCallerName] = useState<string | null>(null);
+  // Store the offer SDP until callee hits Accept
+  const pendingOfferSdpRef = useRef<string | null>(null);
+  // Mirror voice state into a ref so STOMP handlers read current values
+  const voiceCallStateRef = useRef<VoiceCallState>('IDLE');
+  // Call timeout handle (30s auto-decline)
+  const callTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const stompClient = useRef<Stomp.Client | null>(null);
+  const sockJsRef = useRef<WebSocket | null>(null);
 
   // Refs to avoid stale closures in the STOMP subscription callback
   const usernameRef = useRef(username);
@@ -112,6 +128,16 @@ const App: React.FC = () => {
   useEffect(() => { usernameRef.current = username; }, [username]);
   useEffect(() => { mySymbolRef.current = mySymbol; }, [mySymbol]);
   useEffect(() => { gameModeRef.current = gameMode; }, [gameMode]);
+  useEffect(() => { voiceCallStateRef.current = voiceCallState; }, [voiceCallState]);
+
+  // ── WebRTC hook ─────────────────────────────────────────────────────────────
+  // sendSignal: sends a voice STOMP message to the current room
+  const sendSignal = useCallback((_type: string, payload: object) => {
+    stompClient.current?.send('/app/game.voiceSignal', {}, JSON.stringify(payload));
+  }, []);
+
+
+  const { startCall, acceptCall, handleAnswer, handleIceCandidate, setMicEnabled, teardown } = useWebRTC(sendSignal);
 
   // Theme sync + localStorage
   useEffect(() => {
@@ -159,6 +185,7 @@ const App: React.FC = () => {
       if (!isActive) return;
 
       const socket = new SockJS(backendUrl);
+      sockJsRef.current = socket as unknown as WebSocket;
       const client = Stomp.over(socket);
       client.debug = () => { };
 
@@ -195,6 +222,12 @@ const App: React.FC = () => {
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
       if (stompClient.current?.connected) {
         stompClient.current.disconnect(() => { });
+      }
+      if (sockJsRef.current) {
+        try {
+          sockJsRef.current.close();
+        } catch (e) { }
+        sockJsRef.current = null;
       }
       stompClient.current = null;
     };
@@ -315,6 +348,97 @@ const App: React.FC = () => {
         if (message.symbolEffects) setSymbolEffects(message.symbolEffects);
         if (message.symbolSkins) setSymbolSkins(message.symbolSkins);
         break;
+
+      // ── Voice signaling (WebRTC via STOMP relay) ──────────────────────────
+      case 'VOICE_CALL_REQUEST':
+        // Only react if it's NOT from ourselves and we're idle
+        if (message.sender !== usernameRef.current && voiceCallStateRef.current === 'IDLE') {
+          pendingOfferSdpRef.current = null; // will be filled by VOICE_OFFER
+          setIncomingCallerName(message.sender || 'Someone');
+          setVoiceCallState('RECEIVING');
+          voiceCallStateRef.current = 'RECEIVING';
+          // Auto-decline after 30 seconds
+          if (callTimeoutRef.current) clearTimeout(callTimeoutRef.current);
+          callTimeoutRef.current = setTimeout(() => {
+            setVoiceCallState('IDLE');
+            voiceCallStateRef.current = 'IDLE';
+            setIncomingCallerName(null);
+            pendingOfferSdpRef.current = null;
+          }, 30000);
+        }
+        break;
+
+      case 'VOICE_CALL_RESPONSE':
+        // Caller receives this after callee accepted/declined
+        if (message.sender !== usernameRef.current) {
+          if (callTimeoutRef.current) clearTimeout(callTimeoutRef.current);
+          if (message.accepted) {
+            // Callee accepted — now we send the SDP offer
+            setVoiceCallState('CONNECTING');
+            voiceCallStateRef.current = 'CONNECTING';
+            startCall(message.gameId || '', usernameRef.current).then(() => {
+              setVoiceCallState('IN_CALL');
+              voiceCallStateRef.current = 'IN_CALL';
+            }).catch(() => {
+              setVoiceCallState('IDLE');
+              voiceCallStateRef.current = 'IDLE';
+            });
+          } else {
+            // Callee declined
+            setVoiceCallState('IDLE');
+            voiceCallStateRef.current = 'IDLE';
+          }
+        }
+        break;
+
+      case 'VOICE_OFFER':
+        // Callee receives offer SDP from caller
+        if (message.sender !== usernameRef.current && message.sdp) {
+          pendingOfferSdpRef.current = message.sdp;
+          // Race condition guard: if callee already accepted before the offer arrived,
+          // process the answer now immediately.
+          if (voiceCallStateRef.current === 'CONNECTING') {
+            acceptCall(message.gameId || '', usernameRef.current, message.sdp).then(() => {
+              setVoiceCallState('IN_CALL');
+              voiceCallStateRef.current = 'IN_CALL';
+            }).catch(() => {
+              setVoiceCallState('IDLE');
+              voiceCallStateRef.current = 'IDLE';
+            });
+            pendingOfferSdpRef.current = null;
+          }
+        }
+        break;
+
+
+      case 'VOICE_ANSWER':
+        // Caller receives the answer SDP from callee
+        if (message.sender !== usernameRef.current && message.sdp) {
+          handleAnswer(message.sdp).then(() => {
+            setVoiceCallState('IN_CALL');
+            voiceCallStateRef.current = 'IN_CALL';
+          });
+        }
+        break;
+
+      case 'VOICE_ICE':
+        // Both sides relay ICE candidates
+        if (message.sender !== usernameRef.current && message.iceCandidate) {
+          handleIceCandidate(message.iceCandidate);
+        }
+        break;
+
+      case 'VOICE_HANG_UP':
+        // Either side hung up
+        if (message.sender !== usernameRef.current) {
+          teardown();
+          setVoiceCallState('IDLE');
+          voiceCallStateRef.current = 'IDLE';
+          setIsMuted(false);
+          setIncomingCallerName(null);
+          pendingOfferSdpRef.current = null;
+        }
+        break;
     }
   };
 
@@ -347,6 +471,15 @@ const App: React.FC = () => {
     if (stompClient.current && stompClient.current.connected) {
       stompClient.current.send("/app/game.leave", {}, JSON.stringify({ sender: username, type: 'LEAVE', gameId }));
     }
+    // ── Tear down any active voice call on room exit ──
+    teardown();
+    setVoiceCallState('IDLE');
+    voiceCallStateRef.current = 'IDLE';
+    setIsMuted(false);
+    setIncomingCallerName(null);
+    pendingOfferSdpRef.current = null;
+    if (callTimeoutRef.current) clearTimeout(callTimeoutRef.current);
+    // ── Reset game state ──
     setIsJoined(false);
     setWinner(null);
     setWinningLine([]);
@@ -397,6 +530,96 @@ const App: React.FC = () => {
       return next;
     });
   };
+
+  // ── Voice call handlers ─────────────────────────────────────────────────────
+  /** Player A clicks the call button */
+  const handleInitiateCall = useCallback(() => {
+    setVoiceCallState('CALLING');
+    voiceCallStateRef.current = 'CALLING';
+    stompClient.current?.send('/app/game.voiceSignal', {}, JSON.stringify({
+      type: 'VOICE_CALL_REQUEST',
+      gameId,
+      sender: username,
+    }));
+    // Auto-cancel after 30s if no response
+    if (callTimeoutRef.current) clearTimeout(callTimeoutRef.current);
+    callTimeoutRef.current = setTimeout(() => {
+      setVoiceCallState('IDLE');
+      voiceCallStateRef.current = 'IDLE';
+    }, 30000);
+  }, [gameId, username]);
+
+  /** Player B clicks Accept */
+  const handleAcceptCall = useCallback(() => {
+    if (callTimeoutRef.current) clearTimeout(callTimeoutRef.current);
+    const offerSdp = pendingOfferSdpRef.current;
+    setIncomingCallerName(null);
+    setVoiceCallState('CONNECTING');
+    voiceCallStateRef.current = 'CONNECTING';
+    // Notify caller that we accepted
+    stompClient.current?.send('/app/game.voiceSignal', {}, JSON.stringify({
+      type: 'VOICE_CALL_RESPONSE',
+      gameId,
+      sender: username,
+      accepted: true,
+    }));
+    if (offerSdp) {
+      // Offer already arrived — answer immediately
+      acceptCall(gameId, username, offerSdp).then(() => {
+        setVoiceCallState('IN_CALL');
+        voiceCallStateRef.current = 'IN_CALL';
+      }).catch(() => {
+        setVoiceCallState('IDLE');
+        voiceCallStateRef.current = 'IDLE';
+      });
+    } else {
+      // Offer not yet arrived — wait for VOICE_OFFER case to handle it
+      // (race condition guard: handled in VOICE_OFFER message handler below)
+    }
+    pendingOfferSdpRef.current = null;
+  }, [gameId, username, acceptCall]);
+
+  /** Player B clicks Decline */
+  const handleDeclineCall = useCallback(() => {
+    if (callTimeoutRef.current) clearTimeout(callTimeoutRef.current);
+    setVoiceCallState('IDLE');
+    voiceCallStateRef.current = 'IDLE';
+    setIncomingCallerName(null);
+    pendingOfferSdpRef.current = null;
+    stompClient.current?.send('/app/game.voiceSignal', {}, JSON.stringify({
+      type: 'VOICE_CALL_RESPONSE',
+      gameId,
+      sender: username,
+      accepted: false,
+    }));
+  }, [gameId, username]);
+
+  /** Either player hangs up */
+  const handleHangUp = useCallback(() => {
+    if (callTimeoutRef.current) clearTimeout(callTimeoutRef.current);
+    teardown();
+    setVoiceCallState('IDLE');
+    voiceCallStateRef.current = 'IDLE';
+    setIsMuted(false);
+    setIncomingCallerName(null);
+    pendingOfferSdpRef.current = null;
+    stompClient.current?.send('/app/game.voiceSignal', {}, JSON.stringify({
+      type: 'VOICE_HANG_UP',
+      gameId,
+      sender: username,
+    }));
+  }, [gameId, username, teardown]);
+
+  /** Toggle mic mute */
+  const handleToggleMic = useCallback(() => {
+    setIsMuted(prev => {
+      const next = !prev;
+      setMicEnabled(!next);
+      return next;
+    });
+  }, [setMicEnabled]);
+
+  const canCall = gameMode === 'MULTIPLE' && playerCount >= 2;
 
   const isMyTurn = (gameMode === 'SINGLE' || (
     mySymbol ? turnSymbol === mySymbol : history.length === 0 || history[history.length - 1].player !== username
@@ -504,6 +727,29 @@ const App: React.FC = () => {
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
       />
+
+      {/* Floating Voice Call Buttons — left of chat bubble */}
+      {isJoined && (
+        <div className="fixed bottom-6 right-[5.5rem] sm:right-24 z-[55] flex items-end gap-2">
+          <VoiceCallButtons
+            callState={voiceCallState}
+            isMuted={isMuted}
+            canCall={canCall}
+            onCallClick={handleInitiateCall}
+            onHangUp={handleHangUp}
+            onToggleMic={handleToggleMic}
+          />
+        </div>
+      )}
+
+      {/* Incoming Call Popup */}
+      {isJoined && voiceCallState === 'RECEIVING' && incomingCallerName && (
+        <IncomingCallPopup
+          callerName={incomingCallerName}
+          onAccept={handleAcceptCall}
+          onDecline={handleDeclineCall}
+        />
+      )}
     </div>
   );
 };
