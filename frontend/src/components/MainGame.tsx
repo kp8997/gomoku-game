@@ -222,8 +222,8 @@ const MainGame: React.FC<MainGameProps> = ({
                          case 'STAR_CHARM': baseColor = isX ? '#fde047' : '#f472b6'; break;
                          case 'HEART_BOW': baseColor = isX ? '#ef4444' : '#ec4899'; break;
                          case 'LOTUS': baseColor = isX ? '#fbcfe8' : '#86efac'; break;
-                         case 'MOON_BUNNY': baseColor = isX ? '#fef08a' : '#cbd5e1'; break;
-                         case 'LUCKY_CAT': baseColor = isX ? '#f87171' : '#fbbf24'; break;
+                         case 'MOON_BUNNY': baseColor = isX ? '#c084fc' : '#fdba74'; break;
+                         case 'SUN_BUNNY': baseColor = isX ? '#ef4444' : '#eab308'; break;
                          case 'KING_GEORGE': baseColor = isX ? '#facc15' : '#f472b6'; break;
                        }
                     }

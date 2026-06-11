@@ -8,7 +8,7 @@ public enum SymbolSkin {
     HEART_BOW(60, "Heart Bow", "Unlock at 60 Wins"),
     LOTUS(70, "Lotus", "Unlock at 70 Wins"),
     MOON_BUNNY(80, "Moon Bunny", "Unlock at 80 Wins"),
-    LUCKY_CAT(90, "Lucky Cat", "Unlock at 90 Wins"),
+    SUN_BUNNY(90, "Sun Bunny", "Unlock at 90 Wins"),
     KING_GEORGE(100, "George & Loopy", "Unlock at 100 Wins");
 
     private final int requiredWins;

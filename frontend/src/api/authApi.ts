@@ -1,6 +1,6 @@
 import type { LoginRequest, SignupRequest, AuthResponse, UserProfile, ConfrontationRecord, UserStatsDTO, AchievementResponse } from '../types';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8888';
+const API_BASE = import.meta.env.VITE_API_URL === '/api' ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:8888');
 
 const authenticatedFetch = async (url: string, options: RequestInit = {}, token: string) => {
   const headers = new Headers(options.headers || {});

@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: 07-replace-lucky-cat-with-sun-bunny
+      author: ai-agent
+      changes:
+        - update:
+            tableName: user_equipped_effects
+            columns:
+              - column:
+                  name: symbol_skin
+                  value: 'SUN_BUNNY'
+            where: "symbol_skin = 'LUCKY_CAT'"

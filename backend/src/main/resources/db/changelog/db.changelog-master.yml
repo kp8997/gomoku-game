@@ -11,3 +11,5 @@ databaseChangeLog:
       file: db/changelog/changes/05-symbol-skins.yaml
   - include:
       file: db/changelog/changes/06-merge-george-loopy.yaml
+  - include:
+      file: db/changelog/changes/07-replace-lucky-cat-with-sun-bunny.yaml

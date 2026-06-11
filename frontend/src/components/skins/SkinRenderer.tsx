@@ -12,7 +12,7 @@ const StarCharmSkin = lazy(() => import('./StarCharmSkin'));
 const HeartBowSkin = lazy(() => import('./HeartBowSkin'));
 const LotusSkin = lazy(() => import('./LotusSkin'));
 const MoonBunnySkin = lazy(() => import('./MoonBunnySkin'));
-const LuckyCatSkin = lazy(() => import('./LuckyCatSkin'));
+const SunBunnySkin = lazy(() => import('./SunBunnySkin'));
 const KingGeorgeSkin = lazy(() => import('./KingGeorgeSkin'));
 
 interface SkinRendererProps {
@@ -29,7 +29,7 @@ const SKIN_MAP: Record<string, React.LazyExoticComponent<React.FC<SkinProps>>> =
   HEART_BOW: HeartBowSkin,
   LOTUS: LotusSkin,
   MOON_BUNNY: MoonBunnySkin,
-  LUCKY_CAT: LuckyCatSkin,
+  SUN_BUNNY: SunBunnySkin,
   KING_GEORGE: KingGeorgeSkin,
 };
 
