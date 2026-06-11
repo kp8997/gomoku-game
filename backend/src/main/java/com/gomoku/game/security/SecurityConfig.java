@@ -41,6 +41,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/user/**").authenticated()
                 .anyRequest().permitAll()
             )
+            .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         
         return http.build();
