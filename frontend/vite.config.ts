@@ -11,9 +11,9 @@ export default defineConfig({
   server: {
     port: 9999
   },
-  resolve: {
-    alias: {
-      'stompjs': 'stompjs/lib/stomp.js',
-    }
+  build: {
+    rollupOptions: {
+      external: ['websocket'],
+    },
   }
 })
