@@ -43,6 +43,7 @@ const MainGame: React.FC<MainGameProps> = ({
     if (winner) {
       const delay = winningLine && winningLine.length > 0 ? 2500 : 0;
       if (delay === 0) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setShowWinnerPopup(true);
       } else {
         const timer = setTimeout(() => {
@@ -280,7 +281,7 @@ const MainGame: React.FC<MainGameProps> = ({
                            </g>
                          );
                        }
-                      case 'DARK_SLASH':
+                      case 'DARK_SLASH': {
                         const isX = winningSymbol === 'X';
                         const darkBase = isX ? '#312e81' : '#7f1d1d';
                         const darkMain = isX ? '#4f46e5' : '#dc2626';
@@ -291,6 +292,7 @@ const MainGame: React.FC<MainGameProps> = ({
                             <motion.line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#ffffff" strokeWidth="2" strokeLinecap="round" initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.6 }} transition={{ duration: 0.6, ease: "easeOut" }} />
                           </g>
                         );
+                      }
                       case 'HEART_FLUTTER': {
                         const heartColor = '#eab308';
                         const heartGlow = '#facc15';

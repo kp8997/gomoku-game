@@ -46,8 +46,8 @@ const MatchHistoryPage: React.FC = () => {
         ]);
         setRecords(profileData.confrontations);
         setStats(statsData);
-      } catch (err: any) {
-        setError(err.message || 'Failed to load history');
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Failed to load match history');
       } finally {
         setIsLoading(false);
       }

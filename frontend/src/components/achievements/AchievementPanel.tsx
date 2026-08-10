@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { authApi } from '../../api/authApi';
 import type { AchievementResponse, EffectType, SymbolSkinType } from '../../types';
@@ -20,27 +20,28 @@ export const AchievementPanel: React.FC<AchievementPanelProps> = ({ hasMoves, on
 
   const [expandedSection, setExpandedSection] = useState<'EFFECTS' | 'SKINS' | 'WIN_RATE' | 'MATCHES' | 'WINS' | null>('EFFECTS');
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!token) return;
     try {
       setLoading(true);
       const res = await authApi.getAchievements(token);
       setData(res);
       setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load achievements');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load achievements');
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     if (isAuthenticated) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchData();
     } else {
       setLoading(false);
     }
-  }, [isAuthenticated, token]);
+  }, [isAuthenticated, fetchData]);
 
   const handleEquip = async (effectKey: EffectType) => {
     if (hasMoves) return;
@@ -110,7 +111,7 @@ export const AchievementPanel: React.FC<AchievementPanelProps> = ({ hasMoves, on
     setExpandedSection(prev => prev === section ? null : section);
   };
 
-  const SectionHeader = ({ title, section, count, total }: { title: string, section: any, count?: number, total?: number }) => (
+  const renderSectionHeader = (title: string, section: 'EFFECTS' | 'SKINS' | 'WIN_RATE' | 'MATCHES' | 'WINS', count?: number, total?: number) => (
     <button
       onClick={() => toggleSection(section)}
       className={`w-full flex items-center justify-between p-4 bg-surface hover:bg-surface-hover transition-all rounded-t-xl cursor-pointer ${expandedSection === section ? 'border-b border-achievement-border shadow-sm' : 'rounded-b-xl'}`}
@@ -145,7 +146,7 @@ export const AchievementPanel: React.FC<AchievementPanelProps> = ({ hasMoves, on
 
       {/* Section: Effects */}
       <div className="bg-surface rounded-xl shadow-md border border-achievement-border transition-all">
-        <SectionHeader title="Symbol Effects" section="EFFECTS" count={unlockedEffects} total={data.effects.length} />
+        {renderSectionHeader("Symbol Effects", "EFFECTS", unlockedEffects, data.effects.length)}
         {expandedSection === 'EFFECTS' && (
           <div className="p-5 grid grid-cols-2 gap-4">
             {/* Default None */}
@@ -171,7 +172,7 @@ export const AchievementPanel: React.FC<AchievementPanelProps> = ({ hasMoves, on
       {/* Section: Symbol Skins */}
       {data.skins && data.skins.length > 0 && (
         <div className="bg-surface rounded-xl shadow-md border border-achievement-border transition-all">
-          <SectionHeader title="Symbol Skins" section="SKINS" count={unlockedSkins} total={data.skins.length} />
+          {renderSectionHeader("Symbol Skins", "SKINS", unlockedSkins, data.skins.length)}
           {expandedSection === 'SKINS' && (
             <div className="p-5 grid grid-cols-2 gap-4">
               {/* Default None */}
@@ -197,7 +198,7 @@ export const AchievementPanel: React.FC<AchievementPanelProps> = ({ hasMoves, on
 
       {/* Section: Win Rate */}
       <div className="bg-surface rounded-xl shadow-md border border-achievement-border transition-all">
-        <SectionHeader title="Win Rate Shields" section="WIN_RATE" count={unlockedWinRate} total={data.winRateBadges.length} />
+        {renderSectionHeader("Win Rate Shields", "WIN_RATE", unlockedWinRate, data.winRateBadges.length)}
         {expandedSection === 'WIN_RATE' && (
           <div className="p-6 flex flex-wrap gap-5 justify-center bg-black/5 dark:bg-white/5 rounded-b-xl">
             {data.winRateBadges.map(badge => <BadgeCard key={badge.key} badge={badge} />)}
@@ -207,7 +208,7 @@ export const AchievementPanel: React.FC<AchievementPanelProps> = ({ hasMoves, on
 
       {/* Section: Match Milestones */}
       <div className="bg-surface rounded-xl shadow-md border border-achievement-border transition-all">
-        <SectionHeader title="Match Medals" section="MATCHES" count={unlockedMatch} total={data.matchBadges.length} />
+        {renderSectionHeader("Match Medals", "MATCHES", unlockedMatch, data.matchBadges.length)}
         {expandedSection === 'MATCHES' && (
           <div className="p-6 flex flex-wrap gap-5 justify-center bg-black/5 dark:bg-white/5 rounded-b-xl">
             {data.matchBadges.map(badge => <BadgeCard key={badge.key} badge={badge} />)}
@@ -217,7 +218,7 @@ export const AchievementPanel: React.FC<AchievementPanelProps> = ({ hasMoves, on
 
       {/* Section: Win Milestones */}
       <div className="bg-surface rounded-xl shadow-md border border-achievement-border transition-all">
-        <SectionHeader title="Win Crowns" section="WINS" count={unlockedWin} total={data.winBadges.length} />
+        {renderSectionHeader("Win Crowns", "WINS", unlockedWin, data.winBadges.length)}
         {expandedSection === 'WINS' && (
           <div className="p-6 flex flex-wrap gap-5 justify-center bg-black/5 dark:bg-white/5 rounded-b-xl">
             {data.winBadges.map(badge => <BadgeCard key={badge.key} badge={badge} />)}

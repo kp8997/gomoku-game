@@ -90,37 +90,30 @@ public class GameController {
         message.setTurnStartTime(room.getTurnStartTime());
         message.setTurnDuration(TURN_DURATION_SECONDS);
         message.setPlayerSymbol(room.getPlayerSymbol(message.getSender()));
-        message.setSymbolEffects(getRoomSymbolEffects(room));
-        message.setSymbolSkins(getRoomSymbolSkins(room));
+        RoomCosmetics joinCosmetics = loadRoomCosmetics(room);
+        message.setSymbolEffects(joinCosmetics.effects());
+        message.setSymbolSkins(joinCosmetics.skins());
         messagingTemplate.convertAndSend("/topic/game/" + gameId, message);
         
         broadcastStatus(gameId);
     }
 
-    private Map<String, String> getRoomSymbolEffects(GameRoom room) {
-        Map<String, String> effects = new HashMap<>();
-        List<String> playerList = new ArrayList<>(room.getPlayers());
-        if (!playerList.isEmpty()) {
-            List<com.gomoku.game.model.UserEquippedEffect> equipped = equippedEffectRepository.findByUser_UsernameIn(playerList);
-            for (com.gomoku.game.model.UserEquippedEffect e : equipped) {
-                effects.put(e.getUser().getUsername(), e.getEffectKey());
-            }
-        }
-        return effects;
-    }
+    private record RoomCosmetics(Map<String, String> effects, Map<String, String> skins) {}
 
-    private Map<String, String> getRoomSymbolSkins(GameRoom room) {
+    private RoomCosmetics loadRoomCosmetics(GameRoom room) {
+        Map<String, String> effects = new HashMap<>();
         Map<String, String> skins = new HashMap<>();
         List<String> playerList = new ArrayList<>(room.getPlayers());
         if (!playerList.isEmpty()) {
             List<com.gomoku.game.model.UserEquippedEffect> equipped = equippedEffectRepository.findByUser_UsernameIn(playerList);
             for (com.gomoku.game.model.UserEquippedEffect e : equipped) {
+                effects.put(e.getUser().getUsername(), e.getEffectKey());
                 if (e.getSymbolSkin() != null) {
                     skins.put(e.getUser().getUsername(), e.getSymbolSkin());
                 }
             }
         }
-        return skins;
+        return new RoomCosmetics(effects, skins);
     }
 
     @MessageMapping("/game.status")
@@ -217,15 +210,8 @@ public class GameController {
             }
 
             room.makeMove(message.getSender(), message.getRow(), message.getCol(), symbol);
-            
-            message.setType(GameMessage.MessageType.MOVE);
-            message.setContent(symbol);
-            message.setTurnStartTime(System.currentTimeMillis());
-            message.setTurnDuration(TURN_DURATION_SECONDS);
-            message.setSymbolEffects(getRoomSymbolEffects(room));
-            message.setSymbolSkins(getRoomSymbolSkins(room));
-            messagingTemplate.convertAndSend("/topic/game/" + gameId, message);
 
+            // Determine timer state before broadcasting so turnStartTime is correct in the single MOVE message
             List<GameMessage.Move> winningLine = room.getWinningLine(message.getRow(), message.getCol());
             if (winningLine != null) {
                 stopTurnTimer(gameId);
@@ -251,12 +237,14 @@ public class GameController {
                 }
             }
 
+            // Single broadcast with the correct turnStartTime (post-timer-logic) and one DB call
+            RoomCosmetics moveCosmetics = loadRoomCosmetics(room);
             message.setType(GameMessage.MessageType.MOVE);
             message.setContent(symbol);
             message.setTurnStartTime(room.getTurnStartTime());
             message.setTurnDuration(TURN_DURATION_SECONDS);
-            message.setSymbolEffects(getRoomSymbolEffects(room));
-            message.setSymbolSkins(getRoomSymbolSkins(room));
+            message.setSymbolEffects(moveCosmetics.effects());
+            message.setSymbolSkins(moveCosmetics.skins());
             messagingTemplate.convertAndSend("/topic/game/" + gameId, message);
 
             if (winningLine != null) {
@@ -288,8 +276,9 @@ public class GameController {
             startMessage.setSender("SYSTEM");
             startMessage.setTurnStartTime(0); // Explicitly 0 at start
             startMessage.setTurnDuration(TURN_DURATION_SECONDS);
-            startMessage.setSymbolEffects(getRoomSymbolEffects(room));
-            startMessage.setSymbolSkins(getRoomSymbolSkins(room));
+            RoomCosmetics startCosmetics = loadRoomCosmetics(room);
+            startMessage.setSymbolEffects(startCosmetics.effects());
+            startMessage.setSymbolSkins(startCosmetics.skins());
             messagingTemplate.convertAndSend("/topic/game/" + gameId, startMessage);
         }
     }

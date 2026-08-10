@@ -19,7 +19,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         te.initialize();
 
         config.enableSimpleBroker("/topic")
-              .setHeartbeatValue(new long[]{10000, 10000}) // server->client 10s, client->server 10s
+              .setHeartbeatValue(new long[]{25000, 25000}) // server->client 25s, client->server 25s
               .setTaskScheduler(te);
         config.setApplicationDestinationPrefixes("/app");
     }

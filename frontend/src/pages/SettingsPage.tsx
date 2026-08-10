@@ -26,6 +26,7 @@ const SettingsPage: React.FC = () => {
   // Sync user changes (e.g. after login hydration)
   useEffect(() => {
     if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFullName(user.fullName);
       setAvatar(user.avatar || null);
     }
@@ -61,8 +62,8 @@ const SettingsPage: React.FC = () => {
       await updateProfile({ fullName: fullName.trim(), avatar: avatar || undefined });
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-    } catch (err: any) {
-      setError(err.message || 'Failed to update profile');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to update profile');
     } finally {
       setIsUpdating(false);
     }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Camera, Save, Trophy, Swords, User as UserIcon, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -19,13 +19,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
   const [isLoadingRecords, setIsLoadingRecords] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen && token) {
-      fetchRecords();
-    }
-  }, [isOpen, token]);
-
-  const fetchRecords = async () => {
+  const fetchRecords = useCallback(async () => {
     setIsLoadingRecords(true);
     try {
       const profile = await authApi.getProfile(token!);
@@ -35,7 +29,14 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
     } finally {
       setIsLoadingRecords(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    if (isOpen && token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchRecords();
+    }
+  }, [isOpen, token, fetchRecords]);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -58,8 +59,8 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose }) => {
     try {
       await updateProfile({ fullName, avatar: avatar || undefined });
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Failed to update profile');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to update profile');
     } finally {
       setIsUpdating(false);
     }

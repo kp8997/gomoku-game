@@ -19,6 +19,7 @@ const TimeoutWarning: React.FC<TimeoutWarningProps> = ({ startTime, duration, is
   useEffect(() => {
     // Reset or stop if conditions aren't met
     if (isPaused || !isMyTurn || startTime === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTimeLeft(duration);
       return;
     }

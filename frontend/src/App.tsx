@@ -197,9 +197,9 @@ const App: React.FC = () => {
       const client = Stomp.over(socket);
       client.debug = () => { };
 
-      // Enable STOMP heartbeats: outgoing every 10s, expect incoming every 10s
-      client.heartbeat.outgoing = 10000;
-      client.heartbeat.incoming = 10000;
+      // Enable STOMP heartbeats: outgoing every 25s, expect incoming every 25s
+      client.heartbeat.outgoing = 25000;
+      client.heartbeat.incoming = 25000;
 
       client.connect({},
         () => {
@@ -282,7 +282,7 @@ const App: React.FC = () => {
           }
         }
         break;
-      case 'JOIN':
+      case 'JOIN': {
         if (message.scores) setScores(message.scores);
         if (message.history) {
           setHistory(message.history);
@@ -309,7 +309,8 @@ const App: React.FC = () => {
         if (message.symbolSkins) setSymbolSkins(message.symbolSkins);
         setIsJoined(true);
         break;
-      case 'MOVE':
+      }
+      case 'MOVE': {
         if (message.symbolEffects) setSymbolEffects(message.symbolEffects);
         if (message.symbolSkins) setSymbolSkins(message.symbolSkins);
         if (message.row !== undefined && message.col !== undefined) {
@@ -342,6 +343,7 @@ const App: React.FC = () => {
           });
         }
         break;
+      }
       case 'WIN':
         setWinner(message.winner || 'Someone');
         if (message.scores) setScores(message.scores);

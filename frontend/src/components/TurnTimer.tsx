@@ -21,7 +21,9 @@ const TurnTimer: React.FC<TurnTimerProps> = ({
     // Timer should run for BOTH players — only pause when game is over or no turn started yet
     if (isPaused || startTime === 0) {
       if (startTime === 0) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setTimeLeft(duration);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setProgress(1);
       }
       return;
