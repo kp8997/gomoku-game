@@ -5,9 +5,9 @@ import './index.css';
 
 // Components
 import Header from './components/Header';
-import InformationScreen from './components/InformationScreen';
-import AuthInformationScreen from './components/AuthInformationScreen';
-import MainGame from './components/MainGame';
+const InformationScreen = React.lazy(() => import('./components/InformationScreen'));
+const AuthInformationScreen = React.lazy(() => import('./components/AuthInformationScreen'));
+const MainGame = React.lazy(() => import('./components/MainGame'));
 import TimeoutWarning from './components/TimeoutWarning';
 import AuthModal from './components/AuthModal';
 import VoiceCallButtons, { type VoiceCallState } from './components/VoiceCallButtons';
@@ -252,7 +252,7 @@ const App: React.FC = () => {
     };
   }, []);
 
-  const handleMessage = (message: GameMessage) => {
+  const handleMessage = useCallback((message: GameMessage) => {
     switch (message.type) {
       case 'ROOM_STATUS':
         if (message.mode) setGameMode(message.mode);
@@ -311,8 +311,6 @@ const App: React.FC = () => {
         break;
       }
       case 'MOVE': {
-        if (message.symbolEffects) setSymbolEffects(message.symbolEffects);
-        if (message.symbolSkins) setSymbolSkins(message.symbolSkins);
         if (message.row !== undefined && message.col !== undefined) {
           if (!mySymbolRef.current && message.sender) {
             const assignedSymbol = message.sender === usernameRef.current ? (message.content || null) : (message.content === 'X' ? 'O' : 'X');
@@ -325,11 +323,9 @@ const App: React.FC = () => {
 
             const symbol = message.content || (prevHistory.length % 2 === 0 ? 'X' : 'O');
 
-            setBoard(prevBoard => {
-              const next = prevBoard.map(row => [...row]);
-              next[message.row!][message.col!] = symbol;
-              return next;
-            });
+            setBoard(prevBoard => prevBoard.map((row, r) => 
+              r === message.row ? row.map((cell, c) => c === message.col ? symbol : cell) : row
+            ));
             setTurnSymbol(symbol === 'X' ? 'O' : 'X');
             if (message.turnStartTime !== undefined) setTurnStartTime(message.turnStartTime);
             if (message.turnDuration !== undefined) setTurnDuration(message.turnDuration);
@@ -469,7 +465,7 @@ const App: React.FC = () => {
         }
         break;
     }
-  };
+  }, []);
 
   const createNewRoom = () => {
     const newRoom = Math.random().toString(36).substring(7);
@@ -699,66 +695,68 @@ const App: React.FC = () => {
       />
 
       <div className="flex-1 flex flex-col relative overflow-hidden">
-        {!isJoined ? (
-          isAuthenticated ? (
-            <AuthInformationScreen
-              gameId={gameId}
-              gameMode={gameMode}
-              setGameMode={setGameMode}
-              copied={copied}
-              copyToClipboard={copyToClipboard}
-              connect={connect}
-              isRoomFull={isRoomFull}
-              roomFullReason={roomFullReason}
-              serverGameMode={serverGameMode}
-              createNewRoom={createNewRoom}
-            />
+        <React.Suspense fallback={<div className="flex-1 flex items-center justify-center text-slate-400">Loading...</div>}>
+          {!isJoined ? (
+            isAuthenticated ? (
+              <AuthInformationScreen
+                gameId={gameId}
+                gameMode={gameMode}
+                setGameMode={setGameMode}
+                copied={copied}
+                copyToClipboard={copyToClipboard}
+                connect={connect}
+                isRoomFull={isRoomFull}
+                roomFullReason={roomFullReason}
+                serverGameMode={serverGameMode}
+                createNewRoom={createNewRoom}
+              />
+            ) : (
+              <InformationScreen
+                username={username}
+                setUsername={setUsername}
+                generateRandomName={generateRandomName}
+                gameId={gameId}
+                gameMode={gameMode}
+                setGameMode={setGameMode}
+                copied={copied}
+                copyToClipboard={copyToClipboard}
+                connect={connect}
+                isRoomFull={isRoomFull}
+                roomFullReason={roomFullReason}
+                serverGameMode={serverGameMode}
+                createNewRoom={createNewRoom}
+                onOpenAuth={() => setShowAuthModal(true)}
+                isAuthenticated={isAuthenticated}
+              />
+            )
           ) : (
-            <InformationScreen
-              username={username}
-              setUsername={setUsername}
-              generateRandomName={generateRandomName}
+            <MainGame
+              board={board}
+              history={history}
+              winner={winner}
               gameId={gameId}
-              gameMode={gameMode}
-              setGameMode={setGameMode}
-              copied={copied}
-              copyToClipboard={copyToClipboard}
-              connect={connect}
-              isRoomFull={isRoomFull}
-              roomFullReason={roomFullReason}
-              serverGameMode={serverGameMode}
-              createNewRoom={createNewRoom}
-              onOpenAuth={() => setShowAuthModal(true)}
-              isAuthenticated={isAuthenticated}
+              showDrawer={showDrawer}
+              setShowDrawer={setShowDrawer}
+              isMyTurn={isMyTurn}
+              makeMove={makeMove}
+              resetGame={resetGame}
+              chatMessages={chatMessages}
+              onSendMessage={sendChatMessage}
+              username={username}
+              winningLine={winningLine}
+              unreadCount={unreadCount}
+              onChatOpen={handleChatOpen}
+              onChatClose={handleChatClose}
+              symbolEffects={symbolEffects}
+              symbolSkins={symbolSkins}
+              hasMoves={history.length > 0}
+              onEffectChange={handleEffectChange}
+              onSkinChange={handleSkinChange}
+              effectsEnabled={effectsEnabled}
+              mySymbol={mySymbol}
             />
-          )
-        ) : (
-          <MainGame
-            board={board}
-            history={history}
-            winner={winner}
-            gameId={gameId}
-            showDrawer={showDrawer}
-            setShowDrawer={setShowDrawer}
-            isMyTurn={isMyTurn}
-            makeMove={makeMove}
-            resetGame={resetGame}
-            chatMessages={chatMessages}
-            onSendMessage={sendChatMessage}
-            username={username}
-            winningLine={winningLine}
-            unreadCount={unreadCount}
-            onChatOpen={handleChatOpen}
-            onChatClose={handleChatClose}
-            symbolEffects={symbolEffects}
-            symbolSkins={symbolSkins}
-            hasMoves={history.length > 0}
-            onEffectChange={handleEffectChange}
-            onSkinChange={handleSkinChange}
-            effectsEnabled={effectsEnabled}
-            mySymbol={mySymbol}
-          />
-        )}
+          )}
+        </React.Suspense>
       </div>
 
       {/* Global Timeout Warning Overlay */}

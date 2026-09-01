@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { Trophy } from 'lucide-react';
 import { type Move, type ChatMessage } from '../types';
@@ -32,11 +32,104 @@ interface MainGameProps {
   mySymbol?: string | null;
 }
 
-const MainGame: React.FC<MainGameProps> = ({
+// ─── BoardCell ──────────────────────────────────────────────────────────────
+// Memoized so it only re-renders when its specific cell data changes.
+// This prevents all 400 cells from re-rendering on every timer tick or
+// unrelated parent state update.
+interface BoardCellProps {
+  cell: string | null;
+  r: number;
+  c: number;
+  isLastMove: boolean;
+  isWinningCell: boolean;
+  isMyTurn: boolean;
+  winner: string | null;
+  move: Move | undefined;
+  username: string;
+  mySymbol: string | null;
+  symbolEffects?: Record<string, string>;
+  symbolSkins?: Record<string, string>;
+  effectsEnabled: boolean;
+  onCellClick: (r: number, c: number) => void;
+}
+
+const BoardCell = React.memo(({
+  cell, r, c, isLastMove, isWinningCell, isMyTurn, winner,
+  move, username, mySymbol, symbolEffects, symbolSkins, effectsEnabled, onCellClick
+}: BoardCellProps) => {
+  const isOwnCell = move?.player
+    ? move.player.toLowerCase() === username.toLowerCase()
+    : (mySymbol ? cell?.toUpperCase() === mySymbol.toUpperCase() : false);
+
+  const playerKey = move?.player || (isOwnCell ? username : undefined);
+
+  const effectKey = !effectsEnabled
+    ? undefined
+    : (playerKey
+        ? (symbolEffects?.[playerKey] || symbolEffects?.[playerKey.toLowerCase()] || symbolEffects?.[playerKey.toUpperCase()])
+        : undefined);
+
+  const skinKey = playerKey
+    ? (symbolSkins?.[playerKey] || symbolSkins?.[playerKey.toLowerCase()] || symbolSkins?.[playerKey.toUpperCase()])
+    : undefined;
+
+  return (
+    <div
+      className={`
+        w-8 h-8 sm:w-10 sm:h-10 bg-board-cell border-[1px] border-board-grid flex items-center justify-center transition-colors relative group
+        ${isWinningCell ? 'z-40' : ''}
+        ${isMyTurn && !winner ? 'cursor-pointer hover:bg-black/5 dark:hover:bg-white/5' : 'cursor-not-allowed opacity-90'}
+      `}
+      onClick={() => isMyTurn && !winner && onCellClick(r, c)}
+    >
+      <div className="absolute inset-0 bg-black/5 dark:bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
+      {isLastMove && (
+        <motion.div
+          layoutId="lastMoveIndicator"
+          className="absolute top-1 right-1 w-2.5 h-2.5 bg-yellow-400 rounded-full shadow-[0_0_10px_#facc15] blur-[1px] z-30 pointer-events-none"
+          initial={{ scale: 0 }}
+          animate={{
+            scale: [1, 1.4, 1],
+            opacity: [0.8, 1, 0.8]
+          }}
+          transition={{
+            scale: { repeat: Infinity, duration: 1.5 },
+            opacity: { repeat: Infinity, duration: 1.5 },
+            type: "spring",
+            stiffness: 500,
+            damping: 30
+          }}
+        />
+      )}
+
+      {isLastMove && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="absolute inset-0 bg-blue-500/30 dark:bg-blue-500/40 z-0 pointer-events-none"
+        />
+      )}
+
+      {cell && (
+        <motion.div
+          initial={{ scale: 0, rotate: -45 }}
+          animate={{ scale: 1, rotate: 0 }}
+          className="flex items-center justify-center text-xl sm:text-2xl font-black z-10 select-none w-full h-full"
+        >
+          <SymbolRenderer symbol={cell} effectKey={effectKey} skinKey={skinKey} />
+        </motion.div>
+      )}
+    </div>
+  );
+});
+
+// ─── MainGame ────────────────────────────────────────────────────────────────
+const MainGame = React.memo(({
   board, history, winner, gameId, showDrawer, setShowDrawer, isMyTurn, makeMove, resetGame,
   chatMessages, onSendMessage, username, winningLine, unreadCount, onChatOpen, onChatClose, symbolEffects,
   symbolSkins, hasMoves, onEffectChange, onSkinChange, effectsEnabled = true, mySymbol = null
-}) => {
+}: MainGameProps) => {
   const [showWinnerPopup, setShowWinnerPopup] = React.useState(false);
 
   React.useEffect(() => {
@@ -55,6 +148,29 @@ const MainGame: React.FC<MainGameProps> = ({
       setShowWinnerPopup(false);
     }
   }, [winner, winningLine]);
+
+  // ── O(1) lookup maps — recomputed only when history/winningLine change ──────
+  // Replaces O(n) history.find() called per cell (400 × history.length per render)
+  const historyMap = useMemo(() => {
+    const map = new Map<string, Move>();
+    history.forEach(m => map.set(`${m.row}-${m.col}`, m));
+    return map;
+  }, [history]);
+
+  // Replaces O(5) winningLine.some() called per cell (400 × winningLine.length per render)
+  const winningSet = useMemo(() => {
+    return new Set(winningLine.map(m => `${m.row}-${m.col}`));
+  }, [winningLine]);
+
+  // Last move key for O(1) isLastMove check
+  const lastMoveKey = history.length > 0
+    ? `${history[history.length - 1].row}-${history[history.length - 1].col}`
+    : null;
+
+  // Stable click handler — doesn't change on every render
+  const handleCellClick = useCallback((r: number, c: number) => {
+    makeMove(r, c);
+  }, [makeMove]);
 
   return (
     <LayoutGroup>
@@ -108,87 +224,30 @@ const MainGame: React.FC<MainGameProps> = ({
                   gridTemplateColumns: `repeat(${board.length}, 1fr)`,
                 }}
               >
-                {board.map((row, r) => {
-                  return row.map((cell, c) => {
-                    const lastMove = history.length > 0 ? history[history.length - 1] : null;
-                    const isLastMove = lastMove && lastMove.row === r && lastMove.col === c;
-                    const isWinningCell = winningLine.some(m => m.row === r && m.col === c);
-
+                {board.map((row, r) =>
+                  row.map((cell, c) => {
+                    const cellKey = `${r}-${c}`;
                     return (
-                      <div
-                        key={`${r}-${c}`}
-                        className={`
-                          w-8 h-8 sm:w-10 sm:h-10 bg-board-cell border-[1px] border-board-grid flex items-center justify-center transition-colors relative group
-                          ${isWinningCell ? 'z-40' : ''}
-                          ${isMyTurn && !winner ? 'cursor-pointer hover:bg-black/5 dark:hover:bg-white/5' : 'cursor-not-allowed opacity-90'}
-                        `}
-                        onClick={() => isMyTurn && !winner && makeMove(r, c)}
-                      >
-                        <div className="absolute inset-0 bg-black/5 dark:bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-
-                        {isLastMove && (
-                          <motion.div
-                            layoutId="lastMoveIndicator"
-                            className="absolute top-1 right-1 w-2.5 h-2.5 bg-yellow-400 rounded-full shadow-[0_0_10px_#facc15] blur-[1px] z-30 pointer-events-none"
-                            initial={{ scale: 0 }}
-                            animate={{
-                              scale: [1, 1.4, 1],
-                              opacity: [0.8, 1, 0.8]
-                            }}
-                            transition={{
-                              scale: { repeat: Infinity, duration: 1.5 },
-                              opacity: { repeat: Infinity, duration: 1.5 },
-                              type: "spring",
-                              stiffness: 500,
-                              damping: 30
-                            }}
-                          />
-                        )}
-
-                        {isLastMove && (
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="absolute inset-0 bg-blue-500/30 dark:bg-blue-500/40 z-0 pointer-events-none"
-                          />
-                        )}
-
-                        {cell && (() => {
-                          const move = history.find(m => m.row === r && m.col === c);
-                          // Determine if it is our own cell using highly robust name-matching and symbol-matching fallback
-                          const isOwnCell = move?.player 
-                            ? move.player.toLowerCase() === username.toLowerCase()
-                            : (mySymbol ? cell.toUpperCase() === mySymbol.toUpperCase() : false);
-                          
-                          // Resolve player key case-insensitively or fall back to own username if own cell
-                          const playerKey = move?.player || (isOwnCell ? username : undefined);
-
-                          // Resolve effect key case-insensitively
-                          const effectKey = !effectsEnabled
-                            ? undefined
-                            : (playerKey 
-                                ? (symbolEffects?.[playerKey] || symbolEffects?.[playerKey.toLowerCase()] || symbolEffects?.[playerKey.toUpperCase()]) 
-                                : undefined);
-
-                          // Resolve skin key case-insensitively
-                          const skinKey = playerKey 
-                            ? (symbolSkins?.[playerKey] || symbolSkins?.[playerKey.toLowerCase()] || symbolSkins?.[playerKey.toUpperCase()]) 
-                            : undefined;
-
-                          return (
-                            <motion.div
-                              initial={{ scale: 0, rotate: -45 }}
-                              animate={{ scale: 1, rotate: 0 }}
-                              className="flex items-center justify-center text-xl sm:text-2xl font-black z-10 select-none w-full h-full"
-                            >
-                              <SymbolRenderer symbol={cell} effectKey={effectKey} skinKey={skinKey} />
-                            </motion.div>
-                          );
-                        })()}
-                      </div>
+                      <BoardCell
+                        key={cellKey}
+                        cell={cell}
+                        r={r}
+                        c={c}
+                        isLastMove={cellKey === lastMoveKey}
+                        isWinningCell={winningSet.has(cellKey)}
+                        isMyTurn={isMyTurn}
+                        winner={winner}
+                        move={cell ? historyMap.get(cellKey) : undefined}
+                        username={username}
+                        mySymbol={mySymbol}
+                        symbolEffects={symbolEffects}
+                        symbolSkins={symbolSkins}
+                        effectsEnabled={effectsEnabled}
+                        onCellClick={handleCellClick}
+                      />
                     );
-                  });
-                })}
+                  })
+                )}
               </div>
 
               {/* SVG Winning Line */}
@@ -207,14 +266,14 @@ const MainGame: React.FC<MainGameProps> = ({
                     const x2 = `${((end.col + 0.5) / numCols) * 100}%`;
                     const y2 = `${((end.row + 0.5) / numRows) * 100}%`;
 
-                    const matchingMove = history.find(m => m.row === start.row && m.col === start.col);
+                    const matchingMove = historyMap.get(`${start.row}-${start.col}`);
                     const winningPlayer = matchingMove?.player || winner;
                     const winningEffect = (winningPlayer && effectsEnabled) ? symbolEffects?.[winningPlayer] : undefined;
                     const winningSkin = winningPlayer ? symbolSkins?.[winningPlayer] : undefined;
                     const isX = winningSymbol === 'X';
 
                     let baseColor = isX ? '#2563eb' : '#db2677';
-                    
+
                     if (winningSkin && (!winningEffect || winningEffect === 'NONE')) {
                        switch (winningSkin) {
                          case 'CAT_PAW': baseColor = isX ? '#fca5a5' : '#c4b5fd'; break;
@@ -505,6 +564,6 @@ const MainGame: React.FC<MainGameProps> = ({
       />
     </LayoutGroup>
   );
-};
+});
 
 export default MainGame;

@@ -24,10 +24,35 @@ const TimeoutWarning: React.FC<TimeoutWarningProps> = ({ startTime, duration, is
       return;
     }
 
+    // Calculate how much time is left right now
+    const computeRemaining = () => Math.max(0, duration - (Date.now() - startTime) / 1000);
+
+    const remaining = computeRemaining();
+
+    // Only the last 16 seconds need to actually update the display.
+    // For the bulk of the turn, we sleep until we enter the warning zone.
+    if (remaining > 16) {
+      const sleepMs = (remaining - 16) * 1000;
+      const wakeupTimer = setTimeout(() => {
+        // Wake up and start the real interval when entering the warning zone
+        setTimeLeft(computeRemaining());
+        const interval = setInterval(() => {
+          setTimeLeft(computeRemaining());
+        }, 100);
+        // Attach cleanup via a ref pattern — store it in the returned cleanup chain
+        (wakeupTimer as unknown as { _intervalId?: ReturnType<typeof setInterval> })._intervalId = interval;
+      }, sleepMs);
+      return () => {
+        clearTimeout(wakeupTimer);
+        const id = (wakeupTimer as unknown as { _intervalId?: ReturnType<typeof setInterval> })._intervalId;
+        if (id) clearInterval(id);
+      };
+    }
+
+    // Already in the warning zone — start immediately
+    setTimeLeft(remaining);
     const interval = setInterval(() => {
-      const elapsed = (Date.now() - startTime) / 1000;
-      const remaining = Math.max(0, duration - elapsed);
-      setTimeLeft(remaining);
+      setTimeLeft(computeRemaining());
     }, 100);
 
     return () => clearInterval(interval);

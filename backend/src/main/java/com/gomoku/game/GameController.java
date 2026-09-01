@@ -237,14 +237,11 @@ public class GameController {
                 }
             }
 
-            // Single broadcast with the correct turnStartTime (post-timer-logic) and one DB call
-            RoomCosmetics moveCosmetics = loadRoomCosmetics(room);
+            // Single broadcast with the correct turnStartTime (post-timer-logic)
             message.setType(GameMessage.MessageType.MOVE);
             message.setContent(symbol);
             message.setTurnStartTime(room.getTurnStartTime());
             message.setTurnDuration(TURN_DURATION_SECONDS);
-            message.setSymbolEffects(moveCosmetics.effects());
-            message.setSymbolSkins(moveCosmetics.skins());
             messagingTemplate.convertAndSend("/topic/game/" + gameId, message);
 
             if (winningLine != null) {

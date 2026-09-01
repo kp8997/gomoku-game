@@ -40,7 +40,7 @@ const TurnTimer: React.FC<TurnTimerProps> = ({
     };
 
     updateTimer(); // Initial call
-    const interval = setInterval(updateTimer, 50);
+    const interval = setInterval(updateTimer, 250);
 
     return () => clearInterval(interval);
   }, [startTime, duration, isPaused]);
