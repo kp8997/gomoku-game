@@ -1,1 +1,3 @@
-This repository includes all architect of gomoku game that host on server
+This repository includes all architect of gomoku game that host on oracle cloud server.
+
+## 
